@@ -6,7 +6,7 @@ export default {
   splitting: false,
   sourcemap: true,
   clean: true,
-  external: ["react", "react-dom"],
+  external: ["react", "react-dom", "@react-spring/web"],
   target: "es2019",
   jsx: "automatic",
 };

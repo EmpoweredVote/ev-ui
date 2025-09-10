@@ -5,12 +5,8 @@
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
   "types": "./dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
+  "files": ["dist"],
+  "publishConfig": { "registry": "https://npm.pkg.github.com" },
   "repository": {
     "type": "git",
     "url": "https://github.com/EmpoweredVote/ev-ui.git"
@@ -20,10 +16,12 @@
   },
   "peerDependencies": {
     "react": ">=17",
-    "react-dom": ">=17"
+    "react-dom": ">=17",
+    "@react-spring/web": ">=9"
   },
   "devDependencies": {
     "tsup": "^8.0.0",
-    "typescript": "^5.4.0"
+    "typescript": "^5.4.0",
+    "@react-spring/web": "^9.7.2"
   }
 }
