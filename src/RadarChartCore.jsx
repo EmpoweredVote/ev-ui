@@ -83,7 +83,7 @@ export default function RadarChartCore({
       ring.push(`${x},${y}`);
     }
     guidePolygons.push(
-      <polygon key={level} points={ring.join(" ")} fill="none" stroke="#ccc" />
+      <polygon key={level} points={ring.join(" ")} fill="none" stroke="#ccc" />,
     );
   }
 
@@ -122,8 +122,8 @@ export default function RadarChartCore({
           angle > Math.PI
             ? "end"
             : angle < Math.PI && angle > 0
-            ? "start"
-            : "middle";
+              ? "start"
+              : "middle";
         return (
           <text
             key={`label-${shortTitle}`}
@@ -185,8 +185,8 @@ export default function RadarChartCore({
         )
       ) : null}
 
-      {spokes.map(([shortTitle]) => {
-        const angle = 0; // not used, kept simple
+      {spokes.map(([shortTitle], i) => {
+        const angle = (2 * Math.PI * i) / numSpokes;
         const x = centerX + radius * Math.sin(angle);
         const y = centerY - radius * Math.cos(angle);
         return (
@@ -197,7 +197,7 @@ export default function RadarChartCore({
             x2={x}
             y2={y}
             stroke="transparent"
-            strokeWidth={12}
+            strokeWidth={14}
             onClick={() => onToggleInversion(shortTitle)}
             style={{ cursor: "pointer" }}
           />
@@ -207,7 +207,7 @@ export default function RadarChartCore({
   );
 }
 
-function wrapLabel(label, maxChars = 10) {
+function wrapLabel(label, maxChars = 12) {
   const words = String(label).split(/\s+/);
   const lines = [];
   let line = "";
