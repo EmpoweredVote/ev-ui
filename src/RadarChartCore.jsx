@@ -212,13 +212,13 @@ function wrapLabel(label, maxChars = 12) {
   const lines = [];
   let line = "";
   for (const word of words) {
+    // Never split individual words - keep them intact on their own line
     if (word.length > maxChars) {
       if (line) {
         lines.push(line.trim());
         line = "";
       }
-      for (let i = 0; i < word.length; i += maxChars)
-        lines.push(word.slice(i, i + maxChars));
+      lines.push(word);
       continue;
     }
     if ((line + word).length > maxChars) {
