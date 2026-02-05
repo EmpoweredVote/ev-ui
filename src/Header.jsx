@@ -81,13 +81,15 @@ export default function Header({
       position: 'absolute',
       top: '100%',
       left: 0,
-      marginTop: spacing[2],
+      paddingTop: spacing[2],
+      zIndex: 100,
+    },
+    dropdownInner: {
       backgroundColor: colors.bgWhite,
       borderRadius: borderRadius.lg,
       boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
       minWidth: '200px',
       padding: spacing[2],
-      zIndex: 100,
     },
     dropdownItem: {
       display: 'block',
@@ -189,22 +191,24 @@ export default function Header({
         </a>
         {hasDropdown && isOpen && (
           <div style={styles.dropdown}>
-            {item.dropdown.map((dropdownItem, idx) => (
-              <a
-                key={idx}
-                href={dropdownItem.href}
-                onClick={(e) => handleNavClick(e, dropdownItem.href)}
-                style={styles.dropdownItem}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = colors.bgLight;
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'transparent';
-                }}
-              >
-                {dropdownItem.label}
-              </a>
-            ))}
+            <div style={styles.dropdownInner}>
+              {item.dropdown.map((dropdownItem, idx) => (
+                <a
+                  key={idx}
+                  href={dropdownItem.href}
+                  onClick={(e) => handleNavClick(e, dropdownItem.href)}
+                  style={styles.dropdownItem}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = colors.bgLight;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = 'transparent';
+                  }}
+                >
+                  {dropdownItem.label}
+                </a>
+              ))}
+            </div>
           </div>
         )}
       </div>
