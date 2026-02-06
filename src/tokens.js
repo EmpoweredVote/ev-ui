@@ -10,6 +10,8 @@ export const colors = {
   evTealLight: '#59b0c4',
   evCoral: '#ff5740',
   evYellow: '#fed12e',
+  evYellowLight: '#fef3c7',
+  evYellowDark: '#eab308',
 
   // Background colors
   bgLight: '#f0f8fa',
