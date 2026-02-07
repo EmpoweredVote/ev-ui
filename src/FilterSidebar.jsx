@@ -147,20 +147,18 @@ export default function FilterSidebar({
     <aside style={styles.sidebar} className="ev-filter-sidebar">
       <h2 style={styles.title}>{title}</h2>
 
-      {/* ZIP Code Input */}
+      {/* Location Input */}
       <div style={styles.section}>
-        <label style={styles.sectionLabel}>Zip Code</label>
+        <label style={styles.sectionLabel}>Location</label>
         <div style={styles.zipInputWrapper}>
           <input
             type="text"
-            inputMode="numeric"
-            maxLength={5}
             value={zipCode}
             onChange={(e) => onZipChange?.(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Enter ZIP"
+            placeholder="ZIP or address"
             style={styles.zipInput}
-            aria-label="ZIP Code"
+            aria-label="Search location"
           />
           <button
             type="button"

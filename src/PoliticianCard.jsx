@@ -101,9 +101,8 @@ export default function PoliticianCard({
       margin: 0,
       overflow: 'hidden',
       textOverflow: 'ellipsis',
-      whiteSpace: isHorizontal ? 'nowrap' : 'normal',
-      display: isHorizontal ? 'block' : '-webkit-box',
-      WebkitLineClamp: isHorizontal ? undefined : 2,
+      display: '-webkit-box',
+      WebkitLineClamp: 2,
       WebkitBoxOrient: 'vertical',
     },
     compassButton: {
