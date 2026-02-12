@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { colors, fonts, fontWeights, fontSizes, spacing, borderRadius } from './tokens';
 import useMediaQuery from './useMediaQuery';
 
@@ -21,11 +21,25 @@ export default function Header({
   ctaButton,
   currentPath,
   onNavigate,
+  profileMenu,
   style = {},
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [profileOpen, setProfileOpen] = useState(false);
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const profileRef = useRef(null);
+
+  useEffect(() => {
+    if (!profileOpen) return;
+    const handleClickOutside = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [profileOpen]);
 
   const handleNavClick = (e, href) => {
     if (onNavigate) {
@@ -150,6 +164,64 @@ export default function Header({
       padding: `${spacing[3]} 0`,
       borderBottom: `1px solid ${colors.borderLight}`,
     },
+    profileButton: {
+      width: '40px',
+      height: '40px',
+      borderRadius: borderRadius.full,
+      border: `2px solid ${colors.evTeal}`,
+      backgroundColor: colors.bgLight,
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 0,
+    },
+    profileDropdown: {
+      position: 'absolute',
+      top: '100%',
+      right: 0,
+      paddingTop: spacing[2],
+      zIndex: 100,
+    },
+    profileDropdownInner: {
+      backgroundColor: colors.bgWhite,
+      borderRadius: borderRadius.lg,
+      boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+      minWidth: '160px',
+      padding: spacing[2],
+    },
+    profileDropdownItem: {
+      display: 'block',
+      width: '100%',
+      padding: `${spacing[3]} ${spacing[4]}`,
+      fontFamily: fonts.primary,
+      fontWeight: fontWeights.medium,
+      fontSize: fontSizes.base,
+      color: colors.evTeal,
+      textDecoration: 'none',
+      borderRadius: borderRadius.md,
+      cursor: 'pointer',
+      border: 'none',
+      backgroundColor: 'transparent',
+      textAlign: 'left',
+    },
+    mobileDivider: {
+      height: '1px',
+      backgroundColor: colors.borderLight,
+      margin: `${spacing[3]} 0`,
+    },
+    profileLabel: {
+      padding: `${spacing[2]} ${spacing[4]} ${spacing[3]}`,
+      fontFamily: fonts.primary,
+      fontWeight: fontWeights.semibold,
+      fontSize: fontSizes.sm,
+      color: colors.textMuted,
+      borderBottom: `1px solid ${colors.borderLight}`,
+      marginBottom: spacing[1],
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+    },
   };
 
   // Responsive styles via media query in a style tag would be better,
@@ -249,23 +321,104 @@ export default function Header({
           ))}
         </nav>
 
-        {/* CTA Button */}
-        {ctaButton && !isMobile && (
-          <a
-            href={ctaButton.href}
-            onClick={(e) => handleNavClick(e, ctaButton.href)}
-            style={styles.ctaButton}
-            className="ev-header-cta"
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = colors.evTealDark;
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = colors.evTeal;
-            }}
-          >
-            {ctaButton.label}
-          </a>
-        )}
+        {/* Right side: CTA + Profile */}
+        <div style={{ display: isMobile ? 'none' : 'flex', alignItems: 'center', gap: spacing[4] }}>
+          {ctaButton && (
+            <a
+              href={ctaButton.href}
+              onClick={(e) => handleNavClick(e, ctaButton.href)}
+              style={styles.ctaButton}
+              className="ev-header-cta"
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = colors.evTealDark;
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = colors.evTeal;
+              }}
+            >
+              {ctaButton.label}
+            </a>
+          )}
+
+          {/* Profile Menu (Desktop) */}
+          {profileMenu && (
+            <div ref={profileRef} style={{ position: 'relative' }}>
+              <button
+                style={styles.profileButton}
+                onClick={() => setProfileOpen(!profileOpen)}
+                aria-label="Profile menu"
+                aria-expanded={profileOpen}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke={colors.evTeal}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </button>
+              {profileOpen && (
+                <div style={styles.profileDropdown}>
+                  <div style={styles.profileDropdownInner}>
+                    {profileMenu.label && (
+                      <div style={styles.profileLabel}>{profileMenu.label}</div>
+                    )}
+                    {profileMenu.items.map((item, idx) => {
+                      if (item.href) {
+                        return (
+                          <a
+                            key={idx}
+                            href={item.href}
+                            onClick={(e) => {
+                              setProfileOpen(false);
+                              if (onNavigate) {
+                                e.preventDefault();
+                                onNavigate(item.href);
+                              }
+                            }}
+                            style={styles.profileDropdownItem}
+                            onMouseEnter={(e) => {
+                              e.target.style.backgroundColor = colors.bgLight;
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.backgroundColor = 'transparent';
+                            }}
+                          >
+                            {item.label}
+                          </a>
+                        );
+                      }
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            setProfileOpen(false);
+                            item.onClick?.();
+                          }}
+                          style={styles.profileDropdownItem}
+                          onMouseEnter={(e) => {
+                            e.target.style.backgroundColor = colors.bgLight;
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = 'transparent';
+                          }}
+                        >
+                          {item.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Mobile Menu Button */}
         <button
@@ -362,6 +515,67 @@ export default function Header({
           >
             {ctaButton.label}
           </a>
+        )}
+
+        {/* Profile items in mobile menu */}
+        {profileMenu && (
+          <>
+            <div style={styles.mobileDivider} />
+            {profileMenu.label && (
+              <span
+                style={{
+                  ...styles.mobileNavItem,
+                  fontWeight: fontWeights.medium,
+                  fontSize: fontSizes.sm,
+                  color: colors.textMuted,
+                  cursor: 'default',
+                  display: 'block',
+                  borderBottom: 'none',
+                }}
+              >
+                {profileMenu.label}
+              </span>
+            )}
+            {profileMenu.items.map((item, idx) => {
+              if (item.href) {
+                return (
+                  <a
+                    key={idx}
+                    href={item.href}
+                    onClick={(e) => {
+                      setMobileMenuOpen(false);
+                      if (onNavigate) {
+                        e.preventDefault();
+                        onNavigate(item.href);
+                      }
+                    }}
+                    style={styles.mobileNavItem}
+                  >
+                    {item.label}
+                  </a>
+                );
+              }
+              return (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    item.onClick?.();
+                  }}
+                  style={{
+                    ...styles.mobileNavItem,
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    width: '100%',
+                    textAlign: 'left',
+                  }}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </>
         )}
       </div>
     </header>

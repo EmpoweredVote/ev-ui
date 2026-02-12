@@ -41,6 +41,7 @@ export default function SiteHeader({
   logoSrc = '/EVLogo.svg',
   currentPath,
   onNavigate,
+  profileMenu,
   style = {},
 }) {
   const handleNavigate = (href) => {
@@ -60,6 +61,7 @@ export default function SiteHeader({
       ctaButton={defaultCtaButton}
       currentPath={currentPath}
       onNavigate={handleNavigate}
+      profileMenu={profileMenu}
       style={style}
     />
   );
