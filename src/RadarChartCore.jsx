@@ -28,7 +28,7 @@ export default function RadarChartCore({
   const pointsArr = spokes.map(([shortTitle, value], index) => {
     const topic = topics.find((t) => t.short_title === shortTitle);
     const max = topic?.stances?.length || 10;
-    const pct = (value / max) * 10;
+    const pct = Math.min((value / max) * 10, 10);
     const angle = (2 * Math.PI * index) / numSpokes;
     const adjusted =
       value === 0 ? 0 : invertedSpokes[shortTitle] ? 11 - pct : pct;
@@ -52,7 +52,7 @@ export default function RadarChartCore({
       .map(([shortTitle, value], index) => {
         const topic = topics.find((t) => t.short_title === shortTitle);
         const max = topic?.stances?.length || 10;
-        const pct = (value / max) * 10;
+        const pct = Math.min((value / max) * 10, 10);
         const angle = (2 * Math.PI * index) / numSpokes;
         const adjusted =
           value === 0 ? 0 : invertedSpokes[shortTitle] ? 11 - pct : pct;
