@@ -10,8 +10,10 @@ export default function RadarChartCore({
   onToggleInversion = () => {},
   onReplaceTopic = () => {},
   size = 400,
+  labelFontSize,
+  padding = 80,
+  labelOffset = 20,
 }) {
-  const padding = 80;
   const radius = size / 2 - 40;
   const centerX = size / 2;
   const centerY = size / 2;
@@ -115,27 +117,42 @@ export default function RadarChartCore({
 
       {spokes.map(([shortTitle], i) => {
         const angle = (2 * Math.PI * i) / numSpokes;
-        const offset = radius + 20;
+        const offset = radius + labelOffset;
         const x = centerX + offset * Math.sin(angle);
-        const y = centerY - offset * Math.cos(angle);
+        let y = centerY - offset * Math.cos(angle);
         const anchor =
           angle > Math.PI
             ? "end"
             : angle < Math.PI && angle > 0
               ? "start"
               : "middle";
+
+        const cosA = Math.cos(angle);
+        const isTop = cosA > 0.5;
+        const isBottom = cosA < -0.5;
+        const lines = wrapLabel(shortTitle, 10);
+        const fSize = labelFontSize || 16;
+        const lineHeight = fSize * 1.1;
+
+        // For top labels, shift up so multi-line text grows away from chart
+        if (isTop && lines.length > 1) {
+          y -= (lines.length - 1) * lineHeight;
+        }
+        // For bottom labels with multiple lines, no shift needed (text grows downward, away from chart)
+
         return (
           <text
             key={`label-${shortTitle}`}
             x={x}
-            y={y === 20 ? y - 20 : y}
+            y={y}
             textAnchor={anchor}
+            dominantBaseline={isBottom ? "hanging" : "auto"}
             onClick={() => onReplaceTopic(shortTitle)}
             className="text-xl font-medium mb-1 md:text-base md:font-normal"
-            style={{ cursor: "pointer", userSelect: "none" }}
+            style={{ cursor: "pointer", userSelect: "none", ...(labelFontSize ? { fontSize: labelFontSize } : {}) }}
           >
-            {wrapLabel(shortTitle, 10).map((ln, idx) => (
-              <tspan key={idx} x={x} dy={idx === 0 ? "0" : "1.1em"}>
+            {lines.map((ln, idx) => (
+              <tspan key={idx} x={x} dy={idx === 0 ? "0" : `${lineHeight}`}>
                 {ln}
               </tspan>
             ))}
