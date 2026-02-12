@@ -11,5 +11,8 @@ export { default as CommitteeTable } from "./CommitteeTable.jsx";
 export { default as PoliticianProfile } from "./PoliticianProfile.jsx";
 export { default as AuthForm } from "./AuthForm.jsx";
 
+// Hooks
+export { default as useMediaQuery } from "./useMediaQuery.js";
+
 // Design Tokens
 export * from "./tokens.js";

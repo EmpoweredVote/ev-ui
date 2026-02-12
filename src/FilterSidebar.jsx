@@ -1,5 +1,6 @@
 import React from 'react';
 import { colors, fonts, fontWeights, fontSizes, spacing, borderRadius, shadows } from './tokens';
+import useMediaQuery from './useMediaQuery';
 
 /**
  * FilterSidebar component for filtering politicians by level
@@ -35,6 +36,8 @@ export default function FilterSidebar({
   buildingImageSrc,
   style = {},
 }) {
+  const isMobile = useMediaQuery('(max-width: 768px)');
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && onZipSubmit) {
       onZipSubmit();
@@ -42,15 +45,23 @@ export default function FilterSidebar({
   };
 
   const styles = {
-    sidebar: {
-      width: '240px',
-      flexShrink: 0,
-      padding: spacing[6],
-      backgroundColor: colors.bgWhite,
-      borderRight: `1px solid ${colors.borderLight}`,
-      minHeight: 'calc(100vh - 80px)',
-      ...style,
-    },
+    sidebar: isMobile
+      ? {
+          width: '100%',
+          padding: `${spacing[3]} ${spacing[4]}`,
+          backgroundColor: colors.bgWhite,
+          borderBottom: `1px solid ${colors.borderLight}`,
+          ...style,
+        }
+      : {
+          width: '240px',
+          flexShrink: 0,
+          padding: spacing[6],
+          backgroundColor: colors.bgWhite,
+          borderRight: `1px solid ${colors.borderLight}`,
+          minHeight: 'calc(100vh - 80px)',
+          ...style,
+        },
     title: {
       fontFamily: fonts.primary,
       fontWeight: fontWeights.bold,
@@ -98,7 +109,8 @@ export default function FilterSidebar({
     },
     radioGroup: {
       display: 'flex',
-      flexDirection: 'column',
+      flexDirection: isMobile ? 'row' : 'column',
+      flexWrap: isMobile ? 'wrap' : 'nowrap',
       gap: spacing[2],
     },
     radioLabel: {
@@ -145,11 +157,11 @@ export default function FilterSidebar({
 
   return (
     <aside style={styles.sidebar} className="ev-filter-sidebar">
-      <h2 style={styles.title}>{title}</h2>
+      {!isMobile && <h2 style={styles.title}>{title}</h2>}
 
       {/* Location Input */}
-      <div style={styles.section}>
-        <label style={styles.sectionLabel}>Location</label>
+      <div style={isMobile ? { marginBottom: spacing[3] } : styles.section}>
+        {!isMobile && <label style={styles.sectionLabel}>Location</label>}
         <div style={styles.zipInputWrapper}>
           <input
             type="text"
@@ -172,8 +184,8 @@ export default function FilterSidebar({
       </div>
 
       {/* Filter Radio Buttons */}
-      <div style={styles.section}>
-        <label style={styles.sectionLabel}>Group</label>
+      <div style={isMobile ? {} : styles.section}>
+        {!isMobile && <label style={styles.sectionLabel}>Group</label>}
         <div style={styles.radioGroup} role="radiogroup" aria-label="Filter by group">
           {filterOptions.map((option) => (
             <label key={option.value} style={styles.radioLabel}>
@@ -191,22 +203,24 @@ export default function FilterSidebar({
         </div>
       </div>
 
-      {/* Location Label */}
-      {locationLabel && (
+      {/* Location Label - hidden on mobile */}
+      {!isMobile && locationLabel && (
         <div style={styles.locationLabel}>{locationLabel}</div>
       )}
 
-      {/* Building Image */}
-      {buildingImageSrc ? (
-        <img
-          src={buildingImageSrc}
-          alt={`${selectedFilter} government building`}
-          style={styles.buildingImage}
-        />
-      ) : (
-        <div style={styles.buildingPlaceholder}>
-          No image
-        </div>
+      {/* Building Image - hidden on mobile */}
+      {!isMobile && (
+        buildingImageSrc ? (
+          <img
+            src={buildingImageSrc}
+            alt={`${selectedFilter} government building`}
+            style={styles.buildingImage}
+          />
+        ) : (
+          <div style={styles.buildingPlaceholder}>
+            No image
+          </div>
+        )
       )}
     </aside>
   );

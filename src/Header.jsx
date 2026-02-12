@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { colors, fonts, fontWeights, fontSizes, spacing, borderRadius } from './tokens';
+import useMediaQuery from './useMediaQuery';
 
 /**
  * Header component for Empowered Vote applications
@@ -24,6 +25,7 @@ export default function Header({
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   const handleNavClick = (e, href) => {
     if (onNavigate) {
@@ -44,7 +46,7 @@ export default function Header({
     container: {
       maxWidth: '1512px',
       margin: '0 auto',
-      padding: `${spacing[4]} ${spacing[6]}`,
+      padding: isMobile ? `${spacing[3]} ${spacing[3]}` : `${spacing[4]} ${spacing[6]}`,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -54,7 +56,7 @@ export default function Header({
       cursor: 'pointer',
     },
     nav: {
-      display: 'flex',
+      display: isMobile ? 'none' : 'flex',
       alignItems: 'center',
       gap: spacing[10],
     },
@@ -116,7 +118,7 @@ export default function Header({
       display: 'inline-block',
     },
     mobileMenuButton: {
-      display: 'none',
+      display: isMobile ? 'block' : 'none',
       background: 'none',
       border: 'none',
       cursor: 'pointer',
@@ -248,7 +250,7 @@ export default function Header({
         </nav>
 
         {/* CTA Button */}
-        {ctaButton && (
+        {ctaButton && !isMobile && (
           <a
             href={ctaButton.href}
             onClick={(e) => handleNavClick(e, ctaButton.href)}
@@ -300,19 +302,55 @@ export default function Header({
 
       {/* Mobile Menu */}
       <div style={styles.mobileMenu} className="ev-header-mobile-menu">
-        {navItems.map((item, idx) => (
-          <a
-            key={idx}
-            href={item.href}
-            onClick={(e) => {
-              handleNavClick(e, item.href);
-              setMobileMenuOpen(false);
-            }}
-            style={styles.mobileNavItem}
-          >
-            {item.label}
-          </a>
-        ))}
+        {navItems.map((item, idx) => {
+          const hasDropdown = item.dropdown && item.dropdown.length > 0;
+          return (
+            <React.Fragment key={idx}>
+              {hasDropdown ? (
+                <>
+                  <span
+                    style={{
+                      ...styles.mobileNavItem,
+                      cursor: 'default',
+                      display: 'block',
+                    }}
+                  >
+                    {item.label}
+                  </span>
+                  {item.dropdown.map((sub, subIdx) => (
+                    <a
+                      key={subIdx}
+                      href={sub.href}
+                      onClick={(e) => {
+                        handleNavClick(e, sub.href);
+                        setMobileMenuOpen(false);
+                      }}
+                      style={{
+                        ...styles.mobileNavItem,
+                        fontWeight: fontWeights.medium,
+                        fontSize: fontSizes.base,
+                        paddingLeft: spacing[4],
+                      }}
+                    >
+                      {sub.label}
+                    </a>
+                  ))}
+                </>
+              ) : (
+                <a
+                  href={item.href}
+                  onClick={(e) => {
+                    handleNavClick(e, item.href);
+                    setMobileMenuOpen(false);
+                  }}
+                  style={styles.mobileNavItem}
+                >
+                  {item.label}
+                </a>
+              )}
+            </React.Fragment>
+          );
+        })}
         {ctaButton && (
           <a
             href={ctaButton.href}

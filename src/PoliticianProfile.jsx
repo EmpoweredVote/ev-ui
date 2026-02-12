@@ -1,5 +1,6 @@
 import React from 'react';
 import { colors, fonts, fontWeights, fontSizes, spacing, borderRadius, shadows } from './tokens';
+import useMediaQuery from './useMediaQuery';
 import SocialLinks from './SocialLinks.jsx';
 import CommitteeTable from './CommitteeTable.jsx';
 
@@ -20,6 +21,7 @@ export default function PoliticianProfile({
   children,
   style = {},
 }) {
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const pol = politician;
 
   // Extract social handles from identifiers
@@ -97,16 +99,17 @@ export default function PoliticianProfile({
       background: colors.bgWhite,
       borderRadius: borderRadius.lg,
       boxShadow: shadows.lg,
-      padding: spacing[8],
+      padding: isMobile ? spacing[4] : spacing[8],
       marginBottom: spacing[8],
     },
     topRow: {
       display: 'flex',
-      gap: spacing[8],
-      alignItems: 'flex-start',
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: isMobile ? spacing[4] : spacing[8],
+      alignItems: isMobile ? 'center' : 'flex-start',
     },
     photoWrap: {
-      width: '192px',
+      width: isMobile ? '120px' : '192px',
       flexShrink: 0,
     },
     photo: {
@@ -135,8 +138,9 @@ export default function PoliticianProfile({
     },
     headerRow: {
       display: 'flex',
+      flexDirection: isMobile ? 'column' : 'row',
       justifyContent: 'space-between',
-      alignItems: 'flex-start',
+      alignItems: isMobile ? 'center' : 'flex-start',
       marginBottom: spacing[4],
     },
     nameTitle: {
@@ -145,24 +149,27 @@ export default function PoliticianProfile({
     },
     socialLinksWrap: {
       flexShrink: 0,
-      marginLeft: spacing[4],
+      marginLeft: isMobile ? 0 : spacing[4],
+      marginTop: isMobile ? spacing[2] : 0,
     },
     name: {
       fontFamily: fonts.primary,
       fontWeight: fontWeights.bold,
-      fontSize: fontSizes['4xl'],
+      fontSize: isMobile ? fontSizes['2xl'] : fontSizes['4xl'],
       color: colors.evTeal,
       margin: 0,
       marginBottom: spacing[2],
       lineHeight: 1.2,
+      textAlign: isMobile ? 'center' : 'left',
     },
     title: {
       fontFamily: fonts.primary,
       fontWeight: fontWeights.medium,
-      fontSize: fontSizes.xl,
+      fontSize: isMobile ? fontSizes.base : fontSizes.xl,
       color: colors.textSecondary,
       margin: 0,
       marginBottom: spacing[3],
+      textAlign: isMobile ? 'center' : 'left',
     },
     bio: {
       fontFamily: fonts.primary,
