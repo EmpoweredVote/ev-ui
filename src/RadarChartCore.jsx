@@ -164,8 +164,8 @@ export default function RadarChartCore({
         <polygon
           points={targetPoints}
           style={{
-            fill: "rgba(245, 40, 145, 0.4)",
-            stroke: "rgb(245, 40, 145)",
+            fill: "rgba(255, 87, 64, 0.4)",
+            stroke: "rgb(255, 87, 64)",
             strokeWidth: 3,
           }}
         />
@@ -173,8 +173,8 @@ export default function RadarChartCore({
         <animated.polygon
           points={spring.points}
           style={{
-            fill: "rgba(245, 40, 145, 0.4)",
-            stroke: "rgb(245, 40, 145)",
+            fill: "rgba(255, 87, 64, 0.4)",
+            stroke: "rgb(255, 87, 64)",
             strokeWidth: 3,
           }}
         />
@@ -185,8 +185,8 @@ export default function RadarChartCore({
           <polygon
             points={comparePoints}
             style={{
-              fill: "rgba(0,123,255,0.3)",
-              stroke: "rgb(0,123,255)",
+              fill: "rgba(89, 176, 196, 0.3)",
+              stroke: "rgb(89, 176, 196)",
               strokeWidth: 2,
             }}
           />
@@ -194,8 +194,8 @@ export default function RadarChartCore({
           <animated.polygon
             points={compareSpring.points}
             style={{
-              fill: "rgba(0,123,255,0.3)",
-              stroke: "rgb(0,123,255)",
+              fill: "rgba(89, 176, 196, 0.3)",
+              stroke: "rgb(89, 176, 196)",
               strokeWidth: 3,
             }}
           />
