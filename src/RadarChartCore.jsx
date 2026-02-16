@@ -103,6 +103,7 @@ export default function RadarChartCore({
         const angle = (2 * Math.PI * i) / numSpokes;
         const x = centerX + radius * Math.sin(angle);
         const y = centerY - radius * Math.cos(angle);
+        const isInverted = !!invertedSpokes[shortTitle];
         return (
           <line
             key={`line-${shortTitle}`}
@@ -111,6 +112,7 @@ export default function RadarChartCore({
             x2={x}
             y2={y}
             stroke="black"
+            strokeDasharray={isInverted ? "6 4" : "none"}
           />
         );
       })}
