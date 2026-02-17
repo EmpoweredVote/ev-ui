@@ -34,6 +34,8 @@ export default function FilterSidebar({
   onFilterChange,
   locationLabel,
   buildingImageSrc,
+  zipInputRef,
+  autocompleteContainerRef,
   style = {},
 }) {
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -162,25 +164,34 @@ export default function FilterSidebar({
       {/* Location Input */}
       <div style={isMobile ? { marginBottom: spacing[3] } : styles.section}>
         {!isMobile && <label style={styles.sectionLabel}>Location</label>}
-        <div style={styles.zipInputWrapper}>
-          <input
-            type="text"
-            value={zipCode}
-            onChange={(e) => onZipChange?.(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="ZIP or address"
-            style={styles.zipInput}
-            aria-label="Search location"
+        {autocompleteContainerRef ? (
+          <div
+            ref={autocompleteContainerRef}
+            style={styles.zipInputWrapper}
+            className="ev-autocomplete-container"
           />
-          <button
-            type="button"
-            onClick={onZipClear}
-            style={styles.clearButton}
-            aria-label="Clear ZIP code"
-          >
-            &times;
-          </button>
-        </div>
+        ) : (
+          <div style={styles.zipInputWrapper}>
+            <input
+              ref={zipInputRef}
+              type="text"
+              value={zipCode}
+              onChange={(e) => onZipChange?.(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="ZIP or address"
+              style={styles.zipInput}
+              aria-label="Search location"
+            />
+            <button
+              type="button"
+              onClick={onZipClear}
+              style={styles.clearButton}
+              aria-label="Clear ZIP code"
+            >
+              &times;
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Filter Radio Buttons */}
