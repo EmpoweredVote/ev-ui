@@ -56,12 +56,17 @@ export default function FilterSidebar({
           ...style,
         }
       : {
-          width: '240px',
+          width: '300px',
           flexShrink: 0,
           padding: spacing[6],
           backgroundColor: colors.bgWhite,
           borderRight: `1px solid ${colors.borderLight}`,
-          minHeight: 'calc(100vh - 80px)',
+          position: 'sticky',
+          top: 0,
+          height: 'calc(100vh - 75px)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
           ...style,
         },
     title: {
@@ -80,6 +85,9 @@ export default function FilterSidebar({
       fontSize: fontSizes.sm,
       color: colors.textSecondary,
       marginBottom: spacing[2],
+    },
+    contentTop: {
+      flexShrink: 0,
     },
     zipInputWrapper: {
       position: 'relative',
@@ -130,6 +138,14 @@ export default function FilterSidebar({
       accentColor: colors.evTeal,
       cursor: 'pointer',
     },
+    imageSection: {
+      flexGrow: 1,
+      flexShrink: 1,
+      minHeight: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+    },
     locationLabel: {
       fontFamily: fonts.primary,
       fontWeight: fontWeights.bold,
@@ -141,11 +157,14 @@ export default function FilterSidebar({
       width: '100%',
       borderRadius: borderRadius.lg,
       objectFit: 'cover',
-      aspectRatio: '4/5',
+      aspectRatio: '1/2.25',
+      flexShrink: 1,
+      minHeight: 0,
+      overflow: 'hidden',
     },
     buildingPlaceholder: {
       width: '100%',
-      aspectRatio: '4/5',
+      aspectRatio: '1/2.25',
       backgroundColor: colors.bgLight,
       borderRadius: borderRadius.lg,
       display: 'flex',
@@ -161,77 +180,79 @@ export default function FilterSidebar({
     <aside style={styles.sidebar} className="ev-filter-sidebar">
       {!isMobile && <h2 style={styles.title}>{title}</h2>}
 
-      {/* Location Input */}
-      <div style={isMobile ? { marginBottom: spacing[3] } : styles.section}>
-        {!isMobile && <label style={styles.sectionLabel}>Location</label>}
-        {autocompleteContainerRef ? (
-          <div
-            ref={autocompleteContainerRef}
-            style={styles.zipInputWrapper}
-            className="ev-autocomplete-container"
-          />
-        ) : (
-          <div style={styles.zipInputWrapper}>
-            <input
-              ref={zipInputRef}
-              type="text"
-              value={zipCode}
-              onChange={(e) => onZipChange?.(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="ZIP or address"
-              style={styles.zipInput}
-              aria-label="Search location"
+      <div style={isMobile ? undefined : styles.contentTop}>
+        {/* Location Input */}
+        <div style={isMobile ? { marginBottom: spacing[3] } : styles.section}>
+          {!isMobile && <label style={styles.sectionLabel}>Location</label>}
+          {autocompleteContainerRef ? (
+            <div
+              ref={autocompleteContainerRef}
+              style={styles.zipInputWrapper}
+              className="ev-autocomplete-container"
             />
-            <button
-              type="button"
-              onClick={onZipClear}
-              style={styles.clearButton}
-              aria-label="Clear ZIP code"
-            >
-              &times;
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Filter Radio Buttons */}
-      <div style={isMobile ? {} : styles.section}>
-        {!isMobile && <label style={styles.sectionLabel}>Group</label>}
-        <div style={styles.radioGroup} role="radiogroup" aria-label="Filter by group">
-          {filterOptions.map((option) => (
-            <label key={option.value} style={styles.radioLabel}>
+          ) : (
+            <div style={styles.zipInputWrapper}>
               <input
-                type="radio"
-                name="filter"
-                value={option.value}
-                checked={selectedFilter === option.value}
-                onChange={() => onFilterChange?.(option.value)}
-                style={styles.radioInput}
+                ref={zipInputRef}
+                type="text"
+                value={zipCode}
+                onChange={(e) => onZipChange?.(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="ZIP or address"
+                style={styles.zipInput}
+                aria-label="Search location"
               />
-              {option.label}
-            </label>
-          ))}
+              <button
+                type="button"
+                onClick={onZipClear}
+                style={styles.clearButton}
+                aria-label="Clear ZIP code"
+              >
+                &times;
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Filter Radio Buttons */}
+        <div style={isMobile ? {} : styles.section}>
+          {!isMobile && <label style={styles.sectionLabel}>Group</label>}
+          <div style={styles.radioGroup} role="radiogroup" aria-label="Filter by group">
+            {filterOptions.map((option) => (
+              <label key={option.value} style={styles.radioLabel}>
+                <input
+                  type="radio"
+                  name="filter"
+                  value={option.value}
+                  checked={selectedFilter === option.value}
+                  onChange={() => onFilterChange?.(option.value)}
+                  style={styles.radioInput}
+                />
+                {option.label}
+              </label>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Location Label - hidden on mobile */}
-      {!isMobile && locationLabel && (
-        <div style={styles.locationLabel}>{locationLabel}</div>
-      )}
-
-      {/* Building Image - hidden on mobile */}
+      {/* Building image section — fills remaining space, shrinks on short viewports */}
       {!isMobile && (
-        buildingImageSrc ? (
-          <img
-            src={buildingImageSrc}
-            alt={`${selectedFilter} government building`}
-            style={styles.buildingImage}
-          />
-        ) : (
-          <div style={styles.buildingPlaceholder}>
-            No image
-          </div>
-        )
+        <div style={styles.imageSection}>
+          {locationLabel && (
+            <div style={styles.locationLabel}>{locationLabel}</div>
+          )}
+          {buildingImageSrc ? (
+            <img
+              src={buildingImageSrc}
+              alt={`${selectedFilter} government building`}
+              style={styles.buildingImage}
+            />
+          ) : (
+            <div style={styles.buildingPlaceholder}>
+              No image
+            </div>
+          )}
+        </div>
       )}
     </aside>
   );
