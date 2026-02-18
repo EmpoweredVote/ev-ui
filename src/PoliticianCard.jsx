@@ -13,6 +13,7 @@ import { colors, fonts, fontWeights, fontSizes, spacing, borderRadius, shadows }
  * @param {Function} props.onCompassClick - Handler for compass button click
  * @param {'horizontal' | 'vertical'} props.variant - Card layout variant
  * @param {Object} props.style - Additional styles
+ * @param {string} props.badge - Optional badge label (e.g., "Candidate") shown as coral pill
  */
 export default function PoliticianCard({
   id,
@@ -23,6 +24,7 @@ export default function PoliticianCard({
   onCompassClick,
   variant = 'horizontal',
   style = {},
+  badge,
 }) {
   const isHorizontal = variant === 'horizontal';
 
@@ -128,6 +130,22 @@ export default function PoliticianCard({
       height: isHorizontal ? '18px' : '20px',
       color: colors.textWhite,
     },
+    badge: {
+      position: 'absolute',
+      top: spacing[1],
+      right: spacing[1],
+      backgroundColor: colors.evCoral,
+      color: colors.textWhite,
+      fontFamily: fonts.primary,
+      fontWeight: fontWeights.semibold,
+      fontSize: '10px',
+      lineHeight: 1,
+      padding: `${spacing[1]} ${spacing[2]}`,
+      borderRadius: borderRadius.full,
+      zIndex: 1,
+      letterSpacing: '0.02em',
+      textTransform: 'uppercase',
+    },
   };
 
   // Compass/radar icon SVG
@@ -169,6 +187,9 @@ export default function PoliticianCard({
         }
       }}
     >
+      {/* Badge */}
+      {badge && <span style={styles.badge}>{badge}</span>}
+
       {/* Image */}
       <div style={styles.imageWrapper}>
         {imageSrc ? (
