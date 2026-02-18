@@ -119,9 +119,6 @@ export default function RadarChartCore({
 
       {spokes.map(([shortTitle], i) => {
         const angle = (2 * Math.PI * i) / numSpokes;
-        const offset = radius + labelOffset;
-        const x = centerX + offset * Math.sin(angle);
-        let y = centerY - offset * Math.cos(angle);
         const anchor =
           angle > Math.PI
             ? "end"
@@ -132,29 +129,51 @@ export default function RadarChartCore({
         const cosA = Math.cos(angle);
         const isTop = cosA > 0.5;
         const isBottom = cosA < -0.5;
-        const lines = wrapLabel(shortTitle, 10);
-        const fSize = labelFontSize || 16;
+        const baseFSize = labelFontSize || 16;
+        let lines = wrapLabel(shortTitle, 10);
+        let fSize = baseFSize;
+        if (lines.length > 2) {
+          // Try wider wrap at smaller font — more chars fit per line
+          lines = wrapLabel(shortTitle, 14);
+          fSize = 13;
+          if (lines.length > 2) {
+            lines = wrapLabel(shortTitle, 18);
+            fSize = 11;
+            if (lines.length > 2) {
+              lines = lines.slice(0, 2);
+            }
+          }
+        }
+        // Single long word: wrapLabel produces 1 line, but the word may overflow the label area.
+        // Reduce font size based on character count to keep it contained.
+        if (lines.length === 1 && lines[0].length > 10) {
+          fSize = lines[0].length > 14 ? 11 : 13;
+        }
         const lineHeight = fSize * 1.1;
+        const dynamicLabelOffset = lines.length > 1 ? labelOffset + 8 : labelOffset;
+        const offset = radius + dynamicLabelOffset;
+        const labelX = centerX + offset * Math.sin(angle);
+        let labelY = centerY - offset * Math.cos(angle);
 
         // For top labels, shift up so multi-line text grows away from chart
         if (isTop && lines.length > 1) {
-          y -= (lines.length - 1) * lineHeight;
+          labelY -= (lines.length - 1) * lineHeight;
         }
         // For bottom labels with multiple lines, no shift needed (text grows downward, away from chart)
 
         return (
           <text
             key={`label-${shortTitle}`}
-            x={x}
-            y={y}
+            x={labelX}
+            y={labelY}
             textAnchor={anchor}
             dominantBaseline={isBottom ? "hanging" : "auto"}
             onClick={() => onReplaceTopic(shortTitle)}
             className="text-xl font-medium mb-1 md:text-base md:font-normal"
-            style={{ cursor: "pointer", userSelect: "none", ...(labelFontSize ? { fontSize: labelFontSize } : {}) }}
+            style={{ cursor: "pointer", userSelect: "none", fontSize: fSize }}
           >
             {lines.map((ln, idx) => (
-              <tspan key={idx} x={x} dy={idx === 0 ? "0" : `${lineHeight}`}>
+              <tspan key={idx} x={labelX} dy={idx === 0 ? "0" : `${lineHeight}`}>
                 {ln}
               </tspan>
             ))}
