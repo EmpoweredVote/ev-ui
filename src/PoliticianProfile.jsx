@@ -4,6 +4,20 @@ import useMediaQuery from './useMediaQuery';
 import SocialLinks from './SocialLinks.jsx';
 import CommitteeTable from './CommitteeTable.jsx';
 
+function formatTermDate(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+  return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
+
+function getTermLine(pol) {
+  const start = formatTermDate(pol.term_start);
+  if (!start) return null;
+  const end = formatTermDate(pol.term_end);
+  return end ? `${start} \u2013 ${end}` : `Since ${start}`;
+}
+
 /**
  * PoliticianProfile - Reusable politician profile layout component.
  *
@@ -171,6 +185,15 @@ export default function PoliticianProfile({
       marginBottom: spacing[3],
       textAlign: isMobile ? 'center' : 'left',
     },
+    termDate: {
+      fontFamily: fonts.primary,
+      fontWeight: fontWeights.regular,
+      fontSize: fontSizes.sm,
+      color: colors.textMuted,
+      margin: 0,
+      marginBottom: spacing[3],
+      textAlign: isMobile ? 'center' : 'left',
+    },
     bio: {
       fontFamily: fonts.primary,
       fontSize: fontSizes.base,
@@ -230,6 +253,9 @@ export default function PoliticianProfile({
               <div style={styles.nameTitle}>
                 <h1 style={styles.name}>{displayName}</h1>
                 <h2 style={styles.title}>{pol.office_title}</h2>
+                {getTermLine(pol) && (
+                  <p style={styles.termDate}>{getTermLine(pol)}</p>
+                )}
               </div>
               <div style={styles.socialLinksWrap}>
                 <SocialLinks
