@@ -7,6 +7,7 @@ export default function RadarChartCore({
   data,
   compareData = {},
   invertedSpokes = {},
+  unansweredSpokes = {},
   onToggleInversion = () => {},
   onReplaceTopic = () => {},
   size = 400,
@@ -103,6 +104,7 @@ export default function RadarChartCore({
         const angle = (2 * Math.PI * i) / numSpokes;
         const x = centerX + radius * Math.sin(angle);
         const y = centerY - radius * Math.cos(angle);
+        const isUnanswered = !!unansweredSpokes[shortTitle];
         return (
           <line
             key={`line-${shortTitle}`}
@@ -110,7 +112,9 @@ export default function RadarChartCore({
             y1={centerY}
             x2={x}
             y2={y}
-            stroke="black"
+            stroke={isUnanswered ? "#9ca3af" : "black"}
+            strokeDasharray={isUnanswered ? "4 3" : undefined}
+            opacity={isUnanswered ? 0.6 : 1}
           />
         );
       })}
@@ -159,6 +163,7 @@ export default function RadarChartCore({
         }
         // For bottom labels with multiple lines, no shift needed (text grows downward, away from chart)
 
+        const isUnansweredLabel = !!unansweredSpokes[shortTitle];
         return (
           <text
             key={`label-${shortTitle}`}
@@ -168,6 +173,7 @@ export default function RadarChartCore({
             dominantBaseline={isBottom ? "hanging" : "auto"}
             onClick={() => onReplaceTopic(shortTitle)}
             className="text-xl font-medium mb-1 md:text-base md:font-normal"
+            fill={isUnansweredLabel ? "#9ca3af" : undefined}
             style={{ cursor: "pointer", userSelect: "none", fontSize: fSize }}
           >
             {lines.map((ln, idx) => (
@@ -225,6 +231,7 @@ export default function RadarChartCore({
         const angle = (2 * Math.PI * i) / numSpokes;
         const x = centerX + radius * Math.sin(angle);
         const y = centerY - radius * Math.cos(angle);
+        const isUnansweredHitbox = !!unansweredSpokes[shortTitle];
         return (
           <line
             key={`hitbox-${shortTitle}`}
@@ -234,7 +241,11 @@ export default function RadarChartCore({
             y2={y}
             stroke="transparent"
             strokeWidth={14}
-            onClick={() => onToggleInversion(shortTitle)}
+            onClick={() =>
+              isUnansweredHitbox
+                ? onReplaceTopic(shortTitle)
+                : onToggleInversion(shortTitle)
+            }
             style={{ cursor: "pointer" }}
           />
         );
