@@ -51,26 +51,25 @@ export default function RadarChartCore({
 
   let comparePoints = null;
   if (Object.keys(compareData).length) {
-    comparePoints = Object.entries(compareData)
-      .map(([shortTitle, value], index) => {
-        const topic = topics.find((t) => t.short_title === shortTitle);
-        const max = topic?.stances?.length || 10;
-        const pct = Math.min((value / max) * 10, 10);
-        const angle = (2 * Math.PI * index) / numSpokes;
-        const adjusted =
-          value === 0 ? 0 : invertedSpokes[shortTitle] ? 11 - pct : pct;
-        const r = (adjusted / 10) * radius;
-        const x = centerX + r * Math.sin(angle);
-        const y = centerY - r * Math.cos(angle);
-        return [x, y];
-      })
-      .map((p) => p.join(","))
-      .join(" ");
+    const cpts = spokes.map(([shortTitle], index) => {
+      const value = compareData[shortTitle] ?? 0;
+      const topic = topics.find((t) => t.short_title === shortTitle);
+      const max = topic?.stances?.length || 10;
+      const pct = Math.min((value / max) * 10, 10);
+      const angle = (2 * Math.PI * index) / numSpokes;
+      const adjusted =
+        value === 0 ? 0 : invertedSpokes[shortTitle] ? 11 - pct : pct;
+      const r = (adjusted / 10) * radius;
+      const x = centerX + r * Math.sin(angle);
+      const y = centerY - r * Math.cos(angle);
+      return `${x},${y}`;
+    });
+    comparePoints = cpts.join(" ");
   }
 
   const compareSpring = useSpring({
-    to: { points: comparePoints },
-    immediate: countChanged,
+    to: { points: comparePoints || "" },
+    immediate: countChanged || !comparePoints,
     reset: countChanged,
     config: { tension: 300, friction: 30 },
   });
@@ -187,6 +186,7 @@ export default function RadarChartCore({
 
       {countChanged ? (
         <polygon
+          key="user-static"
           points={targetPoints}
           style={{
             fill: "rgba(255, 87, 64, 0.4)",
@@ -196,6 +196,7 @@ export default function RadarChartCore({
         />
       ) : (
         <animated.polygon
+          key="user-animated"
           points={spring.points}
           style={{
             fill: "rgba(255, 87, 64, 0.4)",
@@ -208,6 +209,7 @@ export default function RadarChartCore({
       {comparePoints ? (
         countChanged ? (
           <polygon
+            key="compare-static"
             points={comparePoints}
             style={{
               fill: "rgba(89, 176, 196, 0.3)",
@@ -217,11 +219,12 @@ export default function RadarChartCore({
           />
         ) : (
           <animated.polygon
+            key="compare-animated"
             points={compareSpring.points}
             style={{
               fill: "rgba(89, 176, 196, 0.3)",
               stroke: "rgb(89, 176, 196)",
-              strokeWidth: 3,
+              strokeWidth: 2,
             }}
           />
         )
