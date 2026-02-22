@@ -74,6 +74,50 @@ export default function RadarChartCore({
     config: { tension: 300, friction: 30 },
   });
 
+  // Pre-compute label metadata for dynamic horizontal padding
+  const labelMeta = spokes.map(([shortTitle], i) => {
+    const angle = (2 * Math.PI * i) / numSpokes;
+    const baseFSize = labelFontSize || 16;
+    const lines = wrapLabel(shortTitle, 12);
+    const longestLineLen = lines.reduce(
+      (max, ln) => (ln.length > max ? ln.length : max),
+      0,
+    );
+    let fSize;
+    if (longestLineLen <= 8) {
+      fSize = baseFSize;
+    } else if (longestLineLen <= 12) {
+      fSize = Math.max(baseFSize - 2, 10);
+    } else if (longestLineLen <= 16) {
+      fSize = Math.max(12, 10);
+    } else {
+      fSize = 10;
+    }
+    const estimatedWidth = longestLineLen * fSize * 0.6;
+    const sinA = Math.sin(angle);
+    // Left side: angle > Math.PI (sin < 0); right side: angle > 0 && angle < Math.PI (sin > 0)
+    const side = sinA < -0.1 ? "left" : sinA > 0.1 ? "right" : "center";
+    return { estimatedWidth, side };
+  });
+
+  const leftLabelWidths = labelMeta
+    .filter((m) => m.side === "left")
+    .map((m) => m.estimatedWidth);
+  const rightLabelWidths = labelMeta
+    .filter((m) => m.side === "right")
+    .map((m) => m.estimatedWidth);
+
+  const minPadding = 40;
+  const leftPadding = Math.max(
+    leftLabelWidths.length ? Math.max(...leftLabelWidths) + labelOffset : 0,
+    minPadding,
+  );
+  const rightPadding = Math.max(
+    rightLabelWidths.length ? Math.max(...rightLabelWidths) + labelOffset : 0,
+    minPadding,
+  );
+  const verticalPadding = padding;
+
   const guidePolygons = [];
   for (let level = 1; level <= 5; level++) {
     const scale = level / 5;
@@ -92,9 +136,7 @@ export default function RadarChartCore({
   return (
     <svg
       className="w-full h-auto"
-      viewBox={`-${padding} -${padding} ${size + padding * 2} ${
-        size + padding * 2
-      }`}
+      viewBox={`-${leftPadding} -${verticalPadding} ${size + leftPadding + rightPadding} ${size + verticalPadding * 2}`}
       preserveAspectRatio="xMidYMid meet"
     >
       {guidePolygons}
