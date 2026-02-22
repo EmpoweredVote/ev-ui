@@ -11,7 +11,7 @@ export default function RadarChartCore({
   onToggleInversion = () => {},
   onReplaceTopic = () => {},
   size = 400,
-  labelFontSize,
+  labelFontSize = 18,
   padding = 80,
   labelOffset = 20,
 }) {
@@ -77,22 +77,13 @@ export default function RadarChartCore({
   // Pre-compute label metadata for dynamic horizontal padding
   const labelMeta = spokes.map(([shortTitle], i) => {
     const angle = (2 * Math.PI * i) / numSpokes;
-    const baseFSize = labelFontSize || 16;
+    const baseFSize = labelFontSize;
     const lines = wrapLabel(shortTitle, 12);
     const longestLineLen = lines.reduce(
       (max, ln) => (ln.length > max ? ln.length : max),
       0,
     );
-    let fSize;
-    if (longestLineLen <= 8) {
-      fSize = baseFSize;
-    } else if (longestLineLen <= 12) {
-      fSize = Math.max(baseFSize - 2, 10);
-    } else if (longestLineLen <= 16) {
-      fSize = Math.max(12, 10);
-    } else {
-      fSize = 10;
-    }
+    const fSize = adaptiveFontSize(longestLineLen, baseFSize);
     const estimatedWidth = longestLineLen * fSize * 0.6;
     const sinA = Math.sin(angle);
     // Left side: angle > Math.PI (sin < 0); right side: angle > 0 && angle < Math.PI (sin > 0)
@@ -108,13 +99,20 @@ export default function RadarChartCore({
     .map((m) => m.estimatedWidth);
 
   const minPadding = 40;
-  const leftPadding = Math.max(
-    leftLabelWidths.length ? Math.max(...leftLabelWidths) + labelOffset : 0,
-    minPadding,
+  const maxPadding = padding * 2;
+  const leftPadding = Math.min(
+    Math.max(
+      leftLabelWidths.length ? Math.max(...leftLabelWidths) + labelOffset : 0,
+      minPadding,
+    ),
+    maxPadding,
   );
-  const rightPadding = Math.max(
-    rightLabelWidths.length ? Math.max(...rightLabelWidths) + labelOffset : 0,
-    minPadding,
+  const rightPadding = Math.min(
+    Math.max(
+      rightLabelWidths.length ? Math.max(...rightLabelWidths) + labelOffset : 0,
+      minPadding,
+    ),
+    maxPadding,
   );
   const verticalPadding = padding;
 
@@ -172,23 +170,14 @@ export default function RadarChartCore({
         const cosA = Math.cos(angle);
         const isTop = cosA > 0.5;
         const isBottom = cosA < -0.5;
-        const baseFSize = labelFontSize || 16;
+        const baseFSize = labelFontSize;
         // Single pass wrap at ~12 chars, then pick font size based on longest line
         const lines = wrapLabel(shortTitle, 12);
         const longestLine = lines.reduce(
           (max, ln) => (ln.length > max ? ln.length : max),
           0,
         );
-        let fSize;
-        if (longestLine <= 8) {
-          fSize = baseFSize;
-        } else if (longestLine <= 12) {
-          fSize = Math.max(baseFSize - 2, 10);
-        } else if (longestLine <= 16) {
-          fSize = Math.max(12, 10);
-        } else {
-          fSize = 10;
-        }
+        const fSize = adaptiveFontSize(longestLine, baseFSize);
         const lineHeight = fSize * 1.1;
         const dynamicLabelOffset = lines.length > 1 ? labelOffset + 8 : labelOffset;
         const offset = radius + dynamicLabelOffset;
@@ -294,6 +283,10 @@ export default function RadarChartCore({
       })}
     </svg>
   );
+}
+
+function adaptiveFontSize(longestLineLen, baseFSize) {
+  return Math.max(baseFSize, 10);
 }
 
 function wrapLabel(label, maxChars = 12) {
