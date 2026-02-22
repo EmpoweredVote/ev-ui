@@ -131,24 +131,21 @@ export default function RadarChartCore({
         const isTop = cosA > 0.5;
         const isBottom = cosA < -0.5;
         const baseFSize = labelFontSize || 16;
-        let lines = wrapLabel(shortTitle, 10);
-        let fSize = baseFSize;
-        if (lines.length > 2) {
-          // Try wider wrap at smaller font — more chars fit per line
-          lines = wrapLabel(shortTitle, 14);
-          fSize = 13;
-          if (lines.length > 2) {
-            lines = wrapLabel(shortTitle, 18);
-            fSize = 11;
-            if (lines.length > 2) {
-              lines = lines.slice(0, 2);
-            }
-          }
-        }
-        // Single long word: wrapLabel produces 1 line, but the word may overflow the label area.
-        // Reduce font size based on character count to keep it contained.
-        if (lines.length === 1 && lines[0].length > 10) {
-          fSize = lines[0].length > 14 ? 11 : 13;
+        // Single pass wrap at ~12 chars, then pick font size based on longest line
+        const lines = wrapLabel(shortTitle, 12);
+        const longestLine = lines.reduce(
+          (max, ln) => (ln.length > max ? ln.length : max),
+          0,
+        );
+        let fSize;
+        if (longestLine <= 8) {
+          fSize = baseFSize;
+        } else if (longestLine <= 12) {
+          fSize = Math.max(baseFSize - 2, 10);
+        } else if (longestLine <= 16) {
+          fSize = Math.max(12, 10);
+        } else {
+          fSize = 10;
         }
         const lineHeight = fSize * 1.1;
         const dynamicLabelOffset = lines.length > 1 ? labelOffset + 8 : labelOffset;
@@ -258,26 +255,36 @@ export default function RadarChartCore({
 }
 
 function wrapLabel(label, maxChars = 12) {
-  const words = String(label).split(/\s+/);
+  const str = String(label);
+  // Split on "/" first (handles "Medicare/Medicaid" → ["Medicare/", "Medicaid"])
+  let rawWords;
+  if (str.includes("/")) {
+    rawWords = str.split("/").reduce((acc, segment, idx, arr) => {
+      const part = idx < arr.length - 1 ? segment + "/" : segment;
+      if (part.trim()) acc.push(part.trim());
+      return acc;
+    }, []);
+  } else {
+    rawWords = str.split(/\s+/);
+  }
+  // Build lines wrapping at maxChars; enforce hard max of 2 lines without truncation
   const lines = [];
   let line = "";
-  for (const word of words) {
-    // Never split individual words - keep them intact on their own line
-    if (word.length > maxChars) {
-      if (line) {
-        lines.push(line.trim());
-        line = "";
-      }
-      lines.push(word);
-      continue;
-    }
-    if ((line + word).length > maxChars) {
-      lines.push(line.trim());
-      line = word + " ";
+  for (const word of rawWords) {
+    if (line === "") {
+      line = word;
+    } else if ((line + " " + word).length <= maxChars) {
+      line += " " + word;
     } else {
-      line += word + " ";
+      lines.push(line);
+      line = word;
     }
   }
-  if (line) lines.push(line.trim());
+  if (line) lines.push(line);
+  // Enforce max 2 lines: combine any overflow onto line 2
+  if (lines.length > 2) {
+    const overflow = lines.splice(2).join(" ");
+    lines[1] = lines[1] + " " + overflow;
+  }
   return lines;
 }
