@@ -53,7 +53,7 @@ export default function PoliticianCard({
       cursor: onClick ? 'pointer' : 'default',
       transition: 'box-shadow 0.2s ease, transform 0.2s ease',
       position: 'relative',
-      height: isHorizontal ? '80px' : undefined,
+      height: isHorizontal ? '96px' : undefined,
       ...style,
     },
     imageWrapper: {
@@ -108,10 +108,9 @@ export default function PoliticianCard({
       margin: 0,
       overflow: 'hidden',
       textOverflow: 'ellipsis',
-      whiteSpace: isHorizontal ? 'nowrap' : 'normal',
-      display: isHorizontal ? 'block' : '-webkit-box',
-      WebkitLineClamp: isHorizontal ? undefined : 2,
-      WebkitBoxOrient: isHorizontal ? undefined : 'vertical',
+      display: '-webkit-box',
+      WebkitLineClamp: 2,
+      WebkitBoxOrient: 'vertical',
     },
     subtitle: {
       fontFamily: fonts.primary,
