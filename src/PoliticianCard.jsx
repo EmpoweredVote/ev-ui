@@ -9,6 +9,7 @@ import { colors, fonts, fontWeights, fontSizes, spacing, borderRadius, shadows }
  * @param {string} props.imageSrc - Profile image URL
  * @param {string} props.name - Politician name
  * @param {string} props.title - Politician title/position
+ * @param {string} [props.subtitle] - Optional 3rd line (e.g., chamber + district)
  * @param {Function} props.onClick - Handler for card click
  * @param {Function} props.onCompassClick - Handler for compass button click
  * @param {'horizontal' | 'vertical'} props.variant - Card layout variant
@@ -20,6 +21,7 @@ export default function PoliticianCard({
   imageSrc,
   name,
   title,
+  subtitle,
   onClick,
   onCompassClick,
   variant = 'horizontal',
@@ -68,13 +70,15 @@ export default function PoliticianCard({
     imagePlaceholder: {
       width: '100%',
       height: '100%',
-      backgroundColor: colors.bgLight,
+      backgroundColor: colors.evTeal,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      color: colors.textMuted,
+      color: '#ffffff',
       fontFamily: fonts.primary,
-      fontSize: fontSizes.xs,
+      fontSize: isHorizontal ? fontSizes.base : fontSizes.xl,
+      fontWeight: fontWeights.bold,
+      borderRadius: isHorizontal ? '50%' : 0,
     },
     content: {
       flex: 1,
@@ -106,6 +110,17 @@ export default function PoliticianCard({
       display: '-webkit-box',
       WebkitLineClamp: 2,
       WebkitBoxOrient: 'vertical',
+    },
+    subtitle: {
+      fontFamily: fonts.primary,
+      fontWeight: fontWeights.regular,
+      fontSize: isHorizontal ? '11px' : fontSizes.xs,
+      color: colors.textMuted,
+      margin: 0,
+      marginTop: spacing[1],
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
     },
     compassButton: {
       width: isHorizontal ? '36px' : '40px',
@@ -163,6 +178,15 @@ export default function PoliticianCard({
     </svg>
   );
 
+  // Extract initials from name for placeholder avatar
+  const getInitials = (n) => {
+    const parts = (n || '').split(' ').filter(Boolean);
+    const initials = parts.length >= 2
+      ? parts[0][0] + parts[parts.length - 1][0]
+      : parts[0]?.[0] || '?';
+    return initials.toUpperCase();
+  };
+
   return (
     <div
       style={styles.card}
@@ -199,7 +223,9 @@ export default function PoliticianCard({
             style={styles.image}
           />
         ) : (
-          <div style={styles.imagePlaceholder}>No photo</div>
+          <div style={styles.imagePlaceholder}>
+            {getInitials(name)}
+          </div>
         )}
       </div>
 
@@ -207,6 +233,9 @@ export default function PoliticianCard({
       <div style={styles.content}>
         <h3 style={styles.name}>{name}</h3>
         <p style={styles.title}>{title}</p>
+        {subtitle && (
+          <p style={styles.subtitle}>{subtitle}</p>
+        )}
       </div>
 
       {/* Compass Button */}
