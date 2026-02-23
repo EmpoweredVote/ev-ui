@@ -141,14 +141,14 @@ export default function PoliticianProfile({
     photo: {
       width: '100%',
       height: '100%',
-      borderRadius: '50%',
+      borderRadius: borderRadius.lg,
       objectFit: 'cover',
       background: colors.borderLight,
     },
     placeholder: {
       width: isMobile ? '120px' : '192px',
       height: isMobile ? '120px' : '192px',
-      borderRadius: '50%',
+      borderRadius: borderRadius.lg,
       background: colors.evTeal,
       display: 'flex',
       alignItems: 'center',
