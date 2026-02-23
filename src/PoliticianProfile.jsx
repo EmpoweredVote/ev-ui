@@ -134,8 +134,8 @@ export default function PoliticianProfile({
       alignItems: isMobile ? 'center' : 'flex-start',
     },
     photoWrap: {
-      width: isMobile ? '120px' : '192px',
-      height: isMobile ? '120px' : '192px',
+      width: isMobile ? '150px' : '192px',
+      height: isMobile ? '150px' : '240px',
       flexShrink: 0,
     },
     photo: {
@@ -146,8 +146,8 @@ export default function PoliticianProfile({
       background: colors.borderLight,
     },
     placeholder: {
-      width: isMobile ? '120px' : '192px',
-      height: isMobile ? '120px' : '192px',
+      width: isMobile ? '150px' : '192px',
+      height: isMobile ? '150px' : '240px',
       borderRadius: borderRadius.lg,
       background: colors.evTeal,
       display: 'flex',
