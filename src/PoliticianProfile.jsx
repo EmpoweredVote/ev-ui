@@ -19,23 +19,32 @@ function getTermLine(pol) {
   return `First elected: ${start} \u2014 Term ends: ${end}`;
 }
 
-function buildSubtitle(pol) {
-  const chamber = pol.chamber_name || '';
-  const distId = pol.district_id || '';
+/** Strip "(Retain Name?)" from BallotReady retention election artifacts */
+function stripRetain(s) {
+  return (s || '').replace(/\s*\(Retain\s+.+?\?\)/, '');
+}
 
-  if (!chamber) return null;
+/**
+ * Build display title and subtitle from politician data.
+ * Splits office_title on " - " to separate body from seat designation.
+ * Falls back to chamber_name for state/federal where office_title has no dash.
+ */
+function buildTitleAndSubtitle(pol) {
+  const cleanTitle = stripRetain(pol.office_title);
+  const cleanChamber = stripRetain(pol.chamber_name);
+  const dashIdx = cleanTitle.lastIndexOf(' - ');
 
-  // BallotReady LOCAL: chamber_name equals office_title — use district_label as-is
-  if (chamber === pol.office_title) {
-    return pol.district_label || null;
-  }
+  const title = dashIdx > 0
+    ? cleanTitle.slice(0, dashIdx)
+    : (cleanChamber || cleanTitle);
 
-  // Standard: "Indiana Senate, District 40"
-  if (distId) {
-    return `${chamber}, District ${distId}`;
-  }
+  const subtitle = (() => {
+    if (dashIdx > 0) return cleanTitle.slice(dashIdx + 3);
+    if (cleanChamber && pol.district_id) return `District ${pol.district_id}`;
+    return null;
+  })();
 
-  return chamber;
+  return { title, subtitle };
 }
 
 /**
@@ -257,9 +266,9 @@ export default function PoliticianProfile({
             <div style={styles.headerRow}>
               <div style={styles.nameTitle}>
                 <h1 style={styles.name}>{displayName}</h1>
-                <h2 style={styles.title}>{pol.office_title}</h2>
-                {buildSubtitle(pol) && (
-                  <p style={styles.subtitle}>{buildSubtitle(pol)}</p>
+                <h2 style={styles.title}>{buildTitleAndSubtitle(pol).title}</h2>
+                {buildTitleAndSubtitle(pol).subtitle && (
+                  <p style={styles.subtitle}>{buildTitleAndSubtitle(pol).subtitle}</p>
                 )}
               </div>
               <div style={styles.socialLinksWrap}>
