@@ -40,7 +40,10 @@ function buildTitleAndSubtitle(pol) {
 
   const subtitle = (() => {
     if (dashIdx > 0) return cleanTitle.slice(dashIdx + 3);
-    if (cleanChamber && pol.district_id) return `District ${pol.district_id}`;
+    // Only show "District N" for actual numbered districts;
+    // suppress geographic names like "CA", "UNITED STATES", "Indiana"
+    if (cleanChamber && pol.district_id && /^\d+$/.test(pol.district_id))
+      return `District ${pol.district_id}`;
     return null;
   })();
 
