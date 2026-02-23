@@ -15,7 +15,27 @@ function getTermLine(pol) {
   const start = formatTermDate(pol.term_start);
   if (!start) return null;
   const end = formatTermDate(pol.term_end);
-  return end ? `${start} \u2013 ${end}` : `Since ${start}`;
+  if (!end) return `Since ${start}`;
+  return `First elected: ${start} \u2014 Term ends: ${end}`;
+}
+
+function buildSubtitle(pol) {
+  const chamber = pol.chamber_name || '';
+  const distId = pol.district_id || '';
+
+  if (!chamber) return null;
+
+  // BallotReady LOCAL: chamber_name equals office_title — use district_label as-is
+  if (chamber === pol.office_title) {
+    return pol.district_label || null;
+  }
+
+  // Standard: "Indiana Senate, District 40"
+  if (distId) {
+    return `${chamber}, District ${distId}`;
+  }
+
+  return chamber;
 }
 
 /**
@@ -59,24 +79,6 @@ export default function PoliticianProfile({
     'Unknown';
 
   const label = backLabel || displayName;
-
-  // Normalize notes into a single bio string
-  const normalizeNotes = (s) =>
-    String(s ?? '')
-      .replace(/\\r\\n/g, ' ')
-      .replace(/\r\n/g, ' ')
-      .replace(/\\n/g, ' ')
-      .replace(/\\t/g, ' ');
-
-  // Use bio_text from BallotReady if available, otherwise fall back to notes
-  let bio = pol.bio_text || '';
-  if (!bio && Array.isArray(pol.notes) && pol.notes.length > 0) {
-    bio = pol.notes.map(normalizeNotes).join(' ');
-  } else if (!bio && typeof pol.notes === 'string' && pol.notes) {
-    bio = normalizeNotes(pol.notes);
-  }
-  // Strip trailing date
-  bio = bio.replace(/\s?\b\d{4}-\d{2}-\d{2}\b\s*$/, '');
 
   // Get profile image URL - prefer images array from BallotReady, fall back to photo_origin_url
   const profileImageUrl = (() => {
@@ -124,25 +126,26 @@ export default function PoliticianProfile({
     },
     photoWrap: {
       width: isMobile ? '120px' : '192px',
+      height: isMobile ? '120px' : '192px',
       flexShrink: 0,
     },
     photo: {
       width: '100%',
-      aspectRatio: '3 / 4',
-      borderRadius: borderRadius.lg,
+      height: '100%',
+      borderRadius: '50%',
       objectFit: 'cover',
       background: colors.borderLight,
     },
     placeholder: {
-      width: '100%',
-      aspectRatio: '3 / 4',
-      borderRadius: borderRadius.lg,
-      background: colors.borderLight,
+      width: isMobile ? '120px' : '192px',
+      height: isMobile ? '120px' : '192px',
+      borderRadius: '50%',
+      background: colors.evTeal,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      color: colors.textMuted,
-      fontSize: fontSizes['3xl'],
+      color: '#ffffff',
+      fontSize: isMobile ? fontSizes.xl : fontSizes['3xl'],
       fontWeight: fontWeights.bold,
     },
     infoCol: {
@@ -182,7 +185,16 @@ export default function PoliticianProfile({
       fontSize: isMobile ? fontSizes.base : fontSizes.xl,
       color: colors.textSecondary,
       margin: 0,
-      marginBottom: spacing[3],
+      marginBottom: spacing[1],
+      textAlign: isMobile ? 'center' : 'left',
+    },
+    subtitle: {
+      fontFamily: fonts.primary,
+      fontWeight: fontWeights.regular,
+      fontSize: fontSizes.sm,
+      color: colors.textMuted,
+      margin: 0,
+      marginBottom: spacing[2],
       textAlign: isMobile ? 'center' : 'left',
     },
     termDate: {
@@ -193,13 +205,6 @@ export default function PoliticianProfile({
       margin: 0,
       marginBottom: spacing[3],
       textAlign: isMobile ? 'center' : 'left',
-    },
-    bio: {
-      fontFamily: fonts.primary,
-      fontSize: fontSizes.base,
-      color: colors.textSecondary,
-      lineHeight: '1.65',
-      marginBottom: spacing[6],
     },
     section: {
       marginBottom: spacing[6],
@@ -253,8 +258,8 @@ export default function PoliticianProfile({
               <div style={styles.nameTitle}>
                 <h1 style={styles.name}>{displayName}</h1>
                 <h2 style={styles.title}>{pol.office_title}</h2>
-                {getTermLine(pol) && (
-                  <p style={styles.termDate}>{getTermLine(pol)}</p>
+                {buildSubtitle(pol) && (
+                  <p style={styles.subtitle}>{buildSubtitle(pol)}</p>
                 )}
               </div>
               <div style={styles.socialLinksWrap}>
@@ -270,22 +275,24 @@ export default function PoliticianProfile({
               </div>
             </div>
 
-            {/* Years in Office */}
-            {pol.total_years_in_office > 0 && (
-              <p style={{ ...styles.bio, marginBottom: spacing[2], fontSize: fontSizes.sm, color: colors.textMuted }}>
-                {pol.total_years_in_office} {pol.total_years_in_office === 1 ? 'year' : 'years'} in office
-              </p>
-            )}
-
             {/* Office Description */}
             {pol.office_description && (
-              <p style={{ ...styles.bio, marginBottom: spacing[4], fontSize: fontSizes.sm, fontStyle: 'italic' }}>
+              <p style={{ fontFamily: fonts.primary, fontSize: fontSizes.sm, fontStyle: 'italic', color: colors.textSecondary, marginBottom: spacing[4] }}>
                 {pol.office_description}
               </p>
             )}
 
-            {/* Bio */}
-            {bio && <p style={styles.bio}>{bio}</p>}
+            {/* Term dates */}
+            {getTermLine(pol) && (
+              <p style={styles.termDate}>{getTermLine(pol)}</p>
+            )}
+
+            {/* Years in Office */}
+            {pol.total_years_in_office > 0 && (
+              <p style={{ fontFamily: fonts.primary, fontSize: fontSizes.sm, color: colors.textMuted, marginBottom: spacing[2] }}>
+                {pol.total_years_in_office} {pol.total_years_in_office === 1 ? 'year' : 'years'} in office
+              </p>
+            )}
 
             {/* Committees */}
             {committees.length > 0 && (
