@@ -45,7 +45,7 @@ export default function PoliticianCard({
     card: {
       display: 'flex',
       flexDirection: isHorizontal ? 'row' : 'column',
-      alignItems: isHorizontal ? 'center' : 'stretch',
+      alignItems: 'stretch',
       backgroundColor: colors.bgWhite,
       borderRadius: borderRadius.lg,
       border: `1px solid ${colors.borderLight}`,
@@ -57,8 +57,9 @@ export default function PoliticianCard({
     },
     imageWrapper: {
       width: isHorizontal ? '80px' : '100%',
-      height: isHorizontal ? '80px' : 'auto',
-      aspectRatio: isHorizontal ? '1/1' : '4/5',
+      minHeight: isHorizontal ? '80px' : undefined,
+      height: isHorizontal ? undefined : 'auto',
+      aspectRatio: isHorizontal ? undefined : '4/5',
       flexShrink: 0,
       overflow: 'hidden',
     },
@@ -78,7 +79,7 @@ export default function PoliticianCard({
       fontFamily: fonts.primary,
       fontSize: isHorizontal ? fontSizes.base : fontSizes.xl,
       fontWeight: fontWeights.bold,
-      borderRadius: isHorizontal ? '50%' : 0,
+      borderRadius: 0,
     },
     content: {
       flex: 1,
