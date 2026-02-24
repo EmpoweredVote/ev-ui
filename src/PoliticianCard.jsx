@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { colors, fonts, fontWeights, fontSizes, spacing, borderRadius, shadows } from './tokens';
 
 /**
@@ -179,6 +179,10 @@ export default function PoliticianCard({
     </svg>
   );
 
+  // Track broken image URLs so we can fall back to initials
+  const [imgError, setImgError] = useState(false);
+  useEffect(() => { setImgError(false); }, [imageSrc]);
+
   // Extract initials from name for placeholder avatar
   const getInitials = (n) => {
     const parts = (n || '').split(' ').filter(Boolean);
@@ -217,11 +221,12 @@ export default function PoliticianCard({
 
       {/* Image */}
       <div style={styles.imageWrapper}>
-        {imageSrc ? (
+        {imageSrc && !imgError ? (
           <img
             src={imageSrc}
             alt={`${name} portrait`}
             style={styles.image}
+            onError={() => setImgError(true)}
           />
         ) : (
           <div style={styles.imagePlaceholder}>
