@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { colors, fonts, fontWeights, fontSizes, spacing, borderRadius, shadows } from './tokens';
 import useMediaQuery from './useMediaQuery';
 import SocialLinks from './SocialLinks.jsx';
@@ -34,16 +34,30 @@ function buildTitleAndSubtitle(pol) {
   const cleanChamber = stripRetain(pol.chamber_name);
   const dashIdx = cleanTitle.lastIndexOf(' - ');
 
-  const title = dashIdx > 0
-    ? cleanTitle.slice(0, dashIdx)
-    : (cleanChamber || cleanTitle);
+  const title = (() => {
+    // Dash-split: use part before dash (e.g. "Bloomington City Common Council - At Large")
+    if (dashIdx > 0) return cleanTitle.slice(0, dashIdx);
+    // SCHOOL: prepend school district name (e.g. "Los Angeles Unified Board of Education")
+    if (pol.district_type === 'SCHOOL' && pol.government_name) {
+      const schoolName = pol.government_name.split(',')[0];
+      return cleanChamber ? `${schoolName} ${cleanChamber}` : schoolName;
+    }
+    // Executive/officer positions: prefer office_title (e.g. "Mayor", "Governor", "Sheriff")
+    if (/(_EXEC)$/.test(pol.district_type) || pol.district_type === 'COUNTY')
+      return cleanTitle || cleanChamber;
+    // Default: prefer chamber_name (e.g. "City Council", "State Senate")
+    return cleanChamber || cleanTitle;
+  })();
 
   const subtitle = (() => {
+    // Dash-split: use part after dash
     if (dashIdx > 0) return cleanTitle.slice(dashIdx + 3);
-    // Only show "District N" for actual numbered districts;
-    // suppress geographic names like "CA", "UNITED STATES", "Indiana"
-    if (cleanChamber && pol.district_id && /^\d+$/.test(pol.district_id))
+    // Numbered district (1+)
+    if (pol.district_id && /^[1-9]\d*$/.test(pol.district_id))
       return `District ${pol.district_id}`;
+    // At-large (district_id "0" = represents the whole area), but not for executives
+    if (pol.district_id === '0' && !/(_EXEC)$/.test(pol.district_type))
+      return 'At-Large';
     return null;
   })();
 
@@ -223,6 +237,10 @@ export default function PoliticianProfile({
     },
   };
 
+  // Track broken image URLs so we can fall back to initials
+  const [imgError, setImgError] = useState(false);
+  useEffect(() => { setImgError(false); }, [profileImageUrl]);
+
   // Initials for placeholder
   const initials = [pol.first_name, pol.last_name]
     .filter(Boolean)
@@ -252,11 +270,12 @@ export default function PoliticianProfile({
         <div style={styles.topRow}>
           {/* Photo */}
           <div style={styles.photoWrap}>
-            {profileImageUrl ? (
+            {profileImageUrl && !imgError ? (
               <img
                 src={profileImageUrl}
                 alt={`${displayName} portrait`}
                 style={styles.photo}
+                onError={() => setImgError(true)}
               />
             ) : (
               <div style={styles.placeholder}>{initials || '?'}</div>
