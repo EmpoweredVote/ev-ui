@@ -4,17 +4,25 @@ import useMediaQuery from './useMediaQuery';
 import SocialLinks from './SocialLinks.jsx';
 import CommitteeTable from './CommitteeTable.jsx';
 
-function formatTermDate(dateStr) {
+function formatTermDate(dateStr, precision) {
   if (!dateStr) return null;
+  // Year-only precision: return the raw year string directly.
+  // Avoids new Date("2024") UTC timezone bug (shows "Dec 2023" in US timezones
+  // because "2024" parses as midnight UTC Jan 1, which is Dec 31 in US local time).
+  if (precision === 'year') {
+    const year = parseInt(dateStr, 10);
+    if (!isNaN(year) && year > 1900 && year < 2100) return String(year);
+  }
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return null;
   return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 }
 
 function getTermLine(pol) {
-  const start = formatTermDate(pol.term_start);
+  const precision = pol.term_date_precision;
+  const start = formatTermDate(pol.term_start, precision);
   if (!start) return null;
-  const end = formatTermDate(pol.term_end);
+  const end = formatTermDate(pol.term_end, precision);
   if (!end) return `Since ${start}`;
   return `First elected: ${start} \u2014 Term ends: ${end}`;
 }
