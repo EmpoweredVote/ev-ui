@@ -25,6 +25,33 @@ function stripRetain(s) {
 }
 
 /**
+ * Qualify a generic local title with the jurisdiction name.
+ * e.g. "Mayor" → "Paramount Mayor", "Sheriff" → "Los Angeles County Sheriff"
+ */
+function qualifyLocalTitle(baseTitle, pol) {
+  if (!pol.government_name || !baseTitle) return baseTitle;
+
+  const dt = pol.district_type || '';
+  if (!dt.startsWith('LOCAL') && dt !== 'COUNTY') return baseTitle;
+
+  const gov = pol.government_name.split(',')[0].trim();
+  const govCore = gov
+    .replace(/^City of\s+/i, '')
+    .replace(/\s+County$/i, '')
+    .trim();
+
+  if (govCore && baseTitle.toLowerCase().includes(govCore.toLowerCase()))
+    return baseTitle;
+
+  let prefix = dt === 'COUNTY' ? gov : gov.replace(/^City of\s+/i, '');
+
+  if (prefix.endsWith('County') && baseTitle.startsWith('County'))
+    prefix = prefix.replace(/\s+County$/, '');
+
+  return `${prefix} ${baseTitle}`;
+}
+
+/**
  * Build display title and subtitle from politician data.
  * Splits office_title on " - " to separate body from seat designation.
  * Falls back to chamber_name for state/federal where office_title has no dash.
@@ -36,7 +63,7 @@ function buildTitleAndSubtitle(pol) {
 
   const title = (() => {
     // Dash-split: use part before dash (e.g. "Bloomington City Common Council - At Large")
-    if (dashIdx > 0) return cleanTitle.slice(0, dashIdx);
+    if (dashIdx > 0) return qualifyLocalTitle(cleanTitle.slice(0, dashIdx), pol);
     // SCHOOL: prepend school district name (e.g. "Los Angeles Unified Board of Education")
     if (pol.district_type === 'SCHOOL' && pol.government_name) {
       const schoolName = pol.government_name.split(',')[0];
@@ -44,9 +71,9 @@ function buildTitleAndSubtitle(pol) {
     }
     // Executive/officer positions: prefer office_title (e.g. "Mayor", "Governor", "Sheriff")
     if (/(_EXEC)$/.test(pol.district_type) || pol.district_type === 'COUNTY')
-      return cleanTitle || cleanChamber;
+      return qualifyLocalTitle(cleanTitle || cleanChamber, pol);
     // Default: prefer chamber_name (e.g. "City Council", "State Senate")
-    return cleanChamber || cleanTitle;
+    return qualifyLocalTitle(cleanChamber || cleanTitle, pol);
   })();
 
   const subtitle = (() => {
