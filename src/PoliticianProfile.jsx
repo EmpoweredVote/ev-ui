@@ -27,26 +27,6 @@ function getTermLine(pol) {
   return `First elected: ${start} \u2014 Term ends: ${end}`;
 }
 
-/**
- * Format a contact_type slug into a human-readable label.
- * "city_website" -> "City Website", "district" -> "District Office", etc.
- */
-function formatContactType(contactType) {
-  if (!contactType) return null;
-  const map = {
-    city_website: 'City Website',
-    district: 'District Office',
-    office_website: 'Office Website',
-    capitol: 'Capitol Office',
-  };
-  if (map[contactType]) return map[contactType];
-  // Fallback: replace underscores with spaces, capitalize each word
-  return contactType
-    .split('_')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
-}
-
 /** Strip "(Retain Name?)" from BallotReady retention election artifacts */
 function stripRetain(s) {
   return (s || '').replace(/\s*\(Retain\s+.+?\?\)/, '');
@@ -171,6 +151,32 @@ export default function PoliticianProfile({
     return pol.photo_origin_url;
   })();
 
+  // Collect contact items from enriched contacts + BallotReady person-level data
+  const contactPhones = [];
+  const contactWebsites = [];
+  const contactEmails = [];
+
+  (pol.contacts || []).forEach(c => {
+    if (c.phone && c.phone.trim()) contactPhones.push(c.phone);
+    if (c.website_url && c.website_url.trim()) contactWebsites.push(c.website_url);
+    if (c.email && c.email.trim()) contactEmails.push(c.email);
+  });
+
+  // Add BallotReady person-level data if not already present
+  const brWebsite = pol.urls?.[0];
+  if (brWebsite && !contactWebsites.includes(brWebsite)) contactWebsites.push(brWebsite);
+  const brEmail = pol.email_addresses?.[0];
+  if (brEmail && !contactEmails.includes(brEmail)) contactEmails.push(brEmail);
+
+  const twitter = getSocialHandle('TWITTER');
+  const facebook = getSocialHandle('FACEBOOK');
+  const instagram = getSocialHandle('INSTAGRAM');
+
+  const hasSocial = twitter || facebook || instagram || pol.web_form_url;
+  const hasAnyContact = contactPhones.length > 0 || contactWebsites.length > 0
+    || contactEmails.length > 0 || hasSocial;
+
+  const iconSize = '14px';
 
   const styles = {
     container: {
@@ -205,10 +211,13 @@ export default function PoliticianProfile({
       gap: isMobile ? spacing[4] : spacing[8],
       alignItems: isMobile ? 'center' : 'flex-start',
     },
-    photoWrap: {
+    leftCol: {
       width: isMobile ? '150px' : '192px',
-      height: isMobile ? '150px' : '240px',
       flexShrink: 0,
+    },
+    photoContainer: {
+      width: '100%',
+      height: isMobile ? '150px' : '240px',
     },
     photo: {
       width: '100%',
@@ -229,26 +238,43 @@ export default function PoliticianProfile({
       fontSize: isMobile ? fontSizes.xl : fontSizes['3xl'],
       fontWeight: fontWeights.bold,
     },
+    contactSection: {
+      marginTop: spacing[4],
+      paddingTop: spacing[3],
+      borderTop: `1px solid ${colors.borderLight}`,
+    },
+    contactHeading: {
+      fontFamily: fonts.primary,
+      fontWeight: fontWeights.semibold,
+      fontSize: fontSizes.sm,
+      color: colors.evTeal,
+      margin: 0,
+      marginBottom: spacing[2],
+    },
+    contactItem: {
+      display: 'flex',
+      alignItems: 'flex-start',
+      gap: spacing[1],
+      marginBottom: spacing[1],
+    },
+    contactLink: {
+      display: 'inline-flex',
+      alignItems: 'flex-start',
+      gap: spacing[1],
+      color: colors.evTeal,
+      textDecoration: 'none',
+      wordBreak: 'break-all',
+      fontFamily: fonts.primary,
+      fontSize: fontSizes.xs,
+      lineHeight: 1.4,
+    },
+    socialRow: {
+      marginTop: spacing[2],
+    },
     infoCol: {
       flex: 1,
       minWidth: 0,
       textAlign: 'left',
-    },
-    headerRow: {
-      display: 'flex',
-      flexDirection: isMobile ? 'column' : 'row',
-      justifyContent: 'space-between',
-      alignItems: isMobile ? 'center' : 'flex-start',
-      marginBottom: spacing[4],
-    },
-    nameTitle: {
-      flex: 1,
-      minWidth: 0,
-    },
-    socialLinksWrap: {
-      flexShrink: 0,
-      marginLeft: isMobile ? 0 : spacing[4],
-      marginTop: isMobile ? spacing[2] : 0,
     },
     name: {
       fontFamily: fonts.primary,
@@ -290,66 +316,6 @@ export default function PoliticianProfile({
     section: {
       marginBottom: spacing[6],
     },
-    contactCard: {
-      background: colors.bgWhite,
-      borderRadius: borderRadius.lg,
-      boxShadow: shadows.lg,
-      padding: isMobile ? spacing[4] : spacing[8],
-      marginBottom: spacing[8],
-    },
-    contactHeading: {
-      fontFamily: fonts.primary,
-      fontWeight: fontWeights.semibold,
-      fontSize: fontSizes.lg,
-      color: colors.evTeal,
-      margin: 0,
-      marginBottom: spacing[4],
-    },
-    contactBlock: {
-      borderTop: `1px solid ${colors.borderLight}`,
-      paddingTop: spacing[4],
-      marginTop: spacing[4],
-    },
-    contactBlockFirst: {
-      paddingTop: 0,
-      marginTop: 0,
-      borderTop: 'none',
-    },
-    contactTypeLabel: {
-      fontFamily: fonts.primary,
-      fontWeight: fontWeights.semibold,
-      fontSize: fontSizes.sm,
-      color: colors.textSecondary,
-      marginBottom: spacing[2],
-    },
-    contactRow: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: spacing[2],
-      marginBottom: spacing[2],
-      fontFamily: fonts.primary,
-      fontSize: fontSizes.sm,
-      color: colors.textSecondary,
-    },
-    contactLabel: {
-      fontWeight: fontWeights.medium,
-      color: colors.textSecondary,
-      flexShrink: 0,
-    },
-    contactLink: {
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: spacing[1],
-      color: colors.evTeal,
-      textDecoration: 'none',
-      wordBreak: 'break-all',
-    },
-    syncedAt: {
-      fontFamily: fonts.primary,
-      fontSize: fontSizes.xs,
-      color: colors.textMuted,
-      marginTop: spacing[2],
-    },
   };
 
   // Track broken image URLs so we can fall back to initials
@@ -383,43 +349,100 @@ export default function PoliticianProfile({
       {/* Top card: photo + info */}
       <div style={styles.topCard}>
         <div style={styles.topRow}>
-          {/* Photo */}
-          <div style={styles.photoWrap}>
-            {profileImageUrl && !imgError ? (
-              <img
-                src={profileImageUrl}
-                alt={`${displayName} portrait`}
-                style={styles.photo}
-                onError={() => setImgError(true)}
-              />
-            ) : (
-              <div style={styles.placeholder}>{initials || '?'}</div>
+          {/* Left column: photo + contact */}
+          <div style={styles.leftCol}>
+            <div style={styles.photoContainer}>
+              {profileImageUrl && !imgError ? (
+                <img
+                  src={profileImageUrl}
+                  alt={`${displayName} portrait`}
+                  style={styles.photo}
+                  onError={() => setImgError(true)}
+                />
+              ) : (
+                <div style={styles.placeholder}>{initials || '?'}</div>
+              )}
+            </div>
+
+            {/* Contact */}
+            {hasAnyContact && (
+              <div style={styles.contactSection}>
+                <h3 style={styles.contactHeading}>Contact</h3>
+
+                {contactPhones.map((phone, i) => (
+                  <div key={`ph-${i}`} style={styles.contactItem}>
+                    <a
+                      href={`tel:${phone}`}
+                      style={styles.contactLink}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = colors.evTealDark; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = colors.evTeal; }}
+                    >
+                      <svg style={{ width: iconSize, height: iconSize, flexShrink: 0, marginTop: '1px' }} viewBox="0 0 24 24" fill="none">
+                        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.07 2.18 2 2 0 012.02 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      {phone}
+                    </a>
+                  </div>
+                ))}
+
+                {contactWebsites.map((url, i) => (
+                  <div key={`web-${i}`} style={styles.contactItem}>
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={styles.contactLink}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = colors.evTealDark; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = colors.evTeal; }}
+                    >
+                      <svg style={{ width: iconSize, height: iconSize, flexShrink: 0, marginTop: '1px' }} viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                        <path d="M2 12H22M12 2C14.5 4.5 16 8 16 12C16 16 14.5 19.5 12 22C9.5 19.5 8 16 8 12C8 8 9.5 4.5 12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      {url}
+                    </a>
+                  </div>
+                ))}
+
+                {contactEmails.map((email, i) => (
+                  <div key={`em-${i}`} style={styles.contactItem}>
+                    <a
+                      href={`mailto:${email}`}
+                      style={styles.contactLink}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = colors.evTealDark; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = colors.evTeal; }}
+                    >
+                      <svg style={{ width: iconSize, height: iconSize, flexShrink: 0, marginTop: '1px' }} viewBox="0 0 24 24" fill="none">
+                        <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M22 6L12 13L2 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      {email}
+                    </a>
+                  </div>
+                ))}
+
+                {hasSocial && (
+                  <div style={styles.socialRow}>
+                    <SocialLinks
+                      twitter={twitter}
+                      facebook={facebook}
+                      instagram={instagram}
+                      contactFormUrl={pol.web_form_url}
+                      size="sm"
+                    />
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
           {/* Info */}
           <div style={styles.infoCol}>
-            {/* Header row with name/title on left, social links on right */}
-            <div style={styles.headerRow}>
-              <div style={styles.nameTitle}>
-                <h1 style={styles.name}>{displayName}</h1>
-                <h2 style={styles.title}>{buildTitleAndSubtitle(pol).title}</h2>
-                {buildTitleAndSubtitle(pol).subtitle && (
-                  <p style={styles.subtitle}>{buildTitleAndSubtitle(pol).subtitle}</p>
-                )}
-              </div>
-              <div style={styles.socialLinksWrap}>
-                <SocialLinks
-                  email={pol.email_addresses?.[0]}
-                  website={pol.urls?.[0]}
-                  twitter={getSocialHandle('TWITTER')}
-                  facebook={getSocialHandle('FACEBOOK')}
-                  instagram={getSocialHandle('INSTAGRAM')}
-                  contactFormUrl={pol.web_form_url}
-                  size="sm"
-                />
-              </div>
-            </div>
+            <h1 style={styles.name}>{displayName}</h1>
+            <h2 style={styles.title}>{buildTitleAndSubtitle(pol).title}</h2>
+            {buildTitleAndSubtitle(pol).subtitle && (
+              <p style={styles.subtitle}>{buildTitleAndSubtitle(pol).subtitle}</p>
+            )}
 
             {/* Office Description */}
             {pol.office_description && (
@@ -449,130 +472,6 @@ export default function PoliticianProfile({
           </div>
         </div>
       </div>
-
-      {/* Contact section */}
-      {pol.contacts && pol.contacts.length > 0 && (
-        <div style={styles.contactCard}>
-          <h3 style={styles.contactHeading}>Contact</h3>
-          {pol.contacts.map((c, idx) => (
-            <div
-              key={idx}
-              style={idx === 0 ? styles.contactBlockFirst : styles.contactBlock}
-            >
-              {/* Contact type label (e.g. "District Office", "City Website") */}
-              {c.contact_type && (
-                <div style={styles.contactTypeLabel}>
-                  {formatContactType(c.contact_type)}
-                </div>
-              )}
-
-              {/* Phone */}
-              {c.phone && c.phone.trim() !== '' && (
-                <div style={styles.contactRow}>
-                  <span style={styles.contactLabel}>Phone:</span>
-                  <a
-                    href={`tel:${c.phone}`}
-                    style={styles.contactLink}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = colors.evTealDark; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = colors.evTeal; }}
-                  >
-                    <svg
-                      style={{ width: '16px', height: '16px', flexShrink: 0 }}
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.07 2.18 2 2 0 012.02 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    {c.phone}
-                  </a>
-                </div>
-              )}
-
-              {/* Website */}
-              {c.website_url && c.website_url.trim() !== '' && (
-                <div style={styles.contactRow}>
-                  <span style={styles.contactLabel}>Website:</span>
-                  <a
-                    href={c.website_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={styles.contactLink}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = colors.evTealDark; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = colors.evTeal; }}
-                  >
-                    <svg
-                      style={{ width: '16px', height: '16px', flexShrink: 0 }}
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-                      <path
-                        d="M2 12H22M12 2C14.5 4.5 16 8 16 12C16 16 14.5 19.5 12 22C9.5 19.5 8 16 8 12C8 8 9.5 4.5 12 2Z"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    {c.website_url}
-                  </a>
-                </div>
-              )}
-
-              {/* Email */}
-              {c.email && c.email.trim() !== '' && (
-                <div style={styles.contactRow}>
-                  <span style={styles.contactLabel}>Email:</span>
-                  <a
-                    href={`mailto:${c.email}`}
-                    style={styles.contactLink}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = colors.evTealDark; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = colors.evTeal; }}
-                  >
-                    <svg
-                      style={{ width: '16px', height: '16px', flexShrink: 0 }}
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M22 6L12 13L2 6"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    {c.email}
-                  </a>
-                </div>
-              )}
-
-              {/* Last updated */}
-              {c.synced_at && (
-                <div style={styles.syncedAt}>
-                  Last updated: {new Date(c.synced_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Children slot (compass/radar chart section) */}
       {children}
