@@ -156,10 +156,15 @@ export default function PoliticianProfile({
   const contactWebsites = [];
   const contactEmails = [];
 
+  let latestSyncedAt = null;
+
   (pol.contacts || []).forEach(c => {
     if (c.phone && c.phone.trim()) contactPhones.push(c.phone);
     if (c.website_url && c.website_url.trim()) contactWebsites.push(c.website_url);
     if (c.email && c.email.trim()) contactEmails.push(c.email);
+    if (c.synced_at && (!latestSyncedAt || c.synced_at > latestSyncedAt)) {
+      latestSyncedAt = c.synced_at;
+    }
   });
 
   // Add BallotReady person-level data if not already present
@@ -430,6 +435,12 @@ export default function PoliticianProfile({
                       contactFormUrl={pol.web_form_url}
                       size="sm"
                     />
+                  </div>
+                )}
+
+                {latestSyncedAt && (
+                  <div style={{ fontFamily: fonts.primary, fontSize: fontSizes.xs, color: colors.textMuted, marginTop: spacing[2] }}>
+                    Last updated: {new Date(latestSyncedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </div>
                 )}
               </div>
