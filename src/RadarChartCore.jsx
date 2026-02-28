@@ -49,8 +49,10 @@ export default function RadarChartCore({
     config: { tension: 300, friction: 30 },
   });
 
+  const hasCompareData = Object.keys(compareData).length > 0;
+  const centerPoints = spokes.map(() => `${centerX},${centerY}`).join(" ");
   let comparePoints = null;
-  if (Object.keys(compareData).length) {
+  if (hasCompareData) {
     const cpts = spokes.map(([shortTitle], index) => {
       const value = compareData[shortTitle] ?? 0;
       const topic = topics.find((t) => t.short_title === shortTitle);
@@ -67,10 +69,11 @@ export default function RadarChartCore({
     comparePoints = cpts.join(" ");
   }
 
+  // Keep hook call for rules-of-hooks compliance but always immediate —
+  // react-spring can't interpolate from "" to coordinate strings on mount.
   const compareSpring = useSpring({
-    to: { points: comparePoints || "" },
-    immediate: countChanged || !comparePoints,
-    reset: countChanged,
+    to: { points: comparePoints || centerPoints || `${centerX},${centerY}` },
+    immediate: true,
     config: { tension: 300, friction: 30 },
   });
 
@@ -234,28 +237,16 @@ export default function RadarChartCore({
         />
       )}
 
-      {comparePoints ? (
-        countChanged ? (
-          <polygon
-            key="compare-static"
-            points={comparePoints}
-            style={{
-              fill: "rgba(89, 176, 196, 0.3)",
-              stroke: "rgb(89, 176, 196)",
-              strokeWidth: 2,
-            }}
-          />
-        ) : (
-          <animated.polygon
-            key="compare-animated"
-            points={compareSpring.points}
-            style={{
-              fill: "rgba(89, 176, 196, 0.3)",
-              stroke: "rgb(89, 176, 196)",
-              strokeWidth: 2,
-            }}
-          />
-        )
+      {hasCompareData && comparePoints ? (
+        <polygon
+          key="compare"
+          points={comparePoints}
+          style={{
+            fill: "rgba(89, 176, 196, 0.3)",
+            stroke: "rgb(89, 176, 196)",
+            strokeWidth: 2,
+          }}
+        />
       ) : null}
 
       {spokes.map(([shortTitle], i) => {
