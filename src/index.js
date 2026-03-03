@@ -9,6 +9,8 @@ export { default as SocialLinks } from "./SocialLinks.jsx";
 export { default as IssueTags } from "./IssueTags.jsx";
 export { default as CommitteeTable } from "./CommitteeTable.jsx";
 export { default as PoliticianProfile } from "./PoliticianProfile.jsx";
+export { default as LegislativeInlineSummary } from "./LegislativeInlineSummary.jsx";
+export { default as LegislativeRecord } from "./LegislativeRecord.jsx";
 export { default as AuthForm } from "./AuthForm.jsx";
 
 // Hooks

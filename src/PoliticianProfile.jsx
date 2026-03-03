@@ -3,6 +3,7 @@ import { colors, fonts, fontWeights, fontSizes, spacing, borderRadius, shadows }
 import useMediaQuery from './useMediaQuery';
 import SocialLinks from './SocialLinks.jsx';
 import CommitteeTable from './CommitteeTable.jsx';
+import LegislativeInlineSummary from './LegislativeInlineSummary.jsx';
 
 function formatTermDate(dateStr, precision) {
   if (!dateStr) return null;
@@ -115,6 +116,8 @@ export default function PoliticianProfile({
   backLabel,
   children,
   style = {},
+  legislativeSummary,  // NEW: { recent_bills: [], recent_votes: [] } from /legislative-summary
+  politicianId,        // NEW: opaque ID string for building the /record link
 }) {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const pol = politician;
@@ -483,6 +486,12 @@ export default function PoliticianProfile({
           </div>
         </div>
       </div>
+
+      {/* Legislative inline summary — only renders when data exists */}
+      <LegislativeInlineSummary
+        summary={legislativeSummary}
+        politicianId={politicianId}
+      />
 
       {/* Children slot (compass/radar chart section) */}
       {children}
