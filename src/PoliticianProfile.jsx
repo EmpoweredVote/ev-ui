@@ -116,8 +116,9 @@ export default function PoliticianProfile({
   backLabel,
   children,
   style = {},
-  legislativeSummary,  // NEW: { recent_bills: [], recent_votes: [] } from /legislative-summary
-  politicianId,        // NEW: opaque ID string for building the /record link
+  legislativeSummary,  // { recent_bills: [], recent_votes: [] } from /legislative-summary
+  politicianId,        // Opaque ID string for building the /record link
+  onNavigateToRecord,  // Callback for SPA navigation to /record (react-router navigate)
 }) {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const pol = politician;
@@ -485,13 +486,14 @@ export default function PoliticianProfile({
             )}
           </div>
         </div>
-      </div>
 
-      {/* Legislative inline summary — only renders when data exists */}
-      <LegislativeInlineSummary
-        summary={legislativeSummary}
-        politicianId={politicianId}
-      />
+        {/* Legislative inline summary — embedded in profile card */}
+        <LegislativeInlineSummary
+          summary={legislativeSummary}
+          politicianId={politicianId}
+          onNavigateToRecord={onNavigateToRecord}
+        />
+      </div>  {/* end topCard */}
 
       {/* Children slot (compass/radar chart section) */}
       {children}

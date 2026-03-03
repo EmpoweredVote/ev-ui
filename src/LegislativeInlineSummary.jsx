@@ -66,7 +66,7 @@ function getMostRecentAction(bills, votes) {
  * @param {Object} props.summary - { recent_bills: [], recent_votes: [] }
  * @param {string} props.politicianId - Opaque ID string for building the /record link
  */
-export default function LegislativeInlineSummary({ summary, politicianId }) {
+export default function LegislativeInlineSummary({ summary, politicianId, onNavigateToRecord }) {
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   // Guard: render nothing when no legislative data exists (local politicians, etc.)
@@ -83,20 +83,21 @@ export default function LegislativeInlineSummary({ summary, politicianId }) {
 
   const stats = [];
   if (attendancePct !== null) {
-    stats.push({ value: `${attendancePct}%`, label: 'attendance' });
+    stats.push({ value: `Voted in ${attendancePct}% of roll calls`, label: null });
   }
   if (billsAdvanced !== null) {
-    stats.push({ value: String(billsAdvanced), label: billsAdvanced === 1 ? 'bill advanced' : 'bills advanced' });
+    const billLabel = billsAdvanced === 1
+      ? 'Authored 1 bill that advanced past introduction'
+      : `Authored ${billsAdvanced} bills that advanced past introduction`;
+    stats.push({ value: billLabel, label: null });
   }
 
   const recordHref = '/politician/' + politicianId + '/record';
 
   const card = {
-    background: colors.bgWhite,
-    borderRadius: borderRadius.lg,
-    boxShadow: `0 1px 3px 0 rgba(0,0,0,0.08), 0 0 0 1px ${colors.borderLight}`,
-    padding: spacing[4],
-    marginBottom: spacing[8],
+    borderTop: `1px solid ${colors.borderLight}`,
+    padding: `${spacing[4]} ${spacing[4]} 0`,
+    marginTop: spacing[4],
     fontFamily: fonts.primary,
   };
 
@@ -162,7 +163,7 @@ export default function LegislativeInlineSummary({ summary, politicianId }) {
           {stats.map((s, i) => (
             <div key={i} style={statItem}>
               <span style={statValue}>{s.value}</span>
-              <span style={statLabel}>{s.label}</span>
+              {s.label && <span style={statLabel}>{s.label}</span>}
             </div>
           ))}
         </div>
@@ -180,9 +181,21 @@ export default function LegislativeInlineSummary({ summary, politicianId }) {
 
       {/* View Full Legislative Record link */}
       <div style={footerRow}>
-        <a
-          href={recordHref}
-          style={recordLink}
+        <button
+          onClick={() => {
+            if (onNavigateToRecord) {
+              onNavigateToRecord(recordHref);
+            } else {
+              window.location.href = recordHref;
+            }
+          }}
+          style={{
+            ...recordLink,
+            border: 'none',
+            background: 'none',
+            cursor: 'pointer',
+            padding: 0,
+          }}
           onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
           onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
         >
@@ -190,7 +203,7 @@ export default function LegislativeInlineSummary({ summary, politicianId }) {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M9 18l6-6-6-6" />
           </svg>
-        </a>
+        </button>
       </div>
     </div>
   );
