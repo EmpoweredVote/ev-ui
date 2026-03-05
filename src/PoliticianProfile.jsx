@@ -5,11 +5,10 @@ import SocialLinks from './SocialLinks.jsx';
 import CommitteeTable from './CommitteeTable.jsx';
 import LegislativeInlineSummary from './LegislativeInlineSummary.jsx';
 
+// ── Helpers ──────────────────────────────────────────────────────────
+
 function formatTermDate(dateStr, precision) {
   if (!dateStr) return null;
-  // Year-only precision: return the raw year string directly.
-  // Avoids new Date("2024") UTC timezone bug (shows "Dec 2023" in US timezones
-  // because "2024" parses as midnight UTC Jan 1, which is Dec 31 in US local time).
   if (precision === 'year') {
     const year = parseInt(dateStr, 10);
     if (!isNaN(year) && year > 1900 && year < 2100) return String(year);
@@ -25,73 +24,46 @@ function getTermLine(pol) {
   if (!start) return null;
   const end = formatTermDate(pol.term_end, precision);
   if (!end) return `Since ${start}`;
-  return `First elected: ${start} \u2014 Term ends: ${end}`;
+  return `${start} \u2013 ${end}`;
 }
 
-/** Strip "(Retain Name?)" from BallotReady retention election artifacts */
 function stripRetain(s) {
   return (s || '').replace(/\s*\(Retain\s+.+?\?\)/, '');
 }
 
-/**
- * Qualify a generic local title with the jurisdiction name.
- * e.g. "Mayor" → "Paramount Mayor", "Sheriff" → "Los Angeles County Sheriff"
- */
 function qualifyLocalTitle(baseTitle, pol) {
   if (!pol.government_name || !baseTitle) return baseTitle;
-
   const dt = pol.district_type || '';
   if (!dt.startsWith('LOCAL') && dt !== 'COUNTY') return baseTitle;
-
   const gov = pol.government_name.split(',')[0].trim();
-  const govCore = gov
-    .replace(/^City of\s+/i, '')
-    .replace(/\s+County$/i, '')
-    .trim();
-
-  if (govCore && baseTitle.toLowerCase().includes(govCore.toLowerCase()))
-    return baseTitle;
-
+  const govCore = gov.replace(/^City of\s+/i, '').replace(/\s+County$/i, '').trim();
+  if (govCore && baseTitle.toLowerCase().includes(govCore.toLowerCase())) return baseTitle;
   let prefix = dt === 'COUNTY' ? gov : gov.replace(/^City of\s+/i, '');
-
   if (prefix.endsWith('County') && baseTitle.startsWith('County'))
     prefix = prefix.replace(/\s+County$/, '');
-
   return `${prefix} ${baseTitle}`;
 }
 
-/**
- * Build display title and subtitle from politician data.
- * Splits office_title on " - " to separate body from seat designation.
- * Falls back to chamber_name for state/federal where office_title has no dash.
- */
 function buildTitleAndSubtitle(pol) {
   const cleanTitle = stripRetain(pol.office_title);
   const cleanChamber = stripRetain(pol.chamber_name);
   const dashIdx = cleanTitle.lastIndexOf(' - ');
 
   const title = (() => {
-    // Dash-split: use part before dash (e.g. "Bloomington City Common Council - At Large")
     if (dashIdx > 0) return qualifyLocalTitle(cleanTitle.slice(0, dashIdx), pol);
-    // SCHOOL: prepend school district name (e.g. "Los Angeles Unified Board of Education")
     if (pol.district_type === 'SCHOOL' && pol.government_name) {
       const schoolName = pol.government_name.split(',')[0];
       return cleanChamber ? `${schoolName} ${cleanChamber}` : schoolName;
     }
-    // Executive/officer positions: prefer office_title (e.g. "Mayor", "Governor", "Sheriff")
     if (/(_EXEC)$/.test(pol.district_type) || pol.district_type === 'COUNTY')
       return qualifyLocalTitle(cleanTitle || cleanChamber, pol);
-    // Default: prefer chamber_name (e.g. "City Council", "State Senate")
     return qualifyLocalTitle(cleanChamber || cleanTitle, pol);
   })();
 
   const subtitle = (() => {
-    // Dash-split: use part after dash
     if (dashIdx > 0) return cleanTitle.slice(dashIdx + 3);
-    // Numbered district (1+)
     if (pol.district_id && /^[1-9]\d*$/.test(pol.district_id))
       return `District ${pol.district_id}`;
-    // At-large (district_id "0" = represents the whole area), but not for executives
     if (pol.district_id === '0' && !/(_EXEC)$/.test(pol.district_type))
       return 'At-Large';
     return null;
@@ -100,15 +72,134 @@ function buildTitleAndSubtitle(pol) {
   return { title, subtitle };
 }
 
+/** Map district_type prefix to tier label */
+function getTierLabel(districtType) {
+  if (!districtType) return null;
+  if (districtType.startsWith('NATIONAL')) return 'FEDERAL';
+  if (districtType.startsWith('STATE')) return 'STATE';
+  return 'LOCAL';
+}
+
+/** Tier badge colors */
+function getTierColors(tier) {
+  switch (tier) {
+    case 'FEDERAL': return { bg: '#EFF6FF', text: '#1E40AF' };
+    case 'STATE':   return { bg: '#F0FDF4', text: '#166534' };
+    default:        return { bg: '#FDF4FF', text: '#7E22CE' };
+  }
+}
+
+/** Check if a URL is LinkedIn */
+function isLinkedInUrl(url) {
+  if (!url) return false;
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    return hostname.includes('linkedin.com');
+  } catch {
+    return url.toLowerCase().includes('linkedin.com');
+  }
+}
+
+/** Extract LinkedIn URL from politician data, and return non-LinkedIn websites */
+function extractLinkedIn(pol) {
+  let linkedinUrl = null;
+  const websites = [];
+
+  // Check urls[] (person-level from BallotReady)
+  (pol.urls || []).forEach(url => {
+    if (isLinkedInUrl(url)) {
+      if (!linkedinUrl) linkedinUrl = url;
+    } else {
+      websites.push(url);
+    }
+  });
+
+  // Check contacts[].website_url
+  (pol.contacts || []).forEach(c => {
+    if (c.website_url && c.website_url.trim()) {
+      if (isLinkedInUrl(c.website_url)) {
+        if (!linkedinUrl) linkedinUrl = c.website_url;
+      }
+      // websites from contacts are handled separately in contact section
+    }
+  });
+
+  return { linkedinUrl, personWebsites: websites };
+}
+
+/** Format an address object for display */
+function formatAddress(addr) {
+  const lines = [addr.address_1, addr.address_2, addr.address_3].filter(Boolean);
+  const cityState = [addr.city, addr.state].filter(Boolean).join(', ');
+  const cityStateZip = [cityState, addr.postal_code].filter(Boolean).join(' ');
+  if (cityStateZip) lines.push(cityStateZip);
+  return lines;
+}
+
+// ── SVG Icons ────────────────────────────────────────────────────────
+
+const CalendarIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
+  </svg>
+);
+
+const ClockIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </svg>
+);
+
+const MapPinIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+    <circle cx="12" cy="10" r="3" />
+  </svg>
+);
+
+const PhoneIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.07 2.18 2 2 0 012.02 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
+  </svg>
+);
+
+const MailIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" />
+    <path d="M22 6L12 13L2 6" />
+  </svg>
+);
+
+const GlobeIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M2 12H22M12 2C14.5 4.5 16 8 16 12C16 16 14.5 19.5 12 22C9.5 19.5 8 16 8 12C8 8 9.5 4.5 12 2Z" />
+  </svg>
+);
+
+const DollarIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="1" x2="12" y2="23" />
+    <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+  </svg>
+);
+
+const ExternalLinkIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+    <polyline points="15 3 21 3 21 9" />
+    <line x1="10" y1="14" x2="21" y2="3" />
+  </svg>
+);
+
+// ── Component ────────────────────────────────────────────────────────
+
 /**
  * PoliticianProfile - Reusable politician profile layout component.
- *
- * @param {Object} props
- * @param {Object} props.politician - Full profile object from the API (PoliticianProfileOut shape)
- * @param {Function} props.onBack - Callback for back navigation
- * @param {string} props.backLabel - Text for back link (default: politician name)
- * @param {React.ReactNode} props.children - Slot for compass/radar chart section
- * @param {Object} props.style - Additional styles for outer container
  */
 export default function PoliticianProfile({
   politician = {},
@@ -116,14 +207,38 @@ export default function PoliticianProfile({
   backLabel,
   children,
   style = {},
-  legislativeSummary,  // { recent_bills: [], recent_votes: [] } from /legislative-summary
-  politicianId,        // Opaque ID string for building the /record link
-  onNavigateToRecord,  // Callback for SPA navigation to /record (react-router navigate)
+  legislativeSummary,
+  politicianId,
+  onNavigateToRecord,
 }) {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const pol = politician;
 
-  // Extract social handles from identifiers
+  // ── Derived data ───────────────────────────────────────────────────
+
+  const displayName = pol.full_name ||
+    [pol.first_name, pol.last_name].filter(Boolean).join(' ') ||
+    'Unknown';
+
+  const label = backLabel || displayName;
+
+  const profileImageUrl = (() => {
+    if (pol.images && pol.images.length > 0) {
+      const defaultImg = pol.images.find(img => img.type === 'default');
+      return defaultImg ? defaultImg.url : pol.images[0].url;
+    }
+    return pol.photo_origin_url;
+  })();
+
+  const initials = [pol.first_name, pol.last_name]
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join('');
+
+  const [imgError, setImgError] = useState(false);
+  useEffect(() => { setImgError(false); }, [profileImageUrl]);
+
+  // Social handles
   const getSocialHandle = (type) => {
     const identifier = pol.identifiers?.find(
       (i) => i.identifier_type?.toUpperCase() === type.toUpperCase()
@@ -131,61 +246,97 @@ export default function PoliticianProfile({
     return identifier?.identifier_value;
   };
 
-  // Format committees for CommitteeTable
+  const twitter = getSocialHandle('TWITTER');
+  const facebook = getSocialHandle('FACEBOOK');
+  const instagram = getSocialHandle('INSTAGRAM');
+
+  // LinkedIn detection
+  const { linkedinUrl, personWebsites } = extractLinkedIn(pol);
+
+  // Tier badge
+  const tier = getTierLabel(pol.district_type);
+  const tierColors = tier ? getTierColors(tier) : null;
+
+  // Title & subtitle (no party)
+  const { title: roleTitle, subtitle: roleSubtitle } = buildTitleAndSubtitle(pol);
+  const roleLine = [roleTitle, roleSubtitle].filter(Boolean).join(' \u2013 ');
+
+  // Term
+  const termLine = getTermLine(pol);
+
+  // Committees
   const committees = (pol.committees || []).map((c) => ({
     name: c.name,
     position: c.position,
     url: c.urls?.[0],
   }));
 
-  // Build display name
-  const displayName = pol.full_name ||
-    [pol.first_name, pol.last_name].filter(Boolean).join(' ') ||
-    'Unknown';
+  // ── Contact data (grouped by type) ────────────────────────────────
 
-  const label = backLabel || displayName;
+  // Group addresses
+  const addresses = (pol.addresses || []).map(addr => ({
+    type: addr.contact_type || addr.type || 'Office',
+    lines: formatAddress(addr),
+  })).filter(a => a.lines.length > 0);
 
-  // Get profile image URL - prefer images array from BallotReady, fall back to photo_origin_url
-  const profileImageUrl = (() => {
-    if (pol.images && pol.images.length > 0) {
-      // Prefer "default" type image, otherwise use first image
-      const defaultImg = pol.images.find(img => img.type === 'default');
-      return defaultImg ? defaultImg.url : pol.images[0].url;
-    }
-    return pol.photo_origin_url;
-  })();
-
-  // Collect contact items from enriched contacts + BallotReady person-level data
-  const contactPhones = [];
-  const contactWebsites = [];
-  const contactEmails = [];
-
-  let latestSyncedAt = null;
+  // Group phones, emails, websites by contact_type
+  const phonesByType = {};
+  const emailsByType = {};
+  const allWebsites = [];
 
   (pol.contacts || []).forEach(c => {
-    if (c.phone && c.phone.trim()) contactPhones.push(c.phone);
-    if (c.website_url && c.website_url.trim()) contactWebsites.push(c.website_url);
-    if (c.email && c.email.trim()) contactEmails.push(c.email);
-    if (c.synced_at && (!latestSyncedAt || c.synced_at > latestSyncedAt)) {
-      latestSyncedAt = c.synced_at;
+    const cType = c.contact_type || 'Office';
+    if (c.phone && c.phone.trim()) {
+      if (!phonesByType[cType]) phonesByType[cType] = [];
+      phonesByType[cType].push(c.phone.trim());
+    }
+    if (c.email && c.email.trim()) {
+      if (!emailsByType[cType]) emailsByType[cType] = [];
+      emailsByType[cType].push(c.email.trim());
+    }
+    if (c.website_url && c.website_url.trim() && !isLinkedInUrl(c.website_url)) {
+      allWebsites.push(c.website_url.trim());
     }
   });
 
-  // Add BallotReady person-level data if not already present
-  const brWebsite = pol.urls?.[0];
-  if (brWebsite && !contactWebsites.includes(brWebsite)) contactWebsites.push(brWebsite);
-  const brEmail = pol.email_addresses?.[0];
-  if (brEmail && !contactEmails.includes(brEmail)) contactEmails.push(brEmail);
+  // Add BallotReady person-level emails
+  (pol.email_addresses || []).forEach(email => {
+    if (!emailsByType['General']) emailsByType['General'] = [];
+    if (!Object.values(emailsByType).flat().includes(email)) {
+      emailsByType['General'].push(email);
+    }
+  });
 
-  const twitter = getSocialHandle('TWITTER');
-  const facebook = getSocialHandle('FACEBOOK');
-  const instagram = getSocialHandle('INSTAGRAM');
+  // Add person-level websites (non-LinkedIn), deduplicated
+  personWebsites.forEach(url => {
+    if (!allWebsites.includes(url)) allWebsites.push(url);
+  });
 
-  const hasSocial = twitter || facebook || instagram || pol.web_form_url;
-  const hasAnyContact = contactPhones.length > 0 || contactWebsites.length > 0
-    || contactEmails.length > 0 || hasSocial;
+  const hasAddresses = addresses.length > 0;
+  const hasPhones = Object.keys(phonesByType).length > 0;
+  const hasEmails = Object.keys(emailsByType).length > 0;
+  const hasWebsites = allWebsites.length > 0;
+  const hasContactInfo = hasAddresses || hasPhones || hasEmails || hasWebsites;
+  const hasSocial = twitter || facebook || instagram || linkedinUrl || personWebsites.length > 0;
 
-  const iconSize = '14px';
+  // ── Styles ─────────────────────────────────────────────────────────
+
+  const divider = {
+    borderTop: '1px solid #E5E7EB',
+    margin: `${spacing[6]} 0`,
+  };
+
+  const sectionHeading = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: spacing[2],
+    fontFamily: fonts.primary,
+    fontWeight: fontWeights.semibold,
+    fontSize: '18px',
+    color: '#101828',
+    margin: 0,
+    marginBottom: spacing[4],
+  };
 
   const styles = {
     container: {
@@ -207,26 +358,25 @@ export default function PoliticianProfile({
       border: 'none',
       padding: 0,
     },
-    topCard: {
+    card: {
       background: colors.bgWhite,
       borderRadius: borderRadius.lg,
       boxShadow: shadows.lg,
       padding: isMobile ? spacing[4] : spacing[8],
       marginBottom: spacing[8],
     },
-    topRow: {
+
+    // Hero row
+    heroRow: {
       display: 'flex',
       flexDirection: isMobile ? 'column' : 'row',
       gap: isMobile ? spacing[4] : spacing[8],
       alignItems: isMobile ? 'center' : 'flex-start',
     },
-    leftCol: {
+    photoWrap: {
       width: isMobile ? '150px' : '192px',
-      flexShrink: 0,
-    },
-    photoContainer: {
-      width: '100%',
       height: isMobile ? '150px' : '240px',
+      flexShrink: 0,
     },
     photo: {
       width: '100%',
@@ -236,8 +386,8 @@ export default function PoliticianProfile({
       background: colors.borderLight,
     },
     placeholder: {
-      width: isMobile ? '150px' : '192px',
-      height: isMobile ? '150px' : '240px',
+      width: '100%',
+      height: '100%',
       borderRadius: borderRadius.lg,
       background: colors.evTeal,
       display: 'flex',
@@ -247,95 +397,133 @@ export default function PoliticianProfile({
       fontSize: isMobile ? fontSizes.xl : fontSizes['3xl'],
       fontWeight: fontWeights.bold,
     },
-    contactSection: {
-      marginTop: spacing[4],
-      paddingTop: spacing[3],
-      borderTop: `1px solid ${colors.borderLight}`,
-    },
-    contactHeading: {
-      fontFamily: fonts.primary,
-      fontWeight: fontWeights.semibold,
-      fontSize: fontSizes.sm,
-      color: colors.evTeal,
-      margin: 0,
-      marginBottom: spacing[2],
-    },
-    contactItem: {
-      display: 'flex',
-      alignItems: 'flex-start',
-      gap: spacing[1],
-      marginBottom: spacing[1],
-    },
-    contactLink: {
-      display: 'inline-flex',
-      alignItems: 'flex-start',
-      gap: spacing[1],
-      color: colors.evTeal,
-      textDecoration: 'none',
-      wordBreak: 'break-all',
-      fontFamily: fonts.primary,
-      fontSize: fontSizes.xs,
-      lineHeight: 1.4,
-    },
-    socialRow: {
-      marginTop: spacing[2],
-    },
     infoCol: {
       flex: 1,
       minWidth: 0,
-      textAlign: 'left',
+      textAlign: isMobile ? 'center' : 'left',
     },
+    tierBadge: tierColors ? {
+      display: 'inline-block',
+      fontFamily: fonts.primary,
+      fontWeight: fontWeights.semibold,
+      fontSize: '11px',
+      letterSpacing: '0.05em',
+      color: tierColors.text,
+      background: tierColors.bg,
+      padding: '3px 10px',
+      borderRadius: borderRadius.full,
+      marginBottom: spacing[2],
+    } : null,
     name: {
       fontFamily: fonts.primary,
       fontWeight: fontWeights.bold,
-      fontSize: isMobile ? fontSizes['2xl'] : fontSizes['4xl'],
-      color: colors.evTeal,
-      margin: 0,
-      marginBottom: spacing[2],
-      lineHeight: 1.2,
-      textAlign: isMobile ? 'center' : 'left',
-    },
-    title: {
-      fontFamily: fonts.primary,
-      fontWeight: fontWeights.medium,
-      fontSize: isMobile ? fontSizes.base : fontSizes.xl,
-      color: colors.textSecondary,
+      fontSize: isMobile ? fontSizes['2xl'] : '30px',
+      color: '#101828',
       margin: 0,
       marginBottom: spacing[1],
-      textAlign: isMobile ? 'center' : 'left',
+      lineHeight: 1.2,
     },
-    subtitle: {
+    roleLine: {
       fontFamily: fonts.primary,
       fontWeight: fontWeights.regular,
-      fontSize: fontSizes.sm,
-      color: colors.textMuted,
+      fontSize: isMobile ? fontSizes.base : fontSizes.lg,
+      color: '#364153',
       margin: 0,
-      marginBottom: spacing[2],
-      textAlign: isMobile ? 'center' : 'left',
+      marginBottom: spacing[1],
     },
-    termDate: {
+    officeDesc: {
       fontFamily: fonts.primary,
-      fontWeight: fontWeights.regular,
-      fontSize: fontSizes.sm,
-      color: colors.textMuted,
+      fontSize: fontSizes.base,
+      color: '#6A7282',
       margin: 0,
       marginBottom: spacing[3],
-      textAlign: isMobile ? 'center' : 'left',
+      lineHeight: 1.5,
     },
-    section: {
-      marginBottom: spacing[6],
+    metaRow: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: spacing[4],
+      flexWrap: 'wrap',
+      marginBottom: spacing[4],
+      justifyContent: isMobile ? 'center' : 'flex-start',
+    },
+    metaItem: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: spacing[1],
+      fontFamily: fonts.primary,
+      fontSize: fontSizes.sm,
+      color: '#6A7282',
+    },
+    submitBtn: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: spacing[2],
+      fontFamily: fonts.primary,
+      fontWeight: fontWeights.semibold,
+      fontSize: fontSizes.sm,
+      color: '#ffffff',
+      background: colors.evTeal,
+      border: 'none',
+      borderRadius: borderRadius.md,
+      padding: `${spacing[2]} ${spacing[5]}`,
+      cursor: 'pointer',
+      textDecoration: 'none',
+      transition: 'background 0.2s',
+      marginBottom: spacing[3],
+    },
+
+    // Contact section
+    contactGrid: {
+      display: 'grid',
+      gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(220px, 1fr))',
+      gap: isMobile ? spacing[4] : spacing[6],
+    },
+    contactGroup: {
+      minWidth: 0,
+    },
+    contactLabel: {
+      fontFamily: fonts.primary,
+      fontWeight: fontWeights.semibold,
+      fontSize: '11px',
+      letterSpacing: '0.05em',
+      textTransform: 'uppercase',
+      color: '#6A7282',
+      margin: 0,
+      marginBottom: spacing[1],
+      display: 'flex',
+      alignItems: 'center',
+      gap: spacing[1],
+    },
+    contactValue: {
+      fontFamily: fonts.primary,
+      fontSize: fontSizes.sm,
+      color: '#364153',
+      lineHeight: 1.6,
+      margin: 0,
+      marginBottom: spacing[2],
+    },
+    contactLink: {
+      color: '#364153',
+      textDecoration: 'none',
+      wordBreak: 'break-all',
+    },
+
+    // Coming soon
+    comingSoon: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: spacing[1],
+      fontFamily: fonts.primary,
+      fontSize: fontSizes.sm,
+      color: '#6A7282',
+      background: '#F3F4F6',
+      padding: `${spacing[1]} ${spacing[3]}`,
+      borderRadius: borderRadius.full,
     },
   };
 
-  // Track broken image URLs so we can fall back to initials
-  const [imgError, setImgError] = useState(false);
-  useEffect(() => { setImgError(false); }, [profileImageUrl]);
-
-  // Initials for placeholder
-  const initials = [pol.first_name, pol.last_name]
-    .filter(Boolean)
-    .map((n) => n[0])
-    .join('');
+  // ── Render ─────────────────────────────────────────────────────────
 
   return (
     <div style={styles.container} className="ev-politician-profile">
@@ -355,145 +543,207 @@ export default function PoliticianProfile({
         </button>
       )}
 
-      {/* Top card: photo + info */}
-      <div style={styles.topCard}>
-        <div style={styles.topRow}>
-          {/* Left column: photo + contact */}
-          <div style={styles.leftCol}>
-            <div style={styles.photoContainer}>
-              {profileImageUrl && !imgError ? (
-                <img
-                  src={profileImageUrl}
-                  alt={`${displayName} portrait`}
-                  style={styles.photo}
-                  onError={() => setImgError(true)}
-                />
-              ) : (
-                <div style={styles.placeholder}>{initials || '?'}</div>
-              )}
-            </div>
+      {/* Main card */}
+      <div style={styles.card}>
 
-            {/* Contact */}
-            {hasAnyContact && (
-              <div style={styles.contactSection}>
-                <h3 style={styles.contactHeading}>Contact</h3>
-
-                {contactPhones.map((phone, i) => (
-                  <div key={`ph-${i}`} style={styles.contactItem}>
-                    <a
-                      href={`tel:${phone}`}
-                      style={styles.contactLink}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = colors.evTealDark; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = colors.evTeal; }}
-                    >
-                      <svg style={{ width: iconSize, height: iconSize, flexShrink: 0, marginTop: '1px' }} viewBox="0 0 24 24" fill="none">
-                        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.07 2.18 2 2 0 012.02 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      {phone}
-                    </a>
-                  </div>
-                ))}
-
-                {contactWebsites.map((url, i) => (
-                  <div key={`web-${i}`} style={styles.contactItem}>
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={styles.contactLink}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = colors.evTealDark; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = colors.evTeal; }}
-                    >
-                      <svg style={{ width: iconSize, height: iconSize, flexShrink: 0, marginTop: '1px' }} viewBox="0 0 24 24" fill="none">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-                        <path d="M2 12H22M12 2C14.5 4.5 16 8 16 12C16 16 14.5 19.5 12 22C9.5 19.5 8 16 8 12C8 8 9.5 4.5 12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      {url}
-                    </a>
-                  </div>
-                ))}
-
-                {contactEmails.map((email, i) => (
-                  <div key={`em-${i}`} style={styles.contactItem}>
-                    <a
-                      href={`mailto:${email}`}
-                      style={styles.contactLink}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = colors.evTealDark; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = colors.evTeal; }}
-                    >
-                      <svg style={{ width: iconSize, height: iconSize, flexShrink: 0, marginTop: '1px' }} viewBox="0 0 24 24" fill="none">
-                        <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M22 6L12 13L2 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      {email}
-                    </a>
-                  </div>
-                ))}
-
-                {hasSocial && (
-                  <div style={styles.socialRow}>
-                    <SocialLinks
-                      twitter={twitter}
-                      facebook={facebook}
-                      instagram={instagram}
-                      contactFormUrl={pol.web_form_url}
-                      size="sm"
-                    />
-                  </div>
-                )}
-
-                {latestSyncedAt && (
-                  <div style={{ fontFamily: fonts.primary, fontSize: fontSizes.xs, color: colors.textMuted, marginTop: spacing[2] }}>
-                    Last updated: {new Date(latestSyncedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </div>
-                )}
-              </div>
+        {/* ── Section 1: Hero Row ── */}
+        <div style={styles.heroRow}>
+          {/* Photo */}
+          <div style={styles.photoWrap}>
+            {profileImageUrl && !imgError ? (
+              <img
+                src={profileImageUrl}
+                alt={`${displayName} portrait`}
+                style={styles.photo}
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <div style={styles.placeholder}>{initials || '?'}</div>
             )}
           </div>
 
           {/* Info */}
           <div style={styles.infoCol}>
+            {styles.tierBadge && (
+              <div style={styles.tierBadge}>{tier}</div>
+            )}
             <h1 style={styles.name}>{displayName}</h1>
-            <h2 style={styles.title}>{buildTitleAndSubtitle(pol).title}</h2>
-            {buildTitleAndSubtitle(pol).subtitle && (
-              <p style={styles.subtitle}>{buildTitleAndSubtitle(pol).subtitle}</p>
-            )}
+            <p style={styles.roleLine}>{roleLine}</p>
 
-            {/* Office Description */}
             {pol.office_description && (
-              <p style={{ fontFamily: fonts.primary, fontSize: fontSizes.sm, fontStyle: 'italic', color: colors.textSecondary, marginBottom: spacing[4] }}>
-                {pol.office_description}
-              </p>
+              <p style={styles.officeDesc}>{pol.office_description}</p>
             )}
 
-            {/* Term dates */}
-            {getTermLine(pol) && (
-              <p style={styles.termDate}>{getTermLine(pol)}</p>
-            )}
-
-            {/* Years in Office */}
-            {pol.total_years_in_office > 0 && (
-              <p style={{ fontFamily: fonts.primary, fontSize: fontSizes.sm, color: colors.textMuted, marginBottom: spacing[2] }}>
-                {pol.total_years_in_office} {pol.total_years_in_office === 1 ? 'year' : 'years'} in office
-              </p>
-            )}
-
-            {/* Committees */}
-            {committees.length > 0 && (
-              <div style={styles.section}>
-                <CommitteeTable committees={committees} />
+            {/* Term + Years in Office */}
+            {(termLine || pol.total_years_in_office > 0) && (
+              <div style={styles.metaRow}>
+                {termLine && (
+                  <span style={styles.metaItem}>
+                    <CalendarIcon size={14} />
+                    {termLine}
+                  </span>
+                )}
+                {pol.total_years_in_office > 0 && (
+                  <span style={styles.metaItem}>
+                    <ClockIcon size={14} />
+                    {pol.total_years_in_office} {pol.total_years_in_office === 1 ? 'year' : 'years'} in office
+                  </span>
+                )}
               </div>
+            )}
+
+            {/* Submit a Message button */}
+            {pol.web_form_url && (
+              <a
+                href={pol.web_form_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={styles.submitBtn}
+                onMouseEnter={(e) => { e.currentTarget.style.background = colors.evTealDark; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = colors.evTeal; }}
+              >
+                <ExternalLinkIcon size={14} />
+                Submit a Message
+              </a>
+            )}
+
+            {/* Social icons row */}
+            {hasSocial && (
+              <SocialLinks
+                twitter={twitter}
+                facebook={facebook}
+                instagram={instagram}
+                linkedin={linkedinUrl}
+                website={personWebsites[0] || null}
+                size="sm"
+              />
             )}
           </div>
         </div>
 
-        {/* Legislative inline summary — embedded in profile card */}
+        {/* ── Section 2: Contact Info ── */}
+        {hasContactInfo && (
+          <>
+            <div style={divider} />
+            <div style={sectionHeading}>
+              <MailIcon size={20} />
+              Contact Information
+            </div>
+            <div style={styles.contactGrid}>
+              {/* Addresses */}
+              {addresses.map((addr, i) => (
+                <div key={`addr-${i}`} style={styles.contactGroup}>
+                  <p style={styles.contactLabel}>
+                    <MapPinIcon size={12} />
+                    {addr.type}
+                  </p>
+                  <p style={styles.contactValue}>
+                    {addr.lines.map((line, j) => (
+                      <React.Fragment key={j}>
+                        {line}
+                        {j < addr.lines.length - 1 && <br />}
+                      </React.Fragment>
+                    ))}
+                  </p>
+                </div>
+              ))}
+
+              {/* Phones by type */}
+              {Object.entries(phonesByType).map(([type, phones]) => (
+                <div key={`phone-${type}`} style={styles.contactGroup}>
+                  <p style={styles.contactLabel}>
+                    <PhoneIcon size={12} />
+                    {type}
+                  </p>
+                  {phones.map((phone, i) => (
+                    <p key={i} style={styles.contactValue}>
+                      <a
+                        href={`tel:${phone}`}
+                        style={styles.contactLink}
+                        onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
+                      >
+                        {phone}
+                      </a>
+                    </p>
+                  ))}
+                </div>
+              ))}
+
+              {/* Emails by type */}
+              {Object.entries(emailsByType).map(([type, emails]) => (
+                <div key={`email-${type}`} style={styles.contactGroup}>
+                  <p style={styles.contactLabel}>
+                    <MailIcon size={12} />
+                    {type} Email
+                  </p>
+                  {emails.map((email, i) => (
+                    <p key={i} style={styles.contactValue}>
+                      <a
+                        href={`mailto:${email}`}
+                        style={styles.contactLink}
+                        onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
+                      >
+                        {email}
+                      </a>
+                    </p>
+                  ))}
+                </div>
+              ))}
+
+              {/* Websites */}
+              {hasWebsites && (
+                <div style={styles.contactGroup}>
+                  <p style={styles.contactLabel}>
+                    <GlobeIcon size={12} />
+                    Websites
+                  </p>
+                  {allWebsites.map((url, i) => (
+                    <p key={i} style={styles.contactValue}>
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={styles.contactLink}
+                        onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
+                      >
+                        {url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
+                      </a>
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* ── Section 3: Committee Memberships ── */}
+        {committees.length > 0 && (
+          <>
+            <div style={divider} />
+            <CommitteeTable committees={committees} />
+          </>
+        )}
+
+        {/* ── Section 4: Who is Funding? ── */}
+        <div style={divider} />
+        <div style={sectionHeading}>
+          <DollarIcon size={20} />
+          Who is Funding?
+        </div>
+        <div style={styles.comingSoon}>
+          Coming soon
+        </div>
+
+        {/* ── Section 5: Legislative Summary ── */}
         <LegislativeInlineSummary
           summary={legislativeSummary}
           politicianId={politicianId}
           onNavigateToRecord={onNavigateToRecord}
         />
-      </div>  {/* end topCard */}
+      </div>
 
       {/* Children slot (compass/radar chart section) */}
       {children}
