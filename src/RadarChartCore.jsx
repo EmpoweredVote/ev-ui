@@ -103,20 +103,24 @@ export default function RadarChartCore({
 
   const minPadding = 40;
   const maxPadding = padding * 2;
-  const leftPadding = Math.min(
+  const rawLeftPadding = Math.min(
     Math.max(
       leftLabelWidths.length ? Math.max(...leftLabelWidths) + labelOffset : 0,
       minPadding,
     ),
     maxPadding,
   );
-  const rightPadding = Math.min(
+  const rawRightPadding = Math.min(
     Math.max(
       rightLabelWidths.length ? Math.max(...rightLabelWidths) + labelOffset : 0,
       minPadding,
     ),
     maxPadding,
   );
+  // Use symmetric padding so the chart center aligns with the SVG center
+  const symmetricPadding = Math.max(rawLeftPadding, rawRightPadding);
+  const leftPadding = symmetricPadding;
+  const rightPadding = symmetricPadding;
   const verticalPadding = padding;
 
   const guidePolygons = [];
