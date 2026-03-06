@@ -69,11 +69,21 @@ export default function RadarChartCore({
     comparePoints = cpts.join(" ");
   }
 
-  // Keep hook call for rules-of-hooks compliance but always immediate —
-  // react-spring can't interpolate from "" to coordinate strings on mount.
+  // Track whether compareData was present in the previous render.
+  // When a new politician is first selected, skip animation so the polygon
+  // appears immediately rather than flying in from center.
+  const hadCompareDataRef = useRef(false);
+  const compareJustAppeared = hasCompareData && !hadCompareDataRef.current;
+  useEffect(() => {
+    hadCompareDataRef.current = hasCompareData;
+  }, [hasCompareData]);
+
+  // Animate on shape changes (spoke inversion) but be immediate on new entry
+  // or spoke count changes to avoid fly-in artifacts.
   const compareSpring = useSpring({
     to: { points: comparePoints || centerPoints || `${centerX},${centerY}` },
-    immediate: true,
+    immediate: countChanged || compareJustAppeared,
+    reset: countChanged || compareJustAppeared,
     config: { tension: 300, friction: 30 },
   });
 
@@ -242,15 +252,27 @@ export default function RadarChartCore({
       )}
 
       {hasCompareData && comparePoints ? (
-        <polygon
-          key="compare"
-          points={comparePoints}
-          style={{
-            fill: "rgba(89, 176, 196, 0.3)",
-            stroke: "rgb(89, 176, 196)",
-            strokeWidth: 2,
-          }}
-        />
+        countChanged || compareJustAppeared ? (
+          <polygon
+            key="compare-static"
+            points={comparePoints}
+            style={{
+              fill: "rgba(89, 176, 196, 0.3)",
+              stroke: "rgb(89, 176, 196)",
+              strokeWidth: 2,
+            }}
+          />
+        ) : (
+          <animated.polygon
+            key="compare-animated"
+            points={compareSpring.points}
+            style={{
+              fill: "rgba(89, 176, 196, 0.3)",
+              stroke: "rgb(89, 176, 196)",
+              strokeWidth: 2,
+            }}
+          />
+        )
       ) : null}
 
       {spokes.map(([shortTitle], i) => {
