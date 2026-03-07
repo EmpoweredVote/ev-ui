@@ -124,8 +124,8 @@ export default function PoliticianCard({
       whiteSpace: 'nowrap',
     },
     compassButton: {
-      width: isHorizontal ? '36px' : '40px',
-      height: isHorizontal ? '36px' : '40px',
+      width: isHorizontal ? '28px' : '36px',
+      height: isHorizontal ? '28px' : '36px',
       borderRadius: '50%',
       backgroundColor: colors.evTeal,
       border: 'none',
@@ -134,7 +134,8 @@ export default function PoliticianCard({
       alignItems: 'center',
       justifyContent: 'center',
       flexShrink: 0,
-      marginRight: isHorizontal ? spacing[2] : 0,
+      alignSelf: 'center',
+      marginRight: isHorizontal ? spacing[3] : 0,
       marginTop: isHorizontal ? 0 : spacing[2],
       position: isHorizontal ? 'relative' : 'absolute',
       bottom: isHorizontal ? 'auto' : spacing[3],
@@ -142,8 +143,8 @@ export default function PoliticianCard({
       transition: 'background-color 0.2s ease',
     },
     compassIcon: {
-      width: isHorizontal ? '18px' : '20px',
-      height: isHorizontal ? '18px' : '20px',
+      width: isHorizontal ? '14px' : '18px',
+      height: isHorizontal ? '14px' : '18px',
       color: colors.textWhite,
     },
     badge: {
