@@ -206,6 +206,7 @@ export default function PoliticianProfile({
   onBack,
   backLabel,
   children,
+  banner,        // slot for injecting content inside the card after heroRow
   style = {},
   legislativeSummary,
   politicianId,
@@ -620,6 +621,9 @@ export default function PoliticianProfile({
             )}
           </div>
         </div>
+
+        {/* Banner slot (e.g. candidate election info) */}
+        {banner}
 
         {/* ── Section 2: Contact Info ── */}
         {hasContactInfo && (
