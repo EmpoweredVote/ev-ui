@@ -729,7 +729,7 @@ export default function PoliticianProfile({
           </>
         )}
 
-        {/* ── Section 4: Who is Funding? ── */}
+        {/* ── Section 4: Who is Funding? ── (commented out until ready)
         <div style={divider} />
         <div style={sectionHeading}>
           <DollarIcon size={20} />
@@ -738,6 +738,7 @@ export default function PoliticianProfile({
         <div style={styles.comingSoon}>
           Coming soon
         </div>
+        */}
 
         {/* ── Section 5: Legislative Summary ── */}
         <LegislativeInlineSummary
