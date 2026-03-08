@@ -143,8 +143,8 @@ export default function PoliticianCard({
       transition: 'background-color 0.2s ease',
     },
     compassIcon: {
-      width: isHorizontal ? '14px' : '18px',
-      height: isHorizontal ? '14px' : '18px',
+      width: isHorizontal ? '20px' : '24px',
+      height: isHorizontal ? '20px' : '24px',
       color: colors.textWhite,
     },
     badge: {
@@ -165,7 +165,7 @@ export default function PoliticianCard({
     },
   };
 
-  // Compass/radar icon SVG
+  // Mini radar chart icon SVG — represents the compass radar chart feature
   const CompassIcon = () => (
     <svg
       style={styles.compassIcon}
@@ -173,9 +173,33 @@ export default function PoliticianCard({
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path
-        d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"
+      {/* Outer hexagon border */}
+      <polygon
+        points="12,1 21.5,6.5 21.5,17.5 12,23 2.5,17.5 2.5,6.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      {/* 6 spokes from center */}
+      <line x1="12" y1="12" x2="12" y2="1" stroke="currentColor" strokeWidth="1" />
+      <line x1="12" y1="12" x2="21.5" y2="6.5" stroke="currentColor" strokeWidth="1" />
+      <line x1="12" y1="12" x2="21.5" y2="17.5" stroke="currentColor" strokeWidth="1" />
+      <line x1="12" y1="12" x2="12" y2="23" stroke="currentColor" strokeWidth="1" />
+      <line x1="12" y1="12" x2="2.5" y2="17.5" stroke="currentColor" strokeWidth="1" />
+      <line x1="12" y1="12" x2="2.5" y2="6.5" stroke="currentColor" strokeWidth="1" />
+      {/* Filled radar data polygon */}
+      <polygon
+        points="12,4 18,7.5 18,16 12,19.5 7,15 5,8"
         fill="currentColor"
+        opacity="0.35"
+      />
+      <polygon
+        points="12,4 18,7.5 18,16 12,19.5 7,15 5,8"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
       />
     </svg>
   );
