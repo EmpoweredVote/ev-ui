@@ -569,6 +569,7 @@ export default function PoliticianProfile({
               <div style={styles.tierBadge}>{tier}</div>
             )}
             <h1 style={styles.name}>{displayName}</h1>
+            {banner}
             <p style={styles.roleLine}>{roleLine}</p>
 
             {pol.office_description && (
@@ -621,9 +622,6 @@ export default function PoliticianProfile({
             )}
           </div>
         </div>
-
-        {/* Banner slot (e.g. candidate election info) */}
-        {banner}
 
         {/* ── Section 2: Contact Info ── */}
         {hasContactInfo && (
