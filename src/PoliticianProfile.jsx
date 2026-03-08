@@ -302,9 +302,11 @@ export default function PoliticianProfile({
 
   // Add BallotReady person-level emails
   (pol.email_addresses || []).forEach(email => {
-    if (!emailsByType['General']) emailsByType['General'] = [];
-    if (!Object.values(emailsByType).flat().includes(email)) {
-      emailsByType['General'].push(email);
+    if (email && email.trim()) {
+      if (!emailsByType['General']) emailsByType['General'] = [];
+      if (!Object.values(emailsByType).flat().includes(email.trim())) {
+        emailsByType['General'].push(email.trim());
+      }
     }
   });
 
@@ -315,7 +317,7 @@ export default function PoliticianProfile({
 
   const hasAddresses = addresses.length > 0;
   const hasPhones = Object.keys(phonesByType).length > 0;
-  const hasEmails = Object.keys(emailsByType).length > 0;
+  const hasEmails = Object.values(emailsByType).some(emails => emails.some(e => e && e.trim()));
   const hasWebsites = allWebsites.length > 0;
   const hasContactInfo = hasAddresses || hasPhones || hasEmails || hasWebsites;
   const hasSocial = twitter || facebook || instagram || linkedinUrl || personWebsites.length > 0;
@@ -701,12 +703,12 @@ export default function PoliticianProfile({
                     <MailIcon size={12} />
                     Email
                   </p>
-                  {Object.entries(emailsByType).map(([type, emails], i) => (
+                  {Object.entries(emailsByType).filter(([, emails]) => emails.some(e => e && e.trim())).map(([type, emails], i) => (
                     <div key={`email-${type}`}>
                       <p style={{ ...styles.contactSubLabel, ...(i === 0 ? { marginTop: 0 } : { marginTop: spacing[2] }) }}>
                         {type}
                       </p>
-                      {emails.map((email, j) => (
+                      {emails.filter(e => e && e.trim()).map((email, j) => (
                         <p key={j} style={styles.contactValue}>
                           <a
                             href={`mailto:${email}`}
