@@ -477,7 +477,7 @@ export default function PoliticianProfile({
     // Contact section
     contactGrid: {
       display: 'grid',
-      gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(220px, 1fr))',
+      gridTemplateColumns: isMobile ? '1fr' : `repeat(${[hasAddresses, hasPhones, hasEmails, hasWebsites].filter(Boolean).length}, 1fr)`,
       gap: isMobile ? spacing[4] : spacing[6],
     },
     contactGroup: {
@@ -508,6 +508,14 @@ export default function PoliticianProfile({
       color: '#364153',
       textDecoration: 'none',
       wordBreak: 'break-all',
+    },
+    contactSubLabel: {
+      fontFamily: fonts.primary,
+      fontWeight: fontWeights.medium,
+      fontSize: '12px',
+      color: '#9CA3AF',
+      margin: 0,
+      marginBottom: spacing[1],
     },
 
     // Coming soon
@@ -632,69 +640,90 @@ export default function PoliticianProfile({
               Contact Information
             </div>
             <div style={styles.contactGrid}>
-              {/* Addresses */}
-              {addresses.map((addr, i) => (
-                <div key={`addr-${i}`} style={styles.contactGroup}>
+              {/* Addresses column */}
+              {hasAddresses && (
+                <div style={styles.contactGroup}>
                   <p style={styles.contactLabel}>
                     <MapPinIcon size={12} />
-                    {addr.type}
+                    Addresses
                   </p>
-                  <p style={styles.contactValue}>
-                    {addr.lines.map((line, j) => (
-                      <React.Fragment key={j}>
-                        {line}
-                        {j < addr.lines.length - 1 && <br />}
-                      </React.Fragment>
-                    ))}
-                  </p>
+                  {addresses.map((addr, i) => (
+                    <div key={`addr-${i}`}>
+                      <p style={{ ...styles.contactSubLabel, ...(i === 0 ? { marginTop: 0 } : { marginTop: spacing[2] }) }}>
+                        {addr.type}
+                      </p>
+                      <p style={styles.contactValue}>
+                        {addr.lines.map((line, j) => (
+                          <React.Fragment key={j}>
+                            {line}
+                            {j < addr.lines.length - 1 && <br />}
+                          </React.Fragment>
+                        ))}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
 
-              {/* Phones by type */}
-              {Object.entries(phonesByType).map(([type, phones]) => (
-                <div key={`phone-${type}`} style={styles.contactGroup}>
+              {/* Phones column */}
+              {hasPhones && (
+                <div style={styles.contactGroup}>
                   <p style={styles.contactLabel}>
                     <PhoneIcon size={12} />
-                    {type}
+                    Phone
                   </p>
-                  {phones.map((phone, i) => (
-                    <p key={i} style={styles.contactValue}>
-                      <a
-                        href={`tel:${phone}`}
-                        style={styles.contactLink}
-                        onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
-                      >
-                        {phone}
-                      </a>
-                    </p>
+                  {Object.entries(phonesByType).map(([type, phones], i) => (
+                    <div key={`phone-${type}`}>
+                      <p style={{ ...styles.contactSubLabel, ...(i === 0 ? { marginTop: 0 } : { marginTop: spacing[2] }) }}>
+                        {type}
+                      </p>
+                      {phones.map((phone, j) => (
+                        <p key={j} style={styles.contactValue}>
+                          <a
+                            href={`tel:${phone}`}
+                            style={styles.contactLink}
+                            onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
+                          >
+                            {phone}
+                          </a>
+                        </p>
+                      ))}
+                    </div>
                   ))}
                 </div>
-              ))}
+              )}
 
-              {/* Emails by type */}
-              {Object.entries(emailsByType).map(([type, emails]) => (
-                <div key={`email-${type}`} style={styles.contactGroup}>
+              {/* Emails column */}
+              {hasEmails && (
+                <div style={styles.contactGroup}>
                   <p style={styles.contactLabel}>
                     <MailIcon size={12} />
-                    {type} Email
+                    Email
                   </p>
-                  {emails.map((email, i) => (
-                    <p key={i} style={styles.contactValue}>
-                      <a
-                        href={`mailto:${email}`}
-                        style={styles.contactLink}
-                        onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
-                      >
-                        {email}
-                      </a>
-                    </p>
+                  {Object.entries(emailsByType).map(([type, emails], i) => (
+                    <div key={`email-${type}`}>
+                      <p style={{ ...styles.contactSubLabel, ...(i === 0 ? { marginTop: 0 } : { marginTop: spacing[2] }) }}>
+                        {type}
+                      </p>
+                      {emails.map((email, j) => (
+                        <p key={j} style={styles.contactValue}>
+                          <a
+                            href={`mailto:${email}`}
+                            style={styles.contactLink}
+                            onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
+                          >
+                            {email}
+                          </a>
+                        </p>
+                      ))}
+                    </div>
                   ))}
                 </div>
-              ))}
+              )}
 
-              {/* Websites */}
+              {/* Websites column */}
               {hasWebsites && (
                 <div style={styles.contactGroup}>
                   <p style={styles.contactLabel}>
