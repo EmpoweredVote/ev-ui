@@ -164,7 +164,17 @@ export default function StanceAccordion({
   if (!topics || topics.length === 0) return null;
 
   const hasToggle = expandedTopics && expandedTopics.length > topics.length;
-  const visibleTopics = hasToggle && showAll ? expandedTopics : topics;
+  const baseTopics = hasToggle && showAll ? expandedTopics : topics;
+
+  // Pin the deep-linked topic to the top so it's always visible without "show all"
+  let visibleTopics = baseTopics;
+  if (initialExpandedTopicId) {
+    const fullList = expandedTopics || topics;
+    const pinned = fullList.find((t) => String(t.id) === String(initialExpandedTopicId));
+    if (pinned && String(baseTopics[0]?.id) !== String(initialExpandedTopicId)) {
+      visibleTopics = [pinned, ...baseTopics.filter((t) => String(t.id) !== String(initialExpandedTopicId))];
+    }
+  }
 
   return (
     <div
