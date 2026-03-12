@@ -1,3 +1,5 @@
+import React from 'react';
+
 /**
  * Favicon — renders a site's favicon via Google's favicon service.
  * Default size=16 for inline source link display.

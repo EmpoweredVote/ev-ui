@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Favicon from './Favicon';
 
 /**
@@ -28,9 +28,10 @@ function getDisplayUrl(url) {
  *   politicianId     — politician UUID
  *   allTopics        — full topic objects with stances arrays
  *   expandedTopics   — full set of topics for "show all" toggle
- *   verdictsByTopic  — Record<string, 'agreed' | 'disagreed'> | undefined — DEPRECATED (kept for backward compat, no longer used in render)
- *   verdictsByQuote  — Record<quote_id, 'agreed' | 'disagreed'> | undefined — per-quote verdicts shown in expanded rows
- *   apiUrl           — API base URL (default: 'https://api.empowered.vote')
+ *   verdictsByTopic        — Record<string, 'agreed' | 'disagreed'> | undefined — DEPRECATED (kept for backward compat, no longer used in render)
+ *   verdictsByQuote        — Record<quote_id, 'agreed' | 'disagreed'> | undefined — per-quote verdicts shown in expanded rows
+ *   initialExpandedTopicId — topic ID to auto-open on mount (e.g. deep-linked from ReadRank)
+ *   apiUrl                 — API base URL (default: 'https://api.empowered.vote')
  */
 export default function StanceAccordion({
   topics,
@@ -40,6 +41,7 @@ export default function StanceAccordion({
   expandedTopics,
   verdictsByTopic,  // Record<string, 'agreed' | 'disagreed'> | undefined — DEPRECATED, no longer rendered
   verdictsByQuote,  // Record<quote_id, 'agreed' | 'disagreed'> | undefined
+  initialExpandedTopicId,
   apiUrl = 'https://api.empowered.vote',
 }) {
   const [expandedTopicId, setExpandedTopicId] = useState(null);
@@ -149,6 +151,15 @@ export default function StanceAccordion({
     },
     [expandedTopicId, politicianId, apiUrl]
   );
+
+  // Auto-open the deep-linked topic once topics are available
+  useEffect(() => {
+    if (initialExpandedTopicId && topics && topics.length > 0) {
+      handleToggle(String(initialExpandedTopicId));
+    }
+    // Only run once on mount — intentionally omitting handleToggle from deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialExpandedTopicId, topics]);
 
   if (!topics || topics.length === 0) return null;
 
