@@ -18,7 +18,8 @@ function getDisplayUrl(url) {
 
 /**
  * StanceAccordion — vertical list of topic rows showing politician stance labels.
- * Expanding a row lazy-fetches reasoning + source links from the context endpoint.
+ * Expanding a row lazy-fetches reasoning + source links from the context endpoint,
+ * and fetches all politician quotes once (cached) to display per-topic in expanded rows.
  * True accordion: only one row open at a time.
  *
  * Props:
@@ -27,7 +28,8 @@ function getDisplayUrl(url) {
  *   politicianId     — politician UUID
  *   allTopics        — full topic objects with stances arrays
  *   expandedTopics   — full set of topics for "show all" toggle
- *   verdictsByTopic  — Record<string, 'agreed' | 'disagreed'> | undefined
+ *   verdictsByTopic  — Record<string, 'agreed' | 'disagreed'> | undefined — DEPRECATED (kept for backward compat, no longer used in render)
+ *   verdictsByQuote  — Record<quote_id, 'agreed' | 'disagreed'> | undefined — per-quote verdicts shown in expanded rows
  *   apiUrl           — API base URL (default: 'https://api.empowered.vote')
  */
 export default function StanceAccordion({
@@ -36,13 +38,15 @@ export default function StanceAccordion({
   politicianId,
   allTopics,
   expandedTopics,
-  verdictsByTopic,  // Record<string, 'agreed' | 'disagreed'> | undefined
+  verdictsByTopic,  // Record<string, 'agreed' | 'disagreed'> | undefined — DEPRECATED, no longer rendered
+  verdictsByQuote,  // Record<quote_id, 'agreed' | 'disagreed'> | undefined
   apiUrl = 'https://api.empowered.vote',
 }) {
   const [expandedTopicId, setExpandedTopicId] = useState(null);
   const [loadingId, setLoadingId] = useState(null);
   const [showAll, setShowAll] = useState(false);
   const contextCache = useRef(new Map());
+  const quotesCache = useRef(null); // null = unfetched, array = fetched (may be empty)
 
   // Build lookup: topic_id -> polAnswer value
   const polAnswerMap = {};
@@ -73,7 +77,55 @@ export default function StanceAccordion({
   }
 
   /**
-   * Toggle accordion row. Lazy-fetch context if not cached.
+   * Fetch context for a topic (reasoning + sources). Returns after caching.
+   */
+  async function fetchContext(topicId) {
+    if (contextCache.current.has(topicId)) return;
+    try {
+      const res = await fetch(
+        `${apiUrl}/compass/politicians/${politicianId}/${topicId}/context`,
+        { credentials: 'include' }
+      );
+      if (res.status === 404) {
+        contextCache.current.set(topicId, { reasoning: '', sources: [] });
+      } else if (res.ok) {
+        const data = await res.json();
+        contextCache.current.set(topicId, {
+          reasoning: data.reasoning || '',
+          sources: data.sources || [],
+        });
+      } else {
+        contextCache.current.set(topicId, { reasoning: '', sources: [] });
+      }
+    } catch {
+      contextCache.current.set(topicId, { reasoning: '', sources: [] });
+    }
+  }
+
+  /**
+   * Fetch all quotes for this politician once and store in quotesCache.
+   * Subsequent calls return immediately (no-op).
+   */
+  async function ensureQuotesFetched() {
+    if (quotesCache.current !== null) return;
+    try {
+      const res = await fetch(
+        `${apiUrl}/essentials/quotes?politician_id=${politicianId}`,
+        { credentials: 'include' }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        quotesCache.current = data.quotes || [];
+      } else {
+        quotesCache.current = [];
+      }
+    } catch {
+      quotesCache.current = [];
+    }
+  }
+
+  /**
+   * Toggle accordion row. Lazy-fetch context + quotes in parallel if not cached.
    */
   const handleToggle = useCallback(
     async (topicId) => {
@@ -84,29 +136,13 @@ export default function StanceAccordion({
 
       setExpandedTopicId(topicId);
 
-      // Check cache
-      if (contextCache.current.has(topicId)) return;
+      // Check if context already cached (quotes fetched separately)
+      if (contextCache.current.has(topicId) && quotesCache.current !== null) return;
 
-      // Fetch context
+      // Fetch context and quotes in parallel
       setLoadingId(topicId);
       try {
-        const res = await fetch(
-          `${apiUrl}/compass/politicians/${politicianId}/${topicId}/context`,
-          { credentials: 'include' }
-        );
-        if (res.status === 404) {
-          contextCache.current.set(topicId, { reasoning: '', sources: [] });
-        } else if (res.ok) {
-          const data = await res.json();
-          contextCache.current.set(topicId, {
-            reasoning: data.reasoning || '',
-            sources: data.sources || [],
-          });
-        } else {
-          contextCache.current.set(topicId, { reasoning: '', sources: [] });
-        }
-      } catch {
-        contextCache.current.set(topicId, { reasoning: '', sources: [] });
+        await Promise.all([fetchContext(topicId), ensureQuotesFetched()]);
       } finally {
         setLoadingId(null);
       }
@@ -140,7 +176,16 @@ export default function StanceAccordion({
         const cached = contextCache.current.get(topicId);
         const fullTopic = topicById[topicId];
         const questionText = fullTopic?.question_text;
-        const verdict = verdictsByTopic ? verdictsByTopic[topicId] : undefined;
+
+        // Filter quotes for this topic (case-insensitive match on issue vs short_title)
+        const topicQuotes = quotesCache.current
+          ? quotesCache.current.filter(
+              (q) =>
+                q.issue &&
+                topic.short_title &&
+                q.issue.toLowerCase() === topic.short_title.toLowerCase()
+            )
+          : [];
 
         return (
           <div key={topicId} className="border-b border-neutral-100">
@@ -162,28 +207,6 @@ export default function StanceAccordion({
                 <span className="text-xs text-neutral-500 mt-0.5">
                   {label}
                 </span>
-                {verdict === 'agreed' && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px',
-                    backgroundColor: '#ecfeff', color: '#0e7490', padding: '2px 8px',
-                    borderRadius: '9999px', fontSize: '11px', fontWeight: 500,
-                    marginTop: '3px', flexShrink: 0, alignSelf: 'flex-start' }}>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M5 13l4 4L19 7" />
-                    </svg>
-                    Agreed
-                  </span>
-                )}
-                {verdict === 'disagreed' && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px',
-                    backgroundColor: '#fffbeb', color: '#b45309', padding: '2px 8px',
-                    borderRadius: '9999px', fontSize: '11px', fontWeight: 500,
-                    marginTop: '3px', flexShrink: 0, alignSelf: 'flex-start' }}>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    Disagreed
-                  </span>
-                )}
               </div>
 
               {/* Chevron */}
@@ -267,8 +290,120 @@ export default function StanceAccordion({
                         </div>
                       )}
 
+                      {topicQuotes.length > 0 && (
+                        <div style={{ marginTop: '12px' }}>
+                          <p
+                            style={{
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              color: '#737373',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em',
+                              marginBottom: '8px',
+                            }}
+                          >
+                            Quotes
+                          </p>
+                          {topicQuotes.map((quote) => {
+                            const verdict = verdictsByQuote ? verdictsByQuote[quote.id] : undefined;
+                            const borderColor =
+                              verdict === 'agreed'
+                                ? '#0e7490'
+                                : verdict === 'disagreed'
+                                ? '#b45309'
+                                : '#e2e8f0';
+                            const sourceName = quote.source_name || quote.sourceName;
+                            return (
+                              <div
+                                key={quote.id}
+                                style={{
+                                  borderLeft: `3px solid ${borderColor}`,
+                                  paddingLeft: '10px',
+                                  paddingTop: '6px',
+                                  paddingBottom: '6px',
+                                  marginBottom: '8px',
+                                }}
+                              >
+                                <p
+                                  style={{
+                                    fontSize: '13px',
+                                    fontStyle: 'italic',
+                                    color: '#374151',
+                                    margin: 0,
+                                    lineHeight: 1.5,
+                                  }}
+                                >
+                                  {quote.text}
+                                </p>
+                                {verdict === 'agreed' && (
+                                  <span
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '4px',
+                                      backgroundColor: '#ecfeff',
+                                      color: '#0e7490',
+                                      padding: '2px 8px',
+                                      borderRadius: '9999px',
+                                      fontSize: '11px',
+                                      fontWeight: 500,
+                                      marginTop: '4px',
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    Agreed
+                                  </span>
+                                )}
+                                {verdict === 'disagreed' && (
+                                  <span
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '4px',
+                                      backgroundColor: '#fffbeb',
+                                      color: '#b45309',
+                                      padding: '2px 8px',
+                                      borderRadius: '9999px',
+                                      fontSize: '11px',
+                                      fontWeight: 500,
+                                      marginTop: '4px',
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                    Disagreed
+                                  </span>
+                                )}
+                                {sourceName && (
+                                  <a
+                                    href={quote.source_url || quote.sourceUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    style={{
+                                      display: 'block',
+                                      fontSize: '11px',
+                                      color: '#00657c',
+                                      marginTop: '3px',
+                                      textDecoration: 'none',
+                                    }}
+                                  >
+                                    {sourceName}
+                                  </a>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
                       {!cached.reasoning &&
-                        (!cached.sources || cached.sources.length === 0) && (
+                        (!cached.sources || cached.sources.length === 0) &&
+                        topicQuotes.length === 0 && (
                           <p className="text-sm text-neutral-400 italic py-2">
                             No detailed reasoning available for this topic.
                           </p>
