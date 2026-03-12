@@ -100,6 +100,32 @@ function isLinkedInUrl(url) {
   }
 }
 
+/** Social platform detection */
+const SOCIAL_PLATFORMS = [
+  { test: /facebook\.com/i,  platform: 'facebook' },
+  { test: /twitter\.com|x\.com/i, platform: 'twitter' },
+  { test: /instagram\.com/i, platform: 'instagram' },
+  { test: /linkedin\.com/i,  platform: 'linkedin' },
+  { test: /youtube\.com|youtu\.be/i, platform: 'youtube' },
+];
+
+function detectSocialPlatform(url) {
+  if (!url) return null;
+  for (const { test, platform } of SOCIAL_PLATFORMS) {
+    if (test.test(url)) return platform;
+  }
+  return null;
+}
+
+/** Extract just the domain from a URL for display */
+function extractDomain(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0];
+  }
+}
+
 /** Extract LinkedIn URL from politician data, and return non-LinkedIn websites */
 function extractLinkedIn(pol) {
   let linkedinUrl = null;
@@ -283,7 +309,8 @@ export default function PoliticianProfile({
   // Group phones, emails, websites by contact_type
   const phonesByType = {};
   const emailsByType = {};
-  const allWebsites = [];
+  const allWebsites = [];        // non-social websites only
+  const socialWebsiteUrls = [];  // social platform URLs detected from websites list
 
   (pol.contacts || []).forEach(c => {
     const cType = c.contact_type || 'Office';
@@ -296,7 +323,12 @@ export default function PoliticianProfile({
       emailsByType[cType].push(c.email.trim());
     }
     if (c.website_url && c.website_url.trim() && !isLinkedInUrl(c.website_url)) {
-      allWebsites.push(c.website_url.trim());
+      const url = c.website_url.trim();
+      if (detectSocialPlatform(url)) {
+        if (!socialWebsiteUrls.includes(url)) socialWebsiteUrls.push(url);
+      } else {
+        allWebsites.push(url);
+      }
     }
   });
 
@@ -310,17 +342,22 @@ export default function PoliticianProfile({
     }
   });
 
-  // Add person-level websites (non-LinkedIn), deduplicated
+  // Add person-level websites (non-LinkedIn), deduplicated, splitting social vs plain
   personWebsites.forEach(url => {
-    if (!allWebsites.includes(url)) allWebsites.push(url);
+    if (detectSocialPlatform(url)) {
+      if (!socialWebsiteUrls.includes(url)) socialWebsiteUrls.push(url);
+    } else {
+      if (!allWebsites.includes(url)) allWebsites.push(url);
+    }
   });
 
   const hasAddresses = addresses.length > 0;
   const hasPhones = Object.keys(phonesByType).length > 0;
   const hasEmails = Object.values(emailsByType).some(emails => emails.some(e => e && e.trim()));
   const hasWebsites = allWebsites.length > 0;
-  const hasContactInfo = hasAddresses || hasPhones || hasEmails || hasWebsites;
-  const hasSocial = twitter || facebook || instagram || linkedinUrl || personWebsites.length > 0;
+  const hasWebsitesCol = hasWebsites || twitter || facebook || instagram || linkedinUrl || socialWebsiteUrls.length > 0;
+  const hasContactInfo = hasAddresses || hasPhones || hasEmails || hasWebsitesCol;
+  const hasSocial = twitter || facebook || instagram || linkedinUrl;
 
   // ── Styles ─────────────────────────────────────────────────────────
 
@@ -479,7 +516,16 @@ export default function PoliticianProfile({
     // Contact section
     contactGrid: {
       display: 'grid',
-      gridTemplateColumns: isMobile ? '1fr' : `repeat(${[hasAddresses, hasPhones, hasEmails, hasWebsites].filter(Boolean).length}, 1fr)`,
+      gridTemplateColumns: isMobile
+        ? '1fr'
+        : (() => {
+            const cols = [];
+            if (hasAddresses) cols.push('1fr');
+            if (hasPhones) cols.push('140px');
+            if (hasEmails) cols.push('minmax(180px, 1fr)');
+            if (hasWebsitesCol) cols.push('1fr');
+            return cols.join(' ');
+          })(),
       gap: isMobile ? spacing[4] : spacing[6],
     },
     contactGroup: {
@@ -619,17 +665,7 @@ export default function PoliticianProfile({
               </a>
             )}
 
-            {/* Social icons row */}
-            {hasSocial && (
-              <SocialLinks
-                twitter={twitter}
-                facebook={facebook}
-                instagram={instagram}
-                linkedin={linkedinUrl}
-                website={personWebsites[0] || null}
-                size="sm"
-              />
-            )}
+            {/* Social icons moved to bottom of websites column in contact section */}
           </div>
         </div>
 
@@ -726,7 +762,7 @@ export default function PoliticianProfile({
               )}
 
               {/* Websites column */}
-              {hasWebsites && (
+              {hasWebsitesCol && (
                 <div style={styles.contactGroup}>
                   <p style={styles.contactLabel}>
                     <GlobeIcon size={12} />
@@ -742,10 +778,22 @@ export default function PoliticianProfile({
                         onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
                         onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
                       >
-                        {url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
+                        {extractDomain(url)}
                       </a>
                     </p>
                   ))}
+                  {/* Social icon-only links at bottom of websites column */}
+                  {(hasSocial || socialWebsiteUrls.length > 0) && (
+                    <SocialLinks
+                      twitter={twitter}
+                      facebook={facebook}
+                      instagram={instagram}
+                      linkedin={linkedinUrl}
+                      extraLinks={socialWebsiteUrls}
+                      size="sm"
+                      style={{ marginTop: allWebsites.length > 0 ? '8px' : 0 }}
+                    />
+                  )}
                 </div>
               )}
             </div>
