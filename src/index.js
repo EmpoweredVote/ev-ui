@@ -18,3 +18,6 @@ export { default as useMediaQuery } from "./useMediaQuery.js";
 
 // Design Tokens
 export * from "./tokens.js";
+
+// Profile Components
+export { default as StanceAccordion } from "./StanceAccordion.jsx";
