@@ -21,9 +21,9 @@ const defaultNavItems = [
     label: 'Features',
     href: '#',
     dropdown: [
-      { label: 'Political Compass', href: 'https://ev-compass.netlify.app' },
-      { label: 'Find Representatives', href: 'https://ev-essentials.netlify.app' },
-      { label: 'Read & Rank', href: 'https://ev-prototypes.netlify.app/read-rank/dist' },
+      { label: 'Political Compass', href: 'https://compass.empowered.vote' },
+      { label: 'Find Representatives', href: 'https://essentials.empowered.vote' },
+      { label: 'Read & Rank', href: 'https://readrank.empowered.vote' },
       { label: 'Treasury Tracker', href: 'https://ev-prototypes.netlify.app/treasury-tracker/dist' },
       { label: 'Empowered Badges', href: 'https://ev-prototypes.netlify.app/empowered-badges/dist' },
     ],
