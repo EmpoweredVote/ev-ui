@@ -149,7 +149,7 @@ export default function PoliticianCard({
     },
     badge: {
       position: 'absolute',
-      top: spacing[1],
+      bottom: spacing[1],
       right: spacing[1],
       backgroundColor: colors.evCoral,
       color: colors.textWhite,
