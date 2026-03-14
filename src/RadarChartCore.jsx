@@ -150,7 +150,7 @@ export default function RadarChartCore({
 
   return (
     <svg
-      className="w-full h-auto"
+      className="w-full h-auto max-h-full"
       viewBox={`-${leftPadding} -${verticalPadding} ${size + leftPadding + rightPadding} ${size + verticalPadding * 2}`}
       preserveAspectRatio="xMidYMid meet"
     >
