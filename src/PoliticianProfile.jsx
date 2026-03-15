@@ -51,6 +51,9 @@ function buildTitleAndSubtitle(pol) {
 
   const title = (() => {
     if (dashIdx > 0) return qualifyLocalTitle(cleanTitle.slice(0, dashIdx), pol);
+    // NATIONAL_JUDICIAL: show role as title (e.g. "Chief Justice"), chamber as subtitle
+    if (pol.district_type === 'NATIONAL_JUDICIAL')
+      return cleanTitle || cleanChamber;
     if (pol.district_type === 'SCHOOL' && pol.government_name) {
       const schoolName = pol.government_name.split(',')[0];
       return cleanChamber ? `${schoolName} ${cleanChamber}` : schoolName;
@@ -62,6 +65,9 @@ function buildTitleAndSubtitle(pol) {
 
   const subtitle = (() => {
     if (dashIdx > 0) return cleanTitle.slice(dashIdx + 3);
+    // NATIONAL_JUDICIAL: show court name as subtitle (e.g. "Supreme Court of the United States")
+    if (pol.district_type === 'NATIONAL_JUDICIAL')
+      return cleanChamber || null;
     if (pol.district_id && /^[1-9]\d*$/.test(pol.district_id))
       return `District ${pol.district_id}`;
     if (pol.district_id === '0' && !/(_EXEC)$/.test(pol.district_type))
