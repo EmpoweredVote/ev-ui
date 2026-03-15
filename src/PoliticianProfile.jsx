@@ -4,6 +4,7 @@ import useMediaQuery from './useMediaQuery';
 import SocialLinks from './SocialLinks.jsx';
 import CommitteeTable from './CommitteeTable.jsx';
 import LegislativeInlineSummary from './LegislativeInlineSummary.jsx';
+import JudicialScorecard from './JudicialScorecard.jsx';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -241,6 +242,7 @@ export default function PoliticianProfile({
   banner,        // slot for injecting content inside the card after heroRow
   style = {},
   legislativeSummary,
+  judicialRecord,
   politicianId,
   onNavigateToRecord,
 }) {
@@ -825,12 +827,20 @@ export default function PoliticianProfile({
         </div>
         */}
 
-        {/* ── Section 5: Legislative Summary ── */}
-        <LegislativeInlineSummary
-          summary={legislativeSummary}
-          politicianId={politicianId}
-          onNavigateToRecord={onNavigateToRecord}
-        />
+        {/* ── Section 5: Legislative Summary / Judicial Scorecard ── */}
+        {pol.is_judicial ? (
+          <JudicialScorecard
+            judicialRecord={judicialRecord}
+            politicianId={politicianId}
+            onNavigateToRecord={onNavigateToRecord}
+          />
+        ) : (
+          <LegislativeInlineSummary
+            summary={legislativeSummary}
+            politicianId={politicianId}
+            onNavigateToRecord={onNavigateToRecord}
+          />
+        )}
       </div>
 
       {/* Children slot (compass/radar chart section) */}

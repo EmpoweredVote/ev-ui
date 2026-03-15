@@ -11,6 +11,8 @@ export { default as CommitteeTable } from "./CommitteeTable.jsx";
 export { default as PoliticianProfile } from "./PoliticianProfile.jsx";
 export { default as LegislativeInlineSummary } from "./LegislativeInlineSummary.jsx";
 export { default as LegislativeRecord } from "./LegislativeRecord.jsx";
+export { default as JudicialScorecard } from "./JudicialScorecard.jsx";
+export { JudicialRecordDetail } from "./JudicialRecordDetail.jsx";
 export { default as AuthForm } from "./AuthForm.jsx";
 
 // Hooks
