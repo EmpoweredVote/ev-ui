@@ -1,5 +1,5 @@
 import React from 'react';
-import { METRIC_LABELS, formatMetricValue } from './judicialUtils.js';
+import { METRIC_LABELS, formatMetricValue, formatDate } from './judicialUtils.js';
 
 const containerStyle = {
   fontFamily: "'Manrope', sans-serif",
@@ -128,7 +128,7 @@ export function JudicialRecordDetail({ politician = {}, judicialRecord, onBack }
       <h1 style={nameStyle}>{displayName}</h1>
       <p style={roleStyle}>
         {detail?.court_role || politician.office_title}
-        {detail?.date_seated && ` · Seated ${detail.date_seated}`}
+        {detail?.date_seated && ` · Seated ${formatDate(detail.date_seated)}`}
       </p>
 
       {/* Judge Background */}
@@ -186,7 +186,7 @@ export function JudicialRecordDetail({ politician = {}, judicialRecord, onBack }
                   ) : ev.source}
                 </td>
                 <td style={{ ...tdStyle, fontWeight: 600 }}>{ev.rating}</td>
-                <td style={tdStyle}>{ev.rating_date}</td>
+                <td style={tdStyle}>{formatDate(ev.rating_date)}</td>
               </tr>
             ))}
           </tbody>
@@ -235,7 +235,7 @@ export function JudicialRecordDetail({ politician = {}, judicialRecord, onBack }
               marginBottom: '10px',
             }}>
               <div style={{ fontWeight: 700, color: '#742a2a', fontSize: '14px' }}>
-                {d.record_type} — {d.record_date}
+                {d.record_type} — {formatDate(d.record_date)}
               </div>
               {d.description && (
                 <div style={{ color: '#9b2c2c', fontSize: '13px', marginTop: '4px' }}>{d.description}</div>

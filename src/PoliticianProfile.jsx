@@ -80,10 +80,15 @@ function buildTitleAndSubtitle(pol) {
 }
 
 /** Map district_type prefix to tier label */
-function getTierLabel(districtType) {
+function getTierLabel(districtType, officeTitle) {
   if (!districtType) return null;
   if (districtType.startsWith('NATIONAL')) return 'FEDERAL';
   if (districtType.startsWith('STATE')) return 'STATE';
+  // Judicial districts: classify by court level
+  if (districtType === 'JUDICIAL' && officeTitle) {
+    const t = officeTitle.toLowerCase();
+    if (t.includes('supreme court') || t.includes('appeals') || t.includes('tax court')) return 'STATE';
+  }
   return 'LOCAL';
 }
 
@@ -289,7 +294,7 @@ export default function PoliticianProfile({
   const { linkedinUrl, personWebsites } = extractLinkedIn(pol);
 
   // Tier badge
-  const tier = getTierLabel(pol.district_type);
+  const tier = getTierLabel(pol.district_type, pol.office_title);
   const tierColors = tier ? getTierColors(tier) : null;
 
   // Title & subtitle (no party)

@@ -1,5 +1,5 @@
 import React from 'react';
-import { METRIC_LABELS, formatMetricValue } from './judicialUtils.js';
+import { METRIC_LABELS, formatMetricValue, formatDate } from './judicialUtils.js';
 
 const sectionStyle = {
   fontFamily: "'Manrope', sans-serif",
@@ -155,7 +155,7 @@ export default function JudicialScorecard({ judicialRecord, politicianId, onNavi
         <div style={{ marginBottom: '12px' }}>
           {disciplinary.slice(0, 2).map((d, i) => (
             <div key={i} style={disciplinaryStyle}>
-              <strong>{d.record_type}</strong> — {d.record_date}
+              <strong>{d.record_type}</strong> — {formatDate(d.record_date)}
               {d.description && <div style={{ marginTop: '4px' }}>{d.description}</div>}
             </div>
           ))}
