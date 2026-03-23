@@ -1,0 +1,2780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Empowered Vote Design System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #F7F7F8;
+      --card: #FFFFFF;
+      --heading: #1C1C1C;
+      --body: #535964;
+      --muted: #6B7280;
+      --faint: #9CA3AF;
+      --border: #E5E7EB;
+      --teal: #00657C;
+      --coral: #FF5740;
+      --btn-accent: #005366;
+      --btn-accent-hover: #003E4D;
+      --btn-accent-pressed: #03303A;
+      --btn-text: #FFFFFF;
+      --stat-yellow: #7B640E;
+      --stat-coral: #B91C1C;
+      --form-error: #DC2626;
+      --form-success: #047857;
+    }
+
+    [data-theme="dark"] {
+      --bg: #131416;
+      --card: #1E2024;
+      --heading: #EBEDEF;        /* 15.70:1 on bg ✓ AAA */
+      --body: #B3BBCC;           /* 9.56:1 on bg ✓ AAA (bumped from #8F9EBC) */
+      --muted: #8F9EBC;          /* 6.83:1 on bg ✓ AA (bumped from #6B7280) */
+      --faint: #6B7280;          /* 3.81:1 on bg — auxiliary text only */
+      --border: #3A3D44;
+      --teal: #59B0C4;           /* 7.40:1 on bg ✓ AAA (bumped from #3A9BB0) */
+      --coral: #FF5740;
+      --btn-accent: #005366;     /* 8.64:1 white text ✓ AAA (darkened for AA) */
+      --btn-accent-hover: #327E8F; /* 4.65:1 white text ✓ AA */
+      --btn-accent-pressed: #003E4D; /* 11.69:1 white text ✓ AAA */
+      --btn-text: #FFFFFF;
+      --stat-yellow: #FED12E;
+      --stat-coral: #FF5740;
+      --form-error: #FCA5A5;
+      --form-success: #6EE7B7;
+    }
+
+    body {
+      font-family: 'Manrope', sans-serif;
+      background: var(--bg);
+      color: var(--body);
+      line-height: 1.6;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+
+    /* Header */
+    .header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 24px; border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 20; background: var(--bg);
+      transition: background 0.3s;
+    }
+    .header h1 { font-size: 22px; font-weight: 800; color: var(--heading); letter-spacing: -0.02em; }
+    .header .subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .theme-toggle {
+      background: var(--card); border: 1px solid var(--border); border-radius: 999px;
+      padding: 0; width: 72px; height: 36px; cursor: pointer; transition: all 0.3s;
+      position: relative; display: flex; align-items: center;
+    }
+    .theme-toggle:hover { border-color: var(--teal); }
+    .theme-toggle-thumb {
+      position: absolute; top: 3px; left: 3px;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--teal); display: flex; align-items: center; justify-content: center;
+      transition: transform 0.3s ease, background 0.3s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    [data-theme="dark"] .theme-toggle-thumb { transform: translateX(36px); }
+    .theme-toggle-thumb svg { width: 16px; height: 16px; }
+    .theme-toggle-icons {
+      display: flex; width: 100%; justify-content: space-between; padding: 0 9px;
+      pointer-events: none;
+    }
+    .theme-toggle-icons svg { width: 14px; height: 14px; color: var(--muted); }
+
+    /* Nav */
+    .nav {
+      position: sticky; top: 70px; z-index: 10; background: var(--bg);
+      border-bottom: 1px solid var(--border); padding: 10px 0; margin-bottom: 40px;
+      display: flex; gap: 8px; flex-wrap: wrap; transition: background 0.3s;
+    }
+    .nav a {
+      font-size: 13px; font-weight: 600; color: var(--muted); text-decoration: none;
+      padding: 6px 14px; border-radius: 6px; transition: all 0.2s;
+    }
+    .nav a:hover, .nav a.active { background: var(--card); color: var(--teal); }
+
+    /* Sections */
+    .section { margin-bottom: 64px; }
+    .section-title {
+      font-size: 24px; font-weight: 700; color: var(--heading);
+      margin-bottom: 8px; letter-spacing: -0.01em;
+    }
+    .section-desc { font-size: 14px; color: var(--muted); margin-bottom: 32px; }
+
+    /* Color Swatches */
+    .color-scale { margin-bottom: 32px; }
+    .color-scale-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+    .color-scale-name { font-size: 16px; font-weight: 700; color: var(--heading); }
+    .color-scale-pillar { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .swatches { display: flex; gap: 6px; flex-wrap: wrap; }
+    .swatch {
+      width: 88px; border-radius: 8px; overflow: hidden;
+      border: 1px solid var(--border); transition: transform 0.15s;
+    }
+    .swatch:hover { transform: translateY(-2px); }
+    .swatch-color { height: 64px; position: relative; }
+    .swatch-color.brand::after {
+      content: '★'; position: absolute; top: 4px; right: 6px;
+      font-size: 14px; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    .swatch-info { padding: 6px 8px; background: var(--card); }
+    .swatch-step { font-size: 11px; font-weight: 600; color: var(--heading); }
+    .swatch-hex { font-size: 10px; color: var(--faint); font-family: monospace; cursor: pointer; }
+    .swatch-hex:hover { color: var(--teal); }
+
+    /* Typography */
+    .type-specimen { margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--border); }
+    .type-meta { font-size: 12px; font-weight: 500; color: var(--teal); margin-bottom: 8px; }
+    .type-sample { color: var(--heading); }
+
+    .weight-row { display: flex; align-items: center; gap: 24px; margin-bottom: 16px; }
+    .weight-label { width: 120px; font-size: 12px; font-weight: 500; color: var(--muted); flex-shrink: 0; }
+    .weight-sample { font-size: 22px; color: var(--heading); }
+
+    /* Spacing */
+    .spacing-row { display: flex; align-items: center; gap: 16px; margin-bottom: 10px; }
+    .spacing-label { width: 100px; font-size: 12px; font-weight: 500; color: var(--muted); font-family: monospace; }
+    .spacing-value { width: 48px; font-size: 12px; font-weight: 600; color: var(--heading); }
+    .spacing-bar { height: var(--bar-h, 8px); background: var(--teal); opacity: 0.7; border-radius: 2px; transition: width 0.3s; }
+
+    /* Radius */
+    .radius-grid { display: flex; gap: 16px; flex-wrap: wrap; }
+    .radius-item { text-align: center; }
+    .radius-box {
+      width: 72px; height: 72px; border: 2px solid var(--teal);
+      background: var(--card); margin-bottom: 8px;
+    }
+    .radius-name { font-size: 11px; font-weight: 600; color: var(--heading); }
+    .radius-val { font-size: 10px; color: var(--faint); }
+
+    /* Shadows */
+    .shadow-grid { display: flex; gap: 24px; flex-wrap: wrap; }
+    .shadow-card {
+      width: 200px; height: 120px; background: var(--card); border-radius: 12px;
+      display: flex; flex-direction: column; justify-content: center; padding: 20px;
+    }
+    .shadow-name { font-size: 14px; font-weight: 600; color: var(--heading); }
+    .shadow-desc { font-size: 11px; color: var(--muted); margin-top: 8px; }
+
+    /* Pillars */
+    .pillar-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
+    .pillar-card { background: var(--card); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
+    .pillar-header { padding: 20px 24px; }
+    .pillar-name { font-size: 20px; font-weight: 800; }
+    .pillar-body { padding: 20px 24px; }
+    .pillar-desc { font-size: 13px; color: var(--body); margin-bottom: 16px; }
+    .pillar-swatches { display: flex; gap: 8px; margin-bottom: 16px; }
+    .pillar-swatch { width: 40px; height: 40px; border-radius: 6px; }
+    .pillar-buttons { display: flex; gap: 8px; margin-bottom: 16px; }
+    .pillar-btn-primary {
+      padding: 10px 20px; border-radius: 8px; font-family: inherit;
+      font-size: 13px; font-weight: 700; border: none; cursor: pointer;
+    }
+    .pillar-btn-secondary {
+      padding: 10px 20px; border-radius: 8px; font-family: inherit;
+      font-size: 13px; font-weight: 600; background: transparent; cursor: pointer;
+      border: 2px solid;
+    }
+    .pillar-features { list-style: none; }
+    .pillar-features li { font-size: 13px; color: var(--body); padding: 4px 0; }
+    .pillar-features li::before { content: '→  '; color: var(--muted); }
+
+    /* Data Viz */
+    .viz-palette { display: flex; flex-direction: column; gap: 8px; }
+    .viz-row { display: flex; align-items: center; gap: 8px; }
+    .viz-hue-name { width: 60px; font-size: 12px; font-weight: 600; color: var(--heading); }
+    .viz-swatch {
+      width: 48px; height: 36px; border-radius: 4px; cursor: pointer;
+      transition: transform 0.1s; position: relative;
+    }
+    .viz-swatch:hover { transform: scale(1.1); }
+    .viz-swatch.base { outline: 2px solid var(--heading); outline-offset: 1px; }
+    .viz-hex { width: 70px; font-size: 10px; color: var(--faint); font-family: monospace; }
+
+    /* Bar chart example */
+    .chart-card { background: var(--card); border-radius: 12px; padding: 24px; border: 1px solid var(--border); }
+    .chart-title { font-size: 15px; font-weight: 700; color: var(--heading); margin-bottom: 4px; }
+    .chart-subtitle { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+    .chart-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .chart-label { width: 110px; font-size: 12px; font-weight: 500; color: var(--heading); flex-shrink: 0; }
+    .chart-track { flex: 1; height: 24px; background: var(--bg); border-radius: 5px; overflow: hidden; }
+    .chart-fill { height: 100%; border-radius: 5px; transition: width 0.5s; }
+    .chart-value { width: 36px; font-size: 11px; font-weight: 600; color: var(--muted); }
+
+    /* Pillar color tokens — light mode */
+    .pillar-inform { --btn-accent: #FED12F; --btn-accent-hover: #D0A301; --btn-accent-pressed: #9F7F09; --btn-text: #1C1C1C; --pillar-color: #FED12F; --pillar-dark: #D0A301; --pillar-light: #FAF9F5; --pillar-text: #1C1C1C; }
+    .pillar-empower { --btn-accent: #FF5740; --btn-accent-hover: #E61B00; --btn-accent-pressed: #B31D09; --btn-text: #FFFFFF; --pillar-color: #FF5740; --pillar-dark: #E61B00; --pillar-light: #FAF6F5; --pillar-text: #FFFFFF; }
+    .pillar-connect { --btn-accent: #00657C; --btn-accent-hover: #003E4D; --btn-accent-pressed: #03303A; --btn-text: #FFFFFF; --pillar-color: #00657C; --pillar-dark: #003E4D; --pillar-light: #F5F9FA; --pillar-text: #FFFFFF; }
+
+    /* Pillar color tokens — dark mode (AA accessible, vibrant) */
+    /* Dark pillar buttons: yellow uses dark text (11.66:1), coral large-text only (5.87:1 on dark bg), connect darkened for white text */
+    [data-theme="dark"] .pillar-inform { --btn-accent: #FED12E; --btn-accent-hover: #FEE88A; --btn-accent-pressed: #D0A301; --btn-text: #1C1C1C; --pillar-color: #FED12E; --pillar-dark: #FEE88A; --pillar-light: #5B4B10; --pillar-text: #1C1C1C; }
+    [data-theme="dark"] .pillar-empower { --btn-accent: #E61B00; --btn-accent-hover: #B31D09; --btn-accent-pressed: #8E1F10; --btn-text: #FFFFFF; --pillar-color: #FF5740; --pillar-dark: #F66855; --pillar-light: #6C1E13; --pillar-text: #FFFFFF; }
+    [data-theme="dark"] .pillar-connect { --btn-accent: #005366; --btn-accent-hover: #327E8F; --btn-accent-pressed: #003E4D; --btn-text: #FFFFFF; --pillar-color: #59B0C4; --pillar-dark: #7FBECC; --pillar-light: #1E383D; --pillar-text: #131416; }
+
+    /* Interactive Components */
+    .component-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 24px; }
+    .component-card {
+      background: var(--card); border-radius: 12px; padding: 24px;
+      border: 1px solid var(--border);
+    }
+    .component-label { font-size: 14px; font-weight: 700; color: var(--heading); margin-bottom: 16px; }
+    .component-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+    .component-state { font-size: 11px; font-weight: 500; color: var(--muted); width: 64px; flex-shrink: 0; }
+
+    .ev-btn {
+      padding: 10px 24px; border-radius: 8px; font-family: 'Manrope', sans-serif;
+      font-size: 14px; font-weight: 700; border: none; cursor: pointer;
+      transition: all 0.2s; outline: none; position: relative;
+    }
+    .ev-btn-primary {
+      background: var(--btn-accent, #005366); color: var(--btn-text, #FFFFFF);
+    }
+    .ev-btn-primary:hover {
+      background: var(--btn-accent-hover, #003E4D);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px color-mix(in srgb, var(--btn-accent, #005366) 30%, transparent);
+    }
+    .ev-btn-primary:active {
+      background: var(--btn-accent-pressed, #03303A);
+      transform: translateY(0);
+      box-shadow: none;
+    }
+    .ev-btn-primary:focus-visible {
+      box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--btn-accent, #005366);
+    }
+    .ev-btn-primary:disabled {
+      background: var(--border); color: var(--muted); cursor: not-allowed;
+      transform: none; box-shadow: none;
+    }
+
+    .ev-btn-secondary {
+      background: transparent; font-weight: 600;
+      color: var(--btn-accent, #005366);
+      border: 2px solid var(--btn-accent, #005366);
+    }
+    .ev-btn-secondary:hover {
+      background: var(--btn-accent, #005366); color: #FFFFFF;
+      transform: translateY(-1px);
+    }
+    .ev-btn-secondary:active {
+      background: var(--btn-accent-hover, #003E4D); color: #FFFFFF;
+      border-color: var(--btn-accent-hover, #003E4D);
+      transform: translateY(0);
+    }
+    .ev-btn-secondary:focus-visible {
+      box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--btn-accent, #005366);
+    }
+    .ev-btn-secondary:disabled {
+      border-color: var(--border); color: var(--muted); cursor: not-allowed;
+      transform: none; background: transparent;
+    }
+
+    .ev-btn-ghost {
+      background: transparent; font-weight: 600;
+      color: var(--btn-accent, #005366); border: none;
+      padding: 10px 16px;
+    }
+    .ev-btn-ghost:hover { background: color-mix(in srgb, var(--btn-accent, #005366) 8%, transparent); }
+    .ev-btn-ghost:active { background: color-mix(in srgb, var(--btn-accent, #005366) 15%, transparent); }
+
+    .ev-input {
+      padding: 12px 16px; border-radius: 12px; font-family: 'Manrope', sans-serif;
+      font-size: 14px; font-weight: 400; border: 1.5px solid var(--border);
+      background: var(--card); color: var(--heading); width: 280px;
+      outline: none; transition: all 0.2s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .ev-input::placeholder { color: var(--muted); }
+    .ev-input:hover { border-color: var(--teal); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .ev-input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px color-mix(in srgb, var(--teal) 12%, transparent), 0 2px 8px rgba(0,0,0,0.06); }
+    .ev-input:disabled { background: var(--bg); color: var(--faint); cursor: not-allowed; box-shadow: none; border-color: var(--border); }
+    [data-theme="dark"] .ev-input { box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+    [data-theme="dark"] .ev-input:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+
+    .ev-link {
+      font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 600;
+      color: var(--teal); text-decoration: none; transition: all 0.15s;
+      border-bottom: 1px solid transparent; cursor: pointer;
+    }
+    .ev-link:hover { border-bottom-color: var(--teal); }
+    .ev-link:active { opacity: 0.7; }
+
+    .ev-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 999px; font-family: 'Manrope', sans-serif;
+      font-size: 12px; font-weight: 600; border: 1px solid var(--border);
+      background: var(--card); color: var(--heading); cursor: pointer;
+      transition: all 0.15s;
+    }
+    .ev-chip:hover { border-color: var(--teal); color: var(--teal); }
+    .ev-chip.active { background: var(--teal); color: var(--btn-text, #FFFFFF); border-color: var(--teal); }
+
+    .ev-card-interactive {
+      background: var(--card); border-radius: 12px; padding: 20px;
+      border: 1px solid var(--border); cursor: pointer; transition: all 0.2s;
+      width: 260px;
+    }
+    .ev-card-interactive:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      border-color: var(--teal);
+    }
+    [data-theme="dark"] .ev-card-interactive:hover {
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .ev-card-interactive:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .ev-card-interactive .card-title { font-size: 15px; font-weight: 700; color: var(--heading); margin-bottom: 4px; }
+    .ev-card-interactive .card-desc { font-size: 12px; color: var(--muted); }
+    .ev-card-interactive .card-action { font-size: 12px; font-weight: 600; color: var(--teal); margin-top: 12px; }
+
+    .ev-toggle {
+      width: 44px; height: 24px; border-radius: 12px; border: none;
+      background: var(--border); cursor: pointer; position: relative;
+      transition: background 0.2s;
+    }
+    .ev-toggle::after {
+      content: ''; position: absolute; top: 2px; left: 2px;
+      width: 20px; height: 20px; border-radius: 10px;
+      background: white; transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .ev-toggle.on { background: var(--teal); }
+    .ev-toggle.on::after { transform: translateX(20px); }
+
+    /* Copied tooltip */
+    .copied {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: var(--heading); color: var(--bg); padding: 8px 16px;
+      border-radius: 8px; font-size: 13px; font-weight: 600;
+      opacity: 0; transition: opacity 0.2s; pointer-events: none;
+    }
+    .copied.show { opacity: 1; }
+
+    /* Radar Chart */
+    .radar-container { display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start; }
+    .radar-svg-wrap { flex-shrink: 0; }
+    .radar-controls { flex: 1; min-width: 280px; }
+    .radar-preset-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .radar-preset {
+      padding: 8px 14px; border-radius: 8px; font-family: 'Manrope', sans-serif;
+      font-size: 12px; font-weight: 600; border: 2px solid var(--border);
+      background: var(--card); color: var(--heading); cursor: pointer; transition: all 0.2s;
+    }
+    .radar-preset:hover { border-color: var(--teal); }
+    .radar-preset.active { border-color: var(--teal); background: color-mix(in srgb, var(--teal) 10%, var(--card)); }
+    .color-picker-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .color-picker-label { font-size: 13px; font-weight: 600; color: var(--heading); width: 80px; }
+    .color-picker-input {
+      width: 40px; height: 40px; border: 2px solid var(--border); border-radius: 8px;
+      cursor: pointer; padding: 2px; background: var(--card);
+    }
+    .color-picker-hex {
+      font-size: 12px; font-family: monospace; color: var(--muted);
+      background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+      padding: 4px 8px; width: 80px;
+    }
+
+    /* Patterns */
+    .pattern-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; }
+    .pattern-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      overflow: hidden;
+    }
+    .pattern-preview { padding: 24px; border-bottom: 1px solid var(--border); min-height: 140px;
+      display: flex; align-items: center; justify-content: center; }
+    .pattern-info { padding: 16px 20px; }
+    .pattern-name { font-size: 14px; font-weight: 700; color: var(--heading); margin-bottom: 4px; }
+    .pattern-desc { font-size: 12px; color: var(--muted); }
+    .pattern-apps { font-size: 11px; color: var(--faint); margin-top: 8px; }
+
+    /* Agree/Disagree buttons */
+    .action-btn-pair { display: flex; gap: 16px; }
+    .action-btn {
+      width: 64px; height: 64px; border-radius: 50%; border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s; background: var(--card);
+    }
+    .action-btn svg { width: 24px; height: 24px; }
+    .action-btn-disagree:hover { border-color: #78716C; background: #F5F5F4; transform: scale(1.08); }
+    .action-btn-agree:hover { border-color: #0E7490; background: #ECFEFF; transform: scale(1.08); }
+    .action-btn:active { transform: scale(0.95); }
+    [data-theme="dark"] .action-btn-disagree:hover { background: #2A2D32; border-color: #78716C; }
+    [data-theme="dark"] .action-btn-agree:hover { background: #1A2E33; border-color: #0E7490; }
+
+    /* Coach mark demo */
+    .coachmark-demo { position: relative; }
+    .coachmark-spotlight {
+      position: relative; display: inline-block; padding: 10px 20px;
+      background: var(--teal); color: var(--btn-text, #fff); border-radius: 8px;
+      font-size: 13px; font-weight: 700; font-family: 'Manrope', sans-serif;
+    }
+    .coachmark-tooltip {
+      position: absolute; top: calc(100% + 12px); left: 50%; transform: translateX(-50%);
+      background: var(--heading); color: var(--bg); padding: 12px 16px;
+      border-radius: 8px; font-size: 12px; width: 220px; text-align: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+    .coachmark-tooltip::before {
+      content: ''; position: absolute; top: -6px; left: 50%; transform: translateX(-50%);
+      border-left: 6px solid transparent; border-right: 6px solid transparent;
+      border-bottom: 6px solid var(--heading);
+    }
+    .coachmark-tooltip .tip-buttons { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
+    .coachmark-tooltip .tip-btn {
+      padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 600;
+      font-family: 'Manrope', sans-serif; cursor: pointer; border: none;
+    }
+    .coachmark-tooltip .tip-btn-skip { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.6); border-radius: 4px; }
+    .coachmark-tooltip .tip-btn-skip:hover { background: rgba(255,255,255,0.2); color: rgba(255,255,255,0.85); }
+    [data-theme="dark"] .coachmark-tooltip .tip-btn-skip { background: rgba(0,0,0,0.12); color: rgba(0,0,0,0.6); }
+    [data-theme="dark"] .coachmark-tooltip .tip-btn-skip:hover { background: rgba(0,0,0,0.2); color: rgba(0,0,0,0.8); }
+
+    /* Progress steps */
+    .progress-steps { display: flex; align-items: center; gap: 0; }
+    .progress-step {
+      width: 32px; height: 32px; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; font-size: 12px; font-weight: 700;
+      font-family: 'Manrope', sans-serif; transition: all 0.2s;
+    }
+    .progress-step.done { background: var(--teal); color: var(--btn-text, #fff); }
+    .progress-step.current { background: var(--teal); color: var(--btn-text, #fff); transform: scale(1.15); box-shadow: 0 0 0 4px color-mix(in srgb, var(--teal) 20%, transparent); }
+    .progress-step.upcoming { background: var(--border); color: var(--muted); }
+    .progress-line { width: 32px; height: 2px; }
+    .progress-line.done { background: var(--teal); }
+    .progress-line.upcoming { background: var(--border); }
+
+    /* Accordion */
+    .accordion-item { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
+    .accordion-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; background: var(--card); cursor: pointer;
+      font-size: 14px; font-weight: 600; color: var(--heading);
+      font-family: 'Manrope', sans-serif; transition: background 0.15s; border: none; width: 100%;
+    }
+    .accordion-header:hover { background: var(--bg); }
+    .accordion-chevron { transition: transform 0.2s; font-size: 16px; color: var(--muted); }
+    .accordion-item.open .accordion-chevron { transform: rotate(180deg); }
+    .accordion-body {
+      max-height: 0; overflow: hidden; transition: max-height 0.3s ease;
+      padding: 0 16px; font-size: 13px; color: var(--body);
+    }
+    .accordion-item.open .accordion-body { max-height: 200px; padding: 0 16px 12px; }
+
+    /* Toast */
+    .toast-demo {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      font-family: 'Manrope', sans-serif; animation: toastSlide 0.3s ease;
+    }
+    .toast-success { background: #D1FAE5; color: #047857; border: 1px solid #6EE7B7; }
+    .toast-error { background: #FEE2E2; color: #B91C1C; border: 1px solid #FCA5A5; }
+    .toast-info { background: #E0F4F8; color: #00657C; border: 1px solid #8CD4E5; }
+    [data-theme="dark"] .toast-success { background: #064E3B; color: #6EE7B7; border-color: #047857; }
+    [data-theme="dark"] .toast-error { background: #450A0A; color: #FCA5A5; border-color: #B91C1C; }
+    [data-theme="dark"] .toast-info { background: #1E383D; color: #8CD4E5; border-color: #327E8F; }
+    @keyframes toastSlide { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    /* Navigation Menu */
+    .ev-nav { display: flex; align-items: center; gap: 0; background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 4px; }
+    .ev-nav-item {
+      padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      font-family: 'Manrope', sans-serif; color: var(--body); cursor: pointer;
+      transition: all 0.15s; position: relative; border: none; background: none;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .ev-nav-item:hover { color: var(--heading); background: var(--bg); }
+    .ev-nav-item.active { color: var(--btn-text, #fff); background: var(--teal); }
+    .ev-nav-item .nav-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+
+    /* Nested / Dropdown Menu */
+    .ev-menu { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 4px; width: 240px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+    [data-theme="dark"] .ev-menu { box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .ev-menu-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 6px;
+      font-size: 13px; font-weight: 500; font-family: 'Manrope', sans-serif;
+      color: var(--heading); cursor: pointer; transition: all 0.1s; border: none;
+      background: none; width: 100%; text-align: left;
+    }
+    .ev-menu-item:hover { background: var(--bg); }
+    .ev-menu-item .menu-icon { width: 18px; height: 18px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+    .ev-menu-divider { height: 1px; background: var(--border); margin: 4px 8px; }
+    .ev-menu-label { padding: 8px 12px 4px; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .ev-menu-item .menu-arrow { margin-left: auto; color: var(--muted); font-size: 12px; }
+    .ev-menu-item .menu-badge { margin-left: auto; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 999px; background: var(--teal); color: var(--btn-text, #fff); }
+
+    /* Sidebar nav */
+    .ev-sidebar { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 8px; width: 220px; }
+    .ev-sidebar-item {
+      display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px;
+      font-size: 13px; font-weight: 500; font-family: 'Manrope', sans-serif;
+      color: var(--body); cursor: pointer; transition: all 0.15s; border: none;
+      background: none; width: 100%; text-align: left;
+    }
+    .ev-sidebar-item:hover { background: var(--bg); color: var(--heading); }
+    .ev-sidebar-item.active { background: color-mix(in srgb, var(--teal) 12%, var(--card)); color: var(--teal); font-weight: 600; }
+    .ev-sidebar-item .sidebar-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .ev-sidebar-group { padding: 6px 12px 4px; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 8px; }
+    .ev-sidebar-nested { padding-left: 20px; }
+
+    /* Badge variants */
+    .badge {
+      display: inline-flex; padding: 3px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 700; font-family: 'Manrope', sans-serif;
+      letter-spacing: 0.02em;
+    }
+    .badge-federal { background: #E0F4F8; color: #00647A; }
+    .badge-state { background: #FEF3C7; color: #B45309; }
+    .badge-local { background: #D1FAE5; color: #047857; }
+    .badge-inform { background: #FFF9DB; color: #7B640E; }
+    .badge-connect { background: #E0F4F8; color: #00647A; }
+    .badge-empower { background: #FEE2E2; color: #B91C1C; }
+    [data-theme="dark"] .badge-federal { background: #1E383D; color: #8CD4E5; }
+    [data-theme="dark"] .badge-state { background: #3B2F10; color: #FCD34D; }
+    [data-theme="dark"] .badge-local { background: #064E3B; color: #6EE7B7; }
+    [data-theme="dark"] .badge-inform { background: #3B2F10; color: #FEE88A; }
+    [data-theme="dark"] .badge-connect { background: #1E383D; color: #8CD4E5; }
+    [data-theme="dark"] .badge-empower { background: #450A0A; color: #FCA5A5; }
+
+    /* ── Forms ── */
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--heading); margin-bottom: 6px; font-family: 'Manrope', sans-serif; }
+    .form-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    .ev-select {
+      padding: 12px 40px 12px 16px; border-radius: 12px; font-family: 'Manrope', sans-serif;
+      font-size: 14px; font-weight: 500; border: 1.5px solid var(--border);
+      background: var(--card); color: var(--heading); width: 280px;
+      outline: none; transition: all 0.2s ease; appearance: none; cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%236B7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .ev-select:hover { border-color: var(--teal); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .ev-select:focus { border-color: var(--teal); box-shadow: 0 0 0 3px color-mix(in srgb, var(--teal) 12%, transparent), 0 2px 8px rgba(0,0,0,0.06); }
+    [data-theme="dark"] .ev-select { box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+    [data-theme="dark"] .ev-select:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+
+    .ev-textarea {
+      padding: 12px 16px; border-radius: 12px; font-family: 'Manrope', sans-serif;
+      font-size: 14px; border: 1.5px solid var(--border); background: var(--card);
+      color: var(--heading); width: 280px; min-height: 80px; resize: vertical;
+      outline: none; transition: all 0.2s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .ev-textarea:hover { border-color: var(--teal); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .ev-textarea:focus { border-color: var(--teal); box-shadow: 0 0 0 3px color-mix(in srgb, var(--teal) 12%, transparent), 0 2px 8px rgba(0,0,0,0.06); }
+    [data-theme="dark"] .ev-textarea { box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+
+    .ev-checkbox, .ev-radio { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-family: 'Manrope', sans-serif; color: var(--heading); }
+    .ev-checkbox input, .ev-radio input { display: none; }
+    .ev-check-box {
+      width: 20px; height: 20px; border: 2px solid var(--border); border-radius: 4px;
+      display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+      flex-shrink: 0; background: var(--card);
+    }
+    .ev-radio-dot {
+      width: 20px; height: 20px; border: 2px solid var(--border); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+      flex-shrink: 0; background: var(--card);
+    }
+    .ev-radio-dot::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: transparent; transition: background 0.15s; }
+    .ev-checkbox:hover .ev-check-box, .ev-radio:hover .ev-radio-dot { border-color: var(--teal); }
+    .ev-checkbox input:checked ~ .ev-check-box { background: var(--teal); border-color: var(--teal); }
+    .ev-checkbox input:checked ~ .ev-check-box::after { content: '✓'; color: var(--btn-text, #fff); font-size: 12px; font-weight: 800; }
+    .ev-radio input:checked ~ .ev-radio-dot { border-color: var(--teal); }
+    .ev-radio input:checked ~ .ev-radio-dot::after { background: var(--teal); }
+
+    .ev-input-error { border-color: #EF4444 !important; }
+    .ev-input-error:focus { box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important; }
+    .ev-input-success { border-color: #22C55E !important; }
+    .ev-input-success:focus { box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15) !important; }
+    .form-error { font-size: 12px; color: var(--form-error); margin-top: 4px; font-weight: 500; }
+    .form-success { font-size: 12px; color: var(--form-success); margin-top: 4px; font-weight: 500; }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100;
+      display: flex; align-items: center; justify-content: center;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal-card {
+      background: var(--card); border-radius: 16px; padding: 28px;
+      width: 420px; max-width: 90vw; box-shadow: 0 24px 48px rgba(0,0,0,0.2);
+      animation: modalSlide 0.25s ease; border: 1px solid var(--border);
+    }
+    .modal-title { font-size: 18px; font-weight: 700; color: var(--heading); margin-bottom: 8px; }
+    .modal-body { font-size: 14px; color: var(--body); margin-bottom: 24px; line-height: 1.6; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes modalSlide { from { opacity: 0; transform: translateY(12px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+    /* Modal demo (inline, not actually fixed) */
+    .modal-demo-backdrop {
+      background: rgba(0,0,0,0.5); border-radius: 12px; padding: 32px;
+      display: flex; align-items: center; justify-content: center; min-height: 260px;
+    }
+    [data-theme="dark"] .modal-demo-backdrop { background: rgba(255,255,255,0.06); }
+    .modal-demo-card {
+      background: var(--card); border-radius: 16px; padding: 24px;
+      width: 360px; box-shadow: 0 16px 40px rgba(0,0,0,0.15);
+      border: 1px solid var(--border);
+    }
+
+    /* ── Loading ── */
+    .spinner {
+      width: 32px; height: 32px; border: 3px solid var(--border);
+      border-top-color: var(--teal); border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .spinner-sm { width: 18px; height: 18px; border-width: 2px; }
+    .spinner-lg { width: 48px; height: 48px; border-width: 4px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .skeleton {
+      background: linear-gradient(90deg, var(--border) 25%, color-mix(in srgb, var(--border) 60%, var(--card)) 50%, var(--border) 75%);
+      background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    .progress-bar-track { height: 8px; background: color-mix(in srgb, var(--border) 70%, var(--card)); border-radius: 4px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; background: var(--teal); border-radius: 4px; transition: width 0.5s ease; }
+
+    /* ── Avatars ── */
+    .avatar {
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      font-family: 'Manrope', sans-serif; font-weight: 700; overflow: hidden; flex-shrink: 0;
+      background: var(--teal); color: var(--btn-text, #fff);
+    }
+    .avatar-xs { width: 24px; height: 24px; font-size: 10px; border-radius: 5px; }
+    .avatar-sm { width: 32px; height: 32px; font-size: 12px; border-radius: 6px; }
+    .avatar-md { width: 40px; height: 40px; font-size: 14px; }
+    .avatar-lg { width: 56px; height: 56px; font-size: 20px; border-radius: 10px; }
+    .avatar-xl { width: 80px; height: 80px; font-size: 28px; border-radius: 12px; }
+    .avatar-portrait { aspect-ratio: 4/5; width: auto; }
+    .avatar-portrait.avatar-sm { height: 40px; width: 32px; }
+    .avatar-portrait.avatar-md { height: 50px; width: 40px; }
+    .avatar-portrait.avatar-lg { height: 70px; width: 56px; }
+    .avatar-portrait.avatar-xl { height: 100px; width: 80px; }
+    .avatar-portrait.avatar-profile { height: 192px; width: 154px; border-radius: 10px; font-size: 48px; }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-group { display: flex; }
+    .avatar-group .avatar { border: 2px solid var(--card); margin-left: -10px; }
+    .avatar-group .avatar:first-child { margin-left: 0; }
+    .avatar-group .avatar-count { background: var(--border); color: var(--heading); font-size: 11px; }
+
+    /* Politician Profile Card */
+    .profile-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
+    .profile-header { display: flex; gap: 20px; }
+    .profile-info { flex: 1; }
+    .profile-name { font-size: 22px; font-weight: 800; color: var(--heading); margin-bottom: 4px; }
+    .profile-office { font-size: 14px; color: var(--body); margin-bottom: 8px; }
+    .profile-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .profile-stat { font-size: 12px; color: var(--muted); }
+    .profile-stat strong { color: var(--heading); font-weight: 700; }
+    .profile-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+    /* ── Tables ── */
+    .ev-table { width: 100%; border-collapse: collapse; font-size: 13px; font-family: 'Manrope', sans-serif; }
+    .ev-table th {
+      text-align: left; padding: 10px 14px; font-weight: 600; color: var(--muted);
+      border-bottom: 2px solid var(--border); font-size: 12px; text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .ev-table td { padding: 12px 14px; color: var(--heading); border-bottom: 1px solid var(--border); }
+    .ev-table tr:hover td { background: color-mix(in srgb, var(--teal) 4%, var(--card)); }
+    .ev-table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+
+    /* ── Empty State ── */
+    .empty-state {
+      text-align: center; padding: 48px 24px;
+    }
+    .empty-state-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+    .empty-state-title { font-size: 18px; font-weight: 700; color: var(--heading); margin-bottom: 8px; }
+    .empty-state-desc { font-size: 14px; color: var(--muted); margin-bottom: 20px; max-width: 360px; margin-left: auto; margin-right: auto; }
+
+    /* ── Tooltips ── */
+    .ev-tooltip-wrap { position: relative; display: inline-block; }
+    .ev-tooltip-content {
+      position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+      background: var(--heading); color: var(--bg); padding: 6px 12px; border-radius: 6px;
+      font-size: 12px; font-weight: 500; white-space: nowrap; pointer-events: none;
+      opacity: 0; transition: opacity 0.15s; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .ev-tooltip-content::after {
+      content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      border: 5px solid transparent; border-top-color: var(--heading);
+    }
+    .ev-tooltip-wrap:hover .ev-tooltip-content { opacity: 1; }
+
+    /* ── Alerts ── */
+    .ev-alert {
+      display: flex; align-items: flex-start; gap: 12px; padding: 14px 18px;
+      border-radius: 10px; font-size: 13px; font-family: 'Manrope', sans-serif; line-height: 1.5;
+    }
+    .ev-alert-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .ev-alert-title { font-weight: 700; margin-bottom: 2px; }
+    .ev-alert-info { background: #E0F4F8; color: #00657C; border: 1px solid #8CD4E5; }
+    .ev-alert-warning { background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; }
+    .ev-alert-error { background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; }
+    .ev-alert-success { background: #D1FAE5; color: #065F46; border: 1px solid #6EE7B7; }
+    [data-theme="dark"] .ev-alert-info { background: #1E383D; color: #8CD4E5; border-color: #327E8F; }
+    [data-theme="dark"] .ev-alert-warning { background: #3B2F10; color: #FCD34D; border-color: #B45309; }
+    [data-theme="dark"] .ev-alert-error { background: #450A0A; color: #FCA5A5; border-color: #B91C1C; }
+    [data-theme="dark"] .ev-alert-success { background: #064E3B; color: #6EE7B7; border-color: #047857; }
+
+    /* ── Breadcrumbs ── */
+    .ev-breadcrumb { display: flex; align-items: center; gap: 0; font-size: 13px; font-family: 'Manrope', sans-serif; flex-wrap: wrap; }
+    .ev-breadcrumb a { color: var(--teal); text-decoration: none; font-weight: 500; }
+    .ev-breadcrumb a:hover { text-decoration: underline; }
+    .ev-breadcrumb .bc-sep { color: var(--muted); margin: 0 8px; }
+    .ev-breadcrumb .bc-current { color: var(--heading); font-weight: 600; }
+
+    /* ── Pagination ── */
+    .ev-pagination { display: flex; align-items: center; gap: 4px; font-family: 'Manrope', sans-serif; }
+    .ev-page-btn {
+      width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--card); color: var(--heading); font-size: 13px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .ev-page-btn:hover { border-color: var(--teal); color: var(--teal); }
+    .ev-page-btn.active { background: var(--teal); color: var(--btn-text, #fff); border-color: var(--teal); }
+    .ev-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .ev-page-btn.arrow { font-size: 16px; }
+
+    /* ── Mobile Drawer ── */
+    .drawer-demo { position: relative; width: 280px; height: 400px; background: var(--bg); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+    .drawer-phone-bar { height: 24px; background: var(--card); display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--border); }
+    .drawer-phone-bar::after { content: ''; width: 40px; height: 4px; background: var(--border); border-radius: 2px; }
+    .drawer-sheet {
+      position: absolute; bottom: 0; left: 0; right: 0; background: var(--card);
+      border-radius: 16px 16px 0 0; padding: 12px 16px 20px; box-shadow: 0 -8px 32px rgba(0,0,0,0.12);
+      border-top: 1px solid var(--border);
+    }
+    [data-theme="dark"] .drawer-sheet { box-shadow: 0 -8px 32px rgba(0,0,0,0.4); }
+    .drawer-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+
+    /* ── Politician Selector ── */
+    .pol-selector { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 4px; }
+    .pol-selector-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px;
+      cursor: pointer; transition: all 0.1s; border: none; background: none; width: 100%;
+      text-align: left; font-family: 'Manrope', sans-serif;
+    }
+    .pol-selector-item:hover { background: var(--bg); }
+    .pol-selector-item.selected { background: color-mix(in srgb, var(--teal) 10%, var(--card)); }
+    .pol-selector-name { font-size: 13px; font-weight: 600; color: var(--heading); }
+    .pol-selector-office { font-size: 11px; color: var(--muted); }
+    .pol-selector-check { margin-left: auto; color: var(--teal); font-size: 16px; font-weight: 800; }
+
+    /* ── Labeled Dividers ── */
+    .labeled-divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; }
+    .labeled-divider::before, .labeled-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .labeled-divider-text { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
+    .section-divider { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+    .section-divider-line { flex: 1; height: 1px; background: var(--border); }
+    .section-divider-label { font-size: 14px; font-weight: 700; color: var(--heading); display: flex; align-items: center; gap: 6px; }
+    .section-divider-count { font-size: 11px; font-weight: 600; color: var(--muted); }
+
+    /* ── Notification Badges ── */
+    .notif-wrap { position: relative; display: inline-flex; }
+    .notif-dot {
+      position: absolute; top: -3px; right: -3px; width: 10px; height: 10px;
+      background: #FF5740; border-radius: 50%; border: 2px solid var(--card);
+    }
+    .notif-count {
+      position: absolute; top: -6px; right: -8px; min-width: 18px; height: 18px;
+      background: #FF5740; border-radius: 9px; border: 2px solid var(--card);
+      font-size: 10px; font-weight: 700; color: #fff; display: flex;
+      align-items: center; justify-content: center; padding: 0 4px;
+      font-family: 'Manrope', sans-serif;
+    }
+
+    /* ── Timeline ── */
+    .timeline { position: relative; padding-left: 28px; }
+    .timeline::before { content: ''; position: absolute; left: 8px; top: 4px; bottom: 4px; width: 2px; background: var(--border); }
+    .timeline-item { position: relative; padding-bottom: 20px; }
+    .timeline-dot {
+      position: absolute; left: -24px; top: 4px; width: 12px; height: 12px;
+      border-radius: 50%; border: 2px solid var(--teal); background: var(--card);
+    }
+    .timeline-dot.filled { background: var(--teal); }
+    .timeline-date { font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 2px; }
+    .timeline-title { font-size: 13px; font-weight: 600; color: var(--heading); }
+    .timeline-desc { font-size: 12px; color: var(--body); margin-top: 2px; }
+
+    /* ── Legislative Score ── */
+    .leg-score {
+      display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px;
+      background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    }
+    .leg-score-bar { width: 60px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .leg-score-fill { height: 100%; border-radius: 3px; }
+    .leg-score-value { font-size: 13px; font-weight: 700; color: var(--heading); font-family: 'Manrope', sans-serif; }
+    .leg-score-label { font-size: 11px; color: var(--muted); font-family: 'Manrope', sans-serif; }
+
+    /* ── Stance Comparison ── */
+    .stance-row { display: flex; gap: 0; margin-bottom: 2px; }
+    .stance-cell {
+      flex: 1; padding: 10px 14px; font-size: 12px; font-family: 'Manrope', sans-serif;
+      border: 1px solid var(--border); background: var(--card);
+    }
+    .stance-cell:first-child { border-radius: 8px 0 0 8px; }
+    .stance-cell:last-child { border-radius: 0 8px 8px 0; }
+    .stance-topic { font-weight: 700; color: var(--heading); text-align: center; flex: 0 0 120px; display: flex; align-items: center; justify-content: center; }
+    .stance-value { color: var(--body); line-height: 1.4; }
+    .stance-agree { background: color-mix(in srgb, var(--teal) 8%, var(--card)); }
+    .stance-disagree { background: color-mix(in srgb, #FF5740 6%, var(--card)); }
+    .stance-header .stance-cell { background: var(--bg); font-weight: 700; color: var(--heading); font-size: 13px; }
+
+    /* ── Footnotes / Sources ── */
+    .footnote-ref {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 16px; height: 16px; border-radius: 50%; background: var(--teal);
+      color: var(--btn-text, #fff); font-size: 9px; font-weight: 700;
+      font-family: 'Manrope', sans-serif; vertical-align: super; cursor: help;
+      margin: 0 1px;
+    }
+    .source-list { list-style: none; padding: 0; }
+    .source-item {
+      display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border);
+      font-size: 12px; font-family: 'Manrope', sans-serif;
+    }
+    .source-num {
+      width: 20px; height: 20px; border-radius: 50%; background: var(--teal);
+      color: var(--btn-text, #fff); font-size: 10px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .source-text { color: var(--body); }
+    .source-text a { color: var(--teal); text-decoration: none; }
+    .source-text a:hover { text-decoration: underline; }
+    .source-date { color: var(--faint); font-size: 11px; }
+
+    @media (max-width: 768px) {
+      .swatches { gap: 4px; }
+      .swatch { width: 56px; }
+      .swatch-color { height: 40px; }
+      .pillar-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div>
+        <h1>Empowered Vote Design System</h1>
+        <div class="subtitle">Source of truth: ev-ui/src/tokens.js</div>
+      </div>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+        <div class="theme-toggle-icons">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </div>
+        <div class="theme-toggle-thumb">
+          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </div>
+      </button>
+    </div>
+
+    <nav class="nav" id="nav"></nav>
+
+    <div id="content"></div>
+  </div>
+
+  <div class="copied" id="copied">Copied!</div>
+
+  <script type="module">
+    import {
+      colorScales, colors, pillars, semanticTokens, dataVizPalette,
+      fonts, fontWeights, fontSizes, spacing, borderRadius, shadows, breakpoints,
+      lineHeights, letterSpacing, textStyles, accessibleText,
+      duration, easing, focus, zIndex, opacity,
+    } from '../src/tokens.js';
+
+    // ── Helpers ──
+    function copyHex(hex) {
+      navigator.clipboard.writeText(hex);
+      const el = document.getElementById('copied');
+      el.textContent = `Copied ${hex}`;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 1200);
+    }
+    window.copyHex = copyHex;
+
+    function html(strings, ...values) {
+      return strings.reduce((result, str, i) => result + str + (values[i] ?? ''), '');
+    }
+
+    // Pillar icon SVG — a single Greek column in the given color
+    function pillarIcon(color, size = 18) {
+      return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="5" y="2" width="14" height="3" rx="1.5" fill="${color}"/>
+        <rect x="5" y="19" width="14" height="3" rx="1.5" fill="${color}"/>
+        <rect x="8.5" y="5" width="7" height="14" rx="1" fill="${color}" opacity="0.85"/>
+      </svg>`;
+    }
+    window.pillarIcon = pillarIcon;
+
+    const pillarIconColors = { inform: '#FED12F', connect: 'var(--teal)', empower: '#FF5740' };
+
+    const pillarColors = {
+      coral:   { label: 'EMPOWER PILLAR', pillar: 'empower' },
+      teal:    { label: 'CONNECT PILLAR · PRIMARY', pillar: 'connect' },
+      skyblue: { label: 'CONNECT PILLAR · SECONDARY', pillar: 'connect' },
+      yellow:  { label: 'INFORM PILLAR', pillar: 'inform' },
+      gray:    { label: 'NEUTRAL', pillar: null },
+    };
+
+    const steps = ['050','100','200','300','400','500','600','700','800','900','950'];
+
+    // ── Sections ──
+    const sections = [
+      { id: 'colors', title: 'Colors', render: renderColors },
+      { id: 'a11y', title: 'Accessibility', render: renderAccessibility },
+      { id: 'typography', title: 'Typography', render: renderTypography },
+      { id: 'spacing', title: 'Spacing & Scales', render: renderSpacing },
+      { id: 'motion', title: 'Motion', render: renderMotion },
+      { id: 'components', title: 'Components', render: renderComponents },
+      { id: 'forms', title: 'Forms', render: renderForms },
+      { id: 'feedback', title: 'Feedback & Alerts', render: renderFeedback },
+      { id: 'loading', title: 'Loading & Empty', render: renderLoading },
+      { id: 'navigation', title: 'Navigation', render: renderNavigation },
+      { id: 'tables', title: 'Tables & Data', render: renderTables },
+      { id: 'radar', title: 'Radar Chart', render: renderRadarChart },
+      { id: 'comparison', title: 'Comparison & Stances', render: renderComparison },
+      { id: 'patterns', title: 'Patterns', render: renderPatterns },
+      { id: 'pillars', title: 'Pillar Themes', render: renderPillars },
+      { id: 'dataviz', title: 'Data Visualization', render: renderDataViz },
+      { id: 'semantic', title: 'Semantic Tokens', render: renderSemantic },
+    ];
+
+    // ── Nav ──
+    document.getElementById('nav').innerHTML = sections.map(s =>
+      `<a href="#${s.id}">${s.title}</a>`
+    ).join('');
+
+    // ── Colors ──
+    function renderColors() {
+      let out = '';
+      for (const [hue, shades] of Object.entries(colorScales)) {
+        const meta = pillarColors[hue] || {};
+        out += `<div class="color-scale">
+          <div class="color-scale-header">
+            <span class="color-scale-name">${hue.charAt(0).toUpperCase() + hue.slice(1)}</span>
+            ${meta.label ? `<span class="color-scale-pillar">${meta.label}</span>` : ''}
+          </div>
+          <div class="swatches">
+            ${steps.map(step => {
+              const hex = shades[step];
+              if (!hex) return '';
+              const isBrand = step === '500';
+              return `<div class="swatch">
+                <div class="swatch-color${isBrand ? ' brand' : ''}" style="background:${hex}"></div>
+                <div class="swatch-info">
+                  <div class="swatch-step">${step}</div>
+                  <div class="swatch-hex" onclick="copyHex('${hex}')">${hex}</div>
+                </div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+      }
+
+      // Black, White, BG Light
+      out += `<div class="color-scale">
+        <div class="color-scale-header"><span class="color-scale-name">Black & White</span></div>
+        <div class="swatches">
+          ${[['Black', colors.black], ['White', colors.white], ['BG Light', colors.bgLight]].map(([name, hex]) =>
+            `<div class="swatch">
+              <div class="swatch-color" style="background:${hex};${hex === '#FFFFFF' || hex === '#F0F8FA' ? 'border:1px solid var(--border)' : ''}"></div>
+              <div class="swatch-info">
+                <div class="swatch-step">${name}</div>
+                <div class="swatch-hex" onclick="copyHex('${hex}')">${hex}</div>
+              </div>
+            </div>`
+          ).join('')}
+        </div>
+      </div>`;
+
+      return out;
+    }
+
+    // ── Accessibility ──
+    function renderAccessibility() {
+      const brandPairs = [
+        { name: 'Coral', brand: '#FF5740', safe: accessibleText.coral, safeLabel: 'coral-700', ratio: '3.14', safeRatio: '4.64', usage: 'Large text & icons only on white' },
+        { name: 'Muted Blue', brand: colors.evMutedBlue, safe: colors.evMutedBlue, safeLabel: '(same)', ratio: '6.66', safeRatio: '6.66', usage: 'Body text safe on white' },
+        { name: 'Light Blue', brand: colors.evLightBlue, safe: accessibleText.skyblue, safeLabel: 'skyblue-700', ratio: '2.49', safeRatio: '4.65', usage: 'Decorative only on white; text OK on dark' },
+        { name: 'Yellow', brand: '#FED12E', safe: accessibleText.yellow, safeLabel: 'yellow-900', ratio: '1.46', safeRatio: '5.72', usage: 'Accent & backgrounds only; never as text on white' },
+      ];
+
+      let out = `<p style="font-size:14px;color:var(--body);margin-bottom:24px">
+        Brand colors have varying contrast on white. Use the <strong>AA-safe text</strong> column for body text.
+        WCAG AA requires <strong>4.5:1</strong> for normal text and <strong>3:1</strong> for large text (18px bold / 24px).
+      </p>`;
+
+      out += `<div class="ev-table-wrap" style="margin-bottom:32px"><table class="ev-table">
+        <thead><tr>
+          <th>Brand Color</th><th>Swatch</th><th>On White</th><th>AA?</th>
+          <th>Safe Text Alt</th><th>Swatch</th><th>Ratio</th><th>Usage</th>
+        </tr></thead><tbody>`;
+
+      for (const p of brandPairs) {
+        const passClass = parseFloat(p.ratio) >= 4.5 ? 'color:#047857' : parseFloat(p.ratio) >= 3 ? 'color:#B45309' : 'color:#B91C1C';
+        out += `<tr>
+          <td style="font-weight:700">${p.name}</td>
+          <td><div style="width:36px;height:24px;border-radius:4px;background:${p.brand};border:1px solid var(--border)"></div></td>
+          <td style="font-family:monospace;font-size:12px">${p.ratio}:1</td>
+          <td style="${passClass};font-weight:700">${parseFloat(p.ratio) >= 4.5 ? 'Pass' : parseFloat(p.ratio) >= 3 ? 'Large only' : 'Fail'}</td>
+          <td style="font-family:monospace;font-size:12px">${p.safeLabel}</td>
+          <td><div style="width:36px;height:24px;border-radius:4px;background:${p.safe};border:1px solid var(--border)"></div></td>
+          <td style="font-family:monospace;font-size:12px;color:#047857;font-weight:700">${p.safeRatio}:1</td>
+          <td style="font-size:12px;color:var(--muted)">${p.usage}</td>
+        </tr>`;
+      }
+      out += `</tbody></table></div>`;
+
+      // Focus ring demo
+      out += `<h3 style="font-size:18px;font-weight:700;color:var(--heading);margin:32px 0 16px">Focus Rings</h3>`;
+      out += `<p style="font-size:13px;color:var(--body);margin-bottom:16px">Double-ring pattern: white gap + brand color. Ensures visibility on any background.</p>`;
+      out += `<div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center">`;
+      out += `<button class="ev-btn ev-btn-primary" style="box-shadow:${focus.ring}">Default (Teal)</button>`;
+      out += `<button class="ev-btn ev-btn-primary" style="background:#FF5740;box-shadow:${focus.ringCoral}">Coral Variant</button>`;
+      out += `<button class="ev-btn ev-btn-primary" style="background:#2F3237;box-shadow:${focus.ringDark}">Dark Mode</button>`;
+      out += `</div>`;
+
+      // Z-index scale
+      out += `<h3 style="font-size:18px;font-weight:700;color:var(--heading);margin:32px 0 16px">Z-Index Scale</h3>`;
+      out += `<div style="display:flex;gap:8px;flex-wrap:wrap">`;
+      for (const [name, val] of Object.entries(zIndex)) {
+        if (val < 0) continue;
+        out += `<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;min-width:80px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--teal)">${val}</div>
+          <div style="font-size:11px;font-weight:600;color:var(--muted);margin-top:4px">${name}</div>
+        </div>`;
+      }
+      out += `</div>`;
+
+      // Opacity
+      out += `<h3 style="font-size:18px;font-weight:700;color:var(--heading);margin:32px 0 16px">Opacity Scale</h3>`;
+      out += `<div style="display:flex;gap:12px;flex-wrap:wrap">`;
+      for (const [name, val] of Object.entries(opacity)) {
+        out += `<div style="text-align:center">
+          <div style="width:64px;height:64px;border-radius:8px;background:var(--teal);opacity:${val};margin-bottom:8px"></div>
+          <div style="font-size:11px;font-weight:600;color:var(--heading)">${name}</div>
+          <div style="font-size:10px;color:var(--faint)">${val}</div>
+        </div>`;
+      }
+      out += `</div>`;
+
+      return out;
+    }
+
+    // ── Motion ──
+    function renderMotion() {
+      let out = `<h3 style="font-size:18px;font-weight:700;color:var(--heading);margin-bottom:16px">Duration Scale</h3>`;
+      out += `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:32px">`;
+      for (const [name, val] of Object.entries(duration)) {
+        const ms = parseInt(val);
+        out += `<div style="display:flex;align-items:center;gap:16px">
+          <div style="width:80px;font-size:12px;font-weight:600;color:var(--heading);font-family:monospace">${name}</div>
+          <div style="width:48px;font-size:12px;font-weight:500;color:var(--muted)">${val}</div>
+          <div style="flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden">
+            <div style="width:${Math.min(ms / 5, 100)}%;height:100%;background:var(--teal);border-radius:4px;transition:width ${val} ease"></div>
+          </div>
+        </div>`;
+      }
+      out += `</div>`;
+
+      out += `<h3 style="font-size:18px;font-weight:700;color:var(--heading);margin-bottom:16px">Easing Curves</h3>`;
+      out += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:32px">`;
+      for (const [name, curve] of Object.entries(easing)) {
+        out += `<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer"
+          onclick="this.querySelector('.motion-dot').style.transform='translateX(120px)';setTimeout(()=>this.querySelector('.motion-dot').style.transform='translateX(0)',600)">
+          <div style="font-size:13px;font-weight:700;color:var(--heading);margin-bottom:4px">${name}</div>
+          <div style="font-size:10px;font-family:monospace;color:var(--faint);margin-bottom:12px;word-break:break-all">${curve}</div>
+          <div style="height:20px;position:relative">
+            <div class="motion-dot" style="width:20px;height:20px;border-radius:50%;background:var(--teal);transition:transform 500ms ${curve};position:absolute;left:0"></div>
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:8px">Click to preview</div>
+        </div>`;
+      }
+      out += `</div>`;
+
+      // Pre-built animations
+      out += `<h3 style="font-size:18px;font-weight:700;color:var(--heading);margin-bottom:16px">Pre-built Animations</h3>`;
+      out += `<p style="font-size:13px;color:var(--body);margin-bottom:16px">Available via Tailwind preset: <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:12px">animate-fade-in</code>, <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:12px">animate-slide-up</code>, <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:12px">animate-scale-in</code>, <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:12px">animate-skeleton</code></p>`;
+
+      return out;
+    }
+
+    // ── Typography ──
+    function renderTypography() {
+      const typeScale = [
+        { name: 'Display', size: '48px', weight: 800, sample: 'Empowered Vote' },
+        { name: 'Heading 1', size: '30px', weight: 700, sample: 'Know Your Representatives' },
+        { name: 'Heading 2', size: '24px', weight: 700, sample: 'Compare Politicians on Issues' },
+        { name: 'Heading 3', size: '20px', weight: 600, sample: 'Federal, State & Local Officials' },
+        { name: 'Body Large', size: '18px', weight: 400, sample: 'Discover who represents you at every level of government.' },
+        { name: 'Body', size: '16px', weight: 400, sample: 'Every election matters. We help you make informed decisions by presenting clear, unbiased information.' },
+        { name: 'Body Bold', size: '16px', weight: 600, sample: 'Take the Compass Quiz to find your political alignment across 21 topics.' },
+        { name: 'Label', size: '14px', weight: 500, sample: 'DEMOCRAT · DISTRICT 47 · CALIFORNIA' },
+        { name: 'Caption', size: '12px', weight: 400, sample: 'Last updated March 2026 · Source: Congress.gov' },
+      ];
+
+      let out = typeScale.map(t => `
+        <div class="type-specimen">
+          <div class="type-meta">${t.name} · ${t.size} · ${t.weight} · Manrope</div>
+          <div class="type-sample" style="font-size:${t.size};font-weight:${t.weight}">${t.sample}</div>
+        </div>
+      `).join('');
+
+      out += `<h3 style="font-size:18px;font-weight:700;color:var(--heading);margin:32px 0 16px">Font Weights</h3>`;
+      for (const [name, weight] of Object.entries(fontWeights)) {
+        out += `<div class="weight-row">
+          <div class="weight-label">${name.charAt(0).toUpperCase() + name.slice(1)} ${weight}</div>
+          <div class="weight-sample" style="font-weight:${weight}">Aa Bb Cc Dd Ee Ff Gg 0123456789</div>
+        </div>`;
+      }
+
+      // Composite text styles
+      out += `<h3 style="font-size:18px;font-weight:700;color:var(--heading);margin:32px 0 16px">Composite Text Styles</h3>`;
+      out += `<p style="font-size:13px;color:var(--muted);margin-bottom:16px">Pre-composed styles via <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:12px">textStyles</code> — spread into inline styles: <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:12px">style={{ ...textStyles.h1 }}</code></p>`;
+      const styleSamples = {
+        displayTitle: 'Empowered Vote',
+        displaySub: 'Know Your Representatives',
+        h1: 'Federal Representatives',
+        h2: 'Compare Politicians',
+        h3: 'District 47, California',
+        h4: 'Legislative Record',
+        bodyLg: 'Discover who represents you at every level.',
+        body: 'We help you make informed decisions by presenting clear, unbiased information about your elected officials.',
+        bodySm: 'Last updated March 2026',
+        label: 'DEMOCRAT · DISTRICT 47',
+        labelSm: 'U.S. HOUSE OF REPRESENTATIVES',
+        caption: 'Source: Congress.gov API · LegiScan',
+        overline: 'Federal Officials',
+      };
+      for (const [name, sample] of Object.entries(styleSamples)) {
+        const s = textStyles[name];
+        if (!s) continue;
+        const styleStr = Object.entries(s).map(([k,v]) => k.replace(/([A-Z])/g, '-$1').toLowerCase() + ':' + v).join(';');
+        out += `<div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">
+          <div style="font-size:11px;font-weight:600;color:var(--teal);margin-bottom:6px;font-family:monospace">textStyles.${name} · ${s.fontSize} · ${s.fontWeight} · ${s.lineHeight} · ${s.letterSpacing}</div>
+          <div style="${styleStr};color:var(--heading)">${sample}</div>
+        </div>`;
+      }
+
+      return out;
+    }
+
+    // ── Spacing ──
+    function renderSpacing() {
+      let out = '<h3 style="font-size:18px;font-weight:700;color:var(--heading);margin-bottom:16px">Spacing Scale</h3>';
+
+      for (const [key, value] of Object.entries(spacing)) {
+        const px = parseInt(value) || 0;
+        out += `<div class="spacing-row">
+          <div class="spacing-label">space.${key}</div>
+          <div class="spacing-value">${value}</div>
+          <div class="spacing-bar" style="width:${px * 4}px;--bar-h:${Math.max(px, 4)}px"></div>
+        </div>`;
+      }
+
+      out += '<h3 style="font-size:18px;font-weight:700;color:var(--heading);margin:40px 0 16px">Border Radius</h3>';
+      out += '<div class="radius-grid">';
+      for (const [name, value] of Object.entries(borderRadius)) {
+        const px = value === '9999px' ? '50%' : value;
+        out += `<div class="radius-item">
+          <div class="radius-box" style="border-radius:${px}"></div>
+          <div class="radius-name">radius.${name}</div>
+          <div class="radius-val">${value}</div>
+        </div>`;
+      }
+      out += '</div>';
+
+      out += '<h3 style="font-size:18px;font-weight:700;color:var(--heading);margin:40px 0 16px">Shadows</h3>';
+      out += '<div class="shadow-grid">';
+      for (const [name, value] of Object.entries(shadows)) {
+        out += `<div class="shadow-card" style="box-shadow:${value}">
+          <div class="shadow-name">shadow.${name}</div>
+          <div class="shadow-desc">${value}</div>
+        </div>`;
+      }
+      out += '</div>';
+
+      return out;
+    }
+
+    // ── Pillars ──
+    function renderPillars() {
+      const pillarData = [
+        { key: 'inform', features: ['Empowered Badges', 'Fallacy Finders', 'Civic Trivia', 'Treasury Tracker'],
+          desc: 'Educate voters with clear, unbiased information about issues and candidates.' },
+        { key: 'connect', features: ['Essentials (Politicians)', 'CouncilScribe', 'Legislative Profiles', 'District Lookup'],
+          desc: 'Link voters to their representatives and local government activities.' },
+        { key: 'empower', features: ['Compass Quiz', 'Read & Rank', 'Stance Comparison', 'Data Entry Tool'],
+          desc: 'Give voters tools to discover their own political stance and compare candidates.' },
+      ];
+
+      return '<div class="pillar-grid">' + pillarData.map(p => {
+        const cssClass = `pillar-${p.key}`;
+        return `<div class="pillar-card ${cssClass}">
+          <div class="pillar-header" style="background:var(--pillar-color)">
+            <div class="pillar-name" style="color:var(--pillar-text);display:flex;align-items:center;gap:8px">${pillarIcon('var(--pillar-text)', 22)} ${pillars[p.key].name.toUpperCase()}</div>
+          </div>
+          <div class="pillar-body">
+            <div class="pillar-desc">${p.desc}</div>
+            <div class="pillar-swatches">
+              <div class="pillar-swatch" style="background:var(--pillar-light);border:1px solid var(--border)"></div>
+              <div class="pillar-swatch" style="background:var(--pillar-color)"></div>
+              <div class="pillar-swatch" style="background:var(--pillar-dark)"></div>
+            </div>
+            <div class="pillar-buttons">
+              <button class="ev-btn ev-btn-primary ${cssClass}">Primary</button>
+              <button class="ev-btn ev-btn-secondary ${cssClass}">Secondary</button>
+              <button class="ev-btn ev-btn-ghost ${cssClass}">Ghost</button>
+            </div>
+            <ul class="pillar-features">
+              ${p.features.map(f => `<li>${f}</li>`).join('')}
+            </ul>
+          </div>
+        </div>`;
+      }).join('') + '</div>';
+    }
+
+    // ── Data Viz ──
+    function renderDataViz() {
+      // Palette with brand connection labels
+      const paletteLabels = [
+        'Brand — Connect primary', 'Brand — Connect secondary', 'Extended — Ocean depth',
+        'Brand — Empower', 'Extended — Warm earth', 'Brand — Inform',
+        'Extended — Warm gold', 'Extended — Natural growth', 'Extended — Cool accent',
+        'Neutral — Stone'
+      ];
+
+      let out = '<div style="font-size:14px;font-weight:700;color:var(--heading);margin-bottom:12px">Chart Palette — Derived from EV Brand</div>';
+      out += '<div style="font-size:12px;color:var(--muted);margin-bottom:20px">Every hue traces back to the brand. Core 4 (Teal, Sky Blue, Coral, Yellow) + 6 harmonious extensions.</div>';
+      out += '<div class="viz-palette" style="margin-bottom:40px">';
+      for (let i = 0; i < dataVizPalette.length; i++) {
+        const hue = dataVizPalette[i];
+        out += `<div class="viz-row">
+          <div class="viz-hue-name">${hue.name}</div>
+          ${hue.shades.map((hex, si) =>
+            `<div class="viz-swatch${si === 3 ? ' base' : ''}" style="background:${hex}" onclick="copyHex('${hex}')" title="${hex}"></div>`
+          ).join('')}
+          <div class="viz-hex" style="width:auto;min-width:70px">${hue.base}</div>
+          <div style="font-size:10px;color:var(--faint);white-space:nowrap">${paletteLabels[i]}</div>
+        </div>`;
+      }
+      out += '</div>';
+
+      // Example bar chart
+      const categories = [
+        { name: 'Public Safety', pct: 22, idx: 0 }, { name: 'Utilities', pct: 18, idx: 2 },
+        { name: 'Parks & Rec', pct: 12, idx: 7 }, { name: 'Streets', pct: 11, idx: 9 },
+        { name: 'Administration', pct: 10, idx: 8 }, { name: 'Economic Dev', pct: 8, idx: 5 },
+        { name: 'Housing', pct: 7, idx: 3 }, { name: 'Sanitation', pct: 6, idx: 4 },
+        { name: 'IT Services', pct: 4, idx: 1 }, { name: 'Other', pct: 2, idx: 6 },
+      ];
+
+      out += `<div class="chart-card">
+        <div class="chart-title">Budget by Department</div>
+        <div class="chart-subtitle">Example · FY 2025 · $142M Total</div>
+        ${categories.map(c => `
+          <div class="chart-row">
+            <div class="chart-label">${c.name}</div>
+            <div class="chart-track">
+              <div class="chart-fill" style="width:${(c.pct / 22) * 100}%;background:${dataVizPalette[c.idx].base}"></div>
+            </div>
+            <div class="chart-value">${c.pct}%</div>
+          </div>
+        `).join('')}
+      </div>`;
+
+      return out;
+    }
+
+    // ── Semantic Tokens ──
+    // ── Interactive Components ──
+    function renderComponents() {
+      return `
+        <div class="component-grid">
+
+          <!-- Buttons -->
+          <div class="component-card">
+            <div class="component-label">Buttons — Default Theme (Teal)</div>
+            <div class="component-row">
+              <button class="ev-btn ev-btn-primary">Primary</button>
+              <button class="ev-btn ev-btn-secondary">Secondary</button>
+              <button class="ev-btn ev-btn-ghost">Ghost</button>
+            </div>
+            <div class="component-row">
+              <button class="ev-btn ev-btn-primary" disabled>Primary</button>
+              <button class="ev-btn ev-btn-secondary" disabled>Secondary</button>
+              <button class="ev-btn ev-btn-ghost" disabled>Ghost</button>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:8px">Hover, click, and tab to see all states</div>
+          </div>
+
+          <!-- Pillar Buttons -->
+          <div class="component-card">
+            <div class="component-label">Buttons — Per Pillar</div>
+            <div class="component-row pillar-inform-row">
+              <span class="component-state">Inform</span>
+              <button class="ev-btn ev-btn-primary pillar-inform">Primary</button>
+              <button class="ev-btn ev-btn-secondary pillar-inform">Secondary</button>
+              <button class="ev-btn ev-btn-ghost pillar-inform">Ghost</button>
+            </div>
+            <div class="component-row pillar-empower-row">
+              <span class="component-state">Empower</span>
+              <button class="ev-btn ev-btn-primary pillar-empower">Primary</button>
+              <button class="ev-btn ev-btn-secondary pillar-empower">Secondary</button>
+              <button class="ev-btn ev-btn-ghost pillar-empower">Ghost</button>
+            </div>
+            <div class="component-row pillar-connect-row">
+              <span class="component-state">Connect</span>
+              <button class="ev-btn ev-btn-primary pillar-connect">Primary</button>
+              <button class="ev-btn ev-btn-secondary pillar-connect">Secondary</button>
+              <button class="ev-btn ev-btn-ghost pillar-connect">Ghost</button>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:8px">Colors adapt automatically in dark mode for accessibility</div>
+          </div>
+
+          <!-- Inputs -->
+          <div class="component-card">
+            <div class="component-label">Inputs</div>
+            <div class="component-row">
+              <input class="ev-input" type="text" placeholder="Enter your address...">
+            </div>
+            <div class="component-row">
+              <input class="ev-input" type="text" value="1600 Pennsylvania Ave">
+            </div>
+            <div class="component-row">
+              <input class="ev-input" type="text" placeholder="Disabled input" disabled>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:8px">Click to see focus ring, hover for border change</div>
+          </div>
+
+          <!-- Links & Chips -->
+          <div class="component-card">
+            <div class="component-label">Links & Chips</div>
+            <div class="component-row">
+              <a class="ev-link" href="javascript:void(0)">How does address matching work? →</a>
+            </div>
+            <div class="component-row">
+              <a class="ev-link" href="javascript:void(0)">View legislative record</a>
+              <a class="ev-link" href="javascript:void(0)">Compare positions</a>
+            </div>
+            <div class="component-row" style="margin-top:8px">
+              <span class="ev-chip active">Federal</span>
+              <span class="ev-chip" onclick="this.classList.toggle('active')">State</span>
+              <span class="ev-chip" onclick="this.classList.toggle('active')">Local</span>
+              <span class="ev-chip" onclick="this.classList.toggle('active')">Judicial</span>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:8px">Click chips to toggle active state</div>
+          </div>
+
+          <!-- Cards -->
+          <div class="component-card">
+            <div class="component-label">Interactive Cards</div>
+            <div class="component-row" style="align-items:stretch">
+              <div class="ev-card-interactive">
+                <div style="display:flex;gap:12px;align-items:center">
+                  <div class="avatar avatar-md avatar-portrait" style="background:#00647A">AP</div>
+                  <div>
+                    <div class="card-title" style="font-size:14px">Sen. Alex Padilla</div>
+                    <div class="card-desc">U.S. Senate · California</div>
+                  </div>
+                </div>
+                <div class="card-action">View Profile →</div>
+              </div>
+              <div class="ev-card-interactive">
+                <div style="display:flex;gap:12px;align-items:center">
+                  <div class="avatar avatar-md avatar-portrait" style="background:#B31D09">KP</div>
+                  <div>
+                    <div class="card-title" style="font-size:14px">Rep. Katie Porter</div>
+                    <div class="card-desc">U.S. House · District 47</div>
+                  </div>
+                </div>
+                <div class="card-action">View Profile →</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Toggles & Misc -->
+          <div class="component-card">
+            <div class="component-label">Toggles & Controls</div>
+            <div class="component-row">
+              <span class="component-state">Toggle</span>
+              <button class="ev-toggle on" onclick="this.classList.toggle('on')"></button>
+              <button class="ev-toggle" onclick="this.classList.toggle('on')"></button>
+            </div>
+            <div class="component-row" style="margin-top:12px">
+              <span class="component-state">Button Sizes</span>
+              <button class="ev-btn ev-btn-primary" style="padding:6px 12px;font-size:12px">Small</button>
+              <button class="ev-btn ev-btn-primary">Default</button>
+              <button class="ev-btn ev-btn-primary" style="padding:14px 32px;font-size:16px">Large</button>
+            </div>
+          </div>
+
+        </div>
+      `;
+    }
+
+    // ── Forms ──
+    function renderForms() {
+      return `<div class="component-grid">
+
+        <!-- Text Inputs with Validation -->
+        <div class="component-card">
+          <div class="component-label">Input Validation States</div>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input class="ev-input" type="email" value="voter@example.com" style="width:100%">
+            <div class="form-hint">We'll never share your email.</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Address</label>
+            <input class="ev-input ev-input-success" type="text" value="1234 Democracy Lane" style="width:100%">
+            <div class="form-success">✓ Address verified — 12 representatives found</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">ZIP Code</label>
+            <input class="ev-input ev-input-error" type="text" value="000" style="width:100%">
+            <div class="form-error">Please enter a valid 5-digit ZIP code</div>
+          </div>
+        </div>
+
+        <!-- Select, Textarea -->
+        <div class="component-card">
+          <div class="component-label">Select & Textarea</div>
+          <div class="form-group">
+            <label class="form-label">Government Level</label>
+            <select class="ev-select" style="width:100%">
+              <option>All Levels</option>
+              <option>Federal</option>
+              <option>State</option>
+              <option>Local</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Feedback</label>
+            <textarea class="ev-textarea" style="width:100%" placeholder="Tell us what you think about this stance..."></textarea>
+          </div>
+        </div>
+
+        <!-- Checkboxes & Radios -->
+        <div class="component-card">
+          <div class="component-label">Checkboxes</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <label class="ev-checkbox"><input type="checkbox" checked><span class="ev-check-box"></span> Economy & Jobs</label>
+            <label class="ev-checkbox"><input type="checkbox" checked><span class="ev-check-box"></span> Healthcare</label>
+            <label class="ev-checkbox"><input type="checkbox"><span class="ev-check-box"></span> Environment</label>
+            <label class="ev-checkbox"><input type="checkbox"><span class="ev-check-box"></span> Immigration</label>
+          </div>
+          <div class="component-label" style="margin-top:20px">Radio Buttons</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <label class="ev-radio"><input type="radio" name="sort" checked><span class="ev-radio-dot"></span> Sort by relevance</label>
+            <label class="ev-radio"><input type="radio" name="sort"><span class="ev-radio-dot"></span> Sort by name</label>
+            <label class="ev-radio"><input type="radio" name="sort"><span class="ev-radio-dot"></span> Sort by district</label>
+          </div>
+        </div>
+
+        <!-- Search / Autocomplete -->
+        <div class="component-card">
+          <div class="component-label">Search / Autocomplete</div>
+          <div class="form-group">
+            <div style="position:relative">
+              <input class="ev-input" type="text" placeholder="Search by address..." style="width:100%;padding-left:36px" id="search-demo">
+              <svg style="position:absolute;left:12px;top:12px;width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.1)">
+            <div style="padding:10px 14px;cursor:pointer;font-size:13px;color:var(--heading);border-bottom:1px solid var(--border);background:color-mix(in srgb, var(--teal) 6%, var(--card))">
+              <strong>1234 Democracy Lane</strong>, Springfield, IL 62701
+            </div>
+            <div style="padding:10px 14px;cursor:pointer;font-size:13px;color:var(--heading);border-bottom:1px solid var(--border)">
+              <strong>1234 Democracy</strong> Ave, Washington, DC 20001
+            </div>
+            <div style="padding:10px 14px;cursor:pointer;font-size:13px;color:var(--heading)">
+              <strong>1234 Democracy</strong> Blvd, Los Angeles, CA 90012
+            </div>
+          </div>
+        </div>
+
+      </div>`;
+    }
+
+    // ── Feedback & Alerts ──
+    function renderFeedback() {
+      return `<div class="component-grid">
+
+        <!-- Alerts -->
+        <div class="component-card">
+          <div class="component-label">Alert Banners</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="ev-alert ev-alert-info">
+              <span class="ev-alert-icon">ℹ</span>
+              <div><div class="ev-alert-title">New data available</div>2026 legislative session data has been imported for Indiana.</div>
+            </div>
+            <div class="ev-alert ev-alert-warning">
+              <span class="ev-alert-icon">⚠</span>
+              <div><div class="ev-alert-title">Boundary update pending</div>Redistricting data for CA is being processed. Results may change.</div>
+            </div>
+            <div class="ev-alert ev-alert-error">
+              <span class="ev-alert-icon">✕</span>
+              <div><div class="ev-alert-title">Connection failed</div>Unable to reach the API. Please try again in a moment.</div>
+            </div>
+            <div class="ev-alert ev-alert-success">
+              <span class="ev-alert-icon">✓</span>
+              <div><div class="ev-alert-title">Stance submitted</div>Your response has been recorded and will appear after review.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tooltips -->
+        <div class="component-card">
+          <div class="component-label">Tooltips</div>
+          <div style="display:flex;gap:24px;flex-wrap:wrap;padding-top:40px">
+            <div class="ev-tooltip-wrap">
+              <button class="ev-btn ev-btn-primary" style="font-size:12px;padding:8px 16px">Hover me</button>
+              <div class="ev-tooltip-content">View your compass results</div>
+            </div>
+            <div class="ev-tooltip-wrap">
+              <span class="badge badge-federal">Federal</span>
+              <div class="ev-tooltip-content">U.S. Congress & Executive</div>
+            </div>
+            <div class="ev-tooltip-wrap">
+              <span style="font-size:18px;cursor:help">❓</span>
+              <div class="ev-tooltip-content">This score is based on 21 policy topics</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:24px">Hover over elements to see tooltips</div>
+        </div>
+
+        <!-- Toasts (moved from patterns for grouping) -->
+        <div class="component-card">
+          <div class="component-label">Toast Notifications</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="toast-demo toast-success">✓ Stance saved successfully</div>
+            <div class="toast-demo toast-error">✕ Failed to load representatives</div>
+            <div class="toast-demo toast-info">ℹ 3 new officials added to your area</div>
+          </div>
+        </div>
+
+        <!-- Empty States -->
+        <div class="component-card">
+          <div class="component-label">Empty State</div>
+          <div class="empty-state">
+            <div class="empty-state-icon">🔍</div>
+            <div class="empty-state-title">No representatives found</div>
+            <div class="empty-state-desc">Try entering a different address or expanding your search to include more government levels.</div>
+            <button class="ev-btn ev-btn-primary" style="font-size:13px">Try Another Address</button>
+          </div>
+        </div>
+
+      </div>`;
+    }
+
+    // ── Loading ──
+    function renderLoading() {
+      return `<div class="component-grid">
+
+        <!-- Spinners -->
+        <div class="component-card">
+          <div class="component-label">Spinners</div>
+          <div style="display:flex;align-items:center;gap:24px">
+            <div style="text-align:center">
+              <div class="spinner spinner-sm"></div>
+              <div style="font-size:11px;color:var(--muted);margin-top:8px">Small</div>
+            </div>
+            <div style="text-align:center">
+              <div class="spinner"></div>
+              <div style="font-size:11px;color:var(--muted);margin-top:8px">Default</div>
+            </div>
+            <div style="text-align:center">
+              <div class="spinner spinner-lg"></div>
+              <div style="font-size:11px;color:var(--muted);margin-top:8px">Large</div>
+            </div>
+            <div style="text-align:center">
+              <button class="ev-btn ev-btn-primary" disabled style="display:flex;align-items:center;gap:8px">
+                <div class="spinner spinner-sm" style="border-top-color:#fff;border-color:rgba(255,255,255,0.3)"></div>
+                Loading...
+              </button>
+              <div style="font-size:11px;color:var(--muted);margin-top:8px">In button</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="component-card">
+          <div class="component-label">Progress Bars</div>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                <span style="font-weight:600;color:var(--heading)">Default (Teal)</span>
+                <span style="color:var(--muted)">4 of 7 topics</span>
+              </div>
+              <div class="progress-bar-track"><div class="progress-bar-fill" style="width:57%"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                <span style="font-weight:600;color:var(--heading)">${pillarIcon('#FED12F', 14)} Inform Pillar</span>
+                <span style="color:var(--muted)">3 of 5 modules</span>
+              </div>
+              <div class="progress-bar-track"><div class="progress-bar-fill" style="width:60%;background:var(--stat-yellow)"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                <span style="font-weight:600;color:var(--heading)">${pillarIcon('#FF5740', 14)} Empower Pillar</span>
+                <span style="color:var(--muted)">92%</span>
+              </div>
+              <div class="progress-bar-track"><div class="progress-bar-fill" style="width:92%;background:var(--stat-coral)"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                <span style="font-weight:600;color:var(--heading)">${pillarIcon('#3A9BB0', 14)} Connect Pillar</span>
+                <span style="color:var(--muted)">23%</span>
+              </div>
+              <div class="progress-bar-track"><div class="progress-bar-fill" style="width:23%;background:var(--teal)"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skeleton Screens -->
+        <div class="component-card">
+          <div class="component-label">Skeleton Loading</div>
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div class="skeleton" style="width:56px;height:56px;border-radius:50%;flex-shrink:0"></div>
+            <div style="flex:1">
+              <div class="skeleton" style="width:60%;height:16px;margin-bottom:8px"></div>
+              <div class="skeleton" style="width:40%;height:12px;margin-bottom:12px"></div>
+              <div class="skeleton" style="width:100%;height:10px;margin-bottom:6px"></div>
+              <div class="skeleton" style="width:85%;height:10px"></div>
+            </div>
+          </div>
+          <div style="margin-top:20px;display:flex;flex-direction:column;gap:8px">
+            <div class="skeleton" style="width:100%;height:40px;border-radius:8px"></div>
+            <div class="skeleton" style="width:100%;height:40px;border-radius:8px"></div>
+            <div class="skeleton" style="width:70%;height:40px;border-radius:8px"></div>
+          </div>
+        </div>
+
+        <!-- Empty State with illustration -->
+        <div class="component-card">
+          <div class="component-label">Empty State Variants</div>
+          <div class="empty-state" style="padding:24px">
+            <div class="empty-state-icon">📊</div>
+            <div class="empty-state-title">No compass data yet</div>
+            <div class="empty-state-desc">Take the quiz to generate your political compass and compare with representatives.</div>
+            <button class="ev-btn ev-btn-secondary" style="font-size:12px">Start the Quiz →</button>
+          </div>
+        </div>
+
+      </div>`;
+    }
+
+    // ── Navigation ──
+    function renderNavigation() {
+      return `<div class="component-grid">
+
+        <!-- Breadcrumbs -->
+        <div class="component-card">
+          <div class="component-label">Breadcrumbs</div>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <nav class="ev-breadcrumb">
+              <a href="javascript:void(0)">Home</a>
+              <span class="bc-sep">›</span>
+              <a href="javascript:void(0)">California</a>
+              <span class="bc-sep">›</span>
+              <a href="javascript:void(0)">District 47</a>
+              <span class="bc-sep">›</span>
+              <span class="bc-current">Rep. Katie Porter</span>
+            </nav>
+            <nav class="ev-breadcrumb">
+              <a href="javascript:void(0)">Treasury</a>
+              <span class="bc-sep">›</span>
+              <a href="javascript:void(0)">Bloomington 2025</a>
+              <span class="bc-sep">›</span>
+              <a href="javascript:void(0)">Public Safety</a>
+              <span class="bc-sep">›</span>
+              <span class="bc-current">Police Department</span>
+            </nav>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="component-card">
+          <div class="component-label">Pagination</div>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="ev-pagination">
+              <button class="ev-page-btn arrow" disabled>‹</button>
+              <button class="ev-page-btn active">1</button>
+              <button class="ev-page-btn" onclick="this.parentElement.querySelectorAll('.ev-page-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">2</button>
+              <button class="ev-page-btn" onclick="this.parentElement.querySelectorAll('.ev-page-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">3</button>
+              <button class="ev-page-btn" onclick="this.parentElement.querySelectorAll('.ev-page-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">4</button>
+              <button class="ev-page-btn" onclick="this.parentElement.querySelectorAll('.ev-page-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">5</button>
+              <button class="ev-page-btn arrow">›</button>
+            </div>
+            <div style="font-size:12px;color:var(--muted)">Showing 1–10 of 47 representatives</div>
+          </div>
+        </div>
+
+        <!-- Modals -->
+        <div class="component-card" style="grid-column:span 2">
+          <div class="component-label">Modal / Dialog</div>
+          <div style="display:flex;gap:20px;flex-wrap:wrap">
+            <div class="modal-demo-backdrop" style="flex:1;min-width:300px">
+              <div class="modal-demo-card">
+                <div class="modal-title">Confirm your stance</div>
+                <div class="modal-body" style="margin-bottom:16px">You selected "Strongly Agree" on Healthcare. This will be saved to your compass. You can change it later.</div>
+                <div class="modal-actions">
+                  <button class="ev-btn ev-btn-secondary" style="font-size:12px;padding:8px 16px">Cancel</button>
+                  <button class="ev-btn ev-btn-primary" style="font-size:12px;padding:8px 16px">Confirm</button>
+                </div>
+              </div>
+            </div>
+            <div class="modal-demo-backdrop" style="flex:1;min-width:300px">
+              <div class="modal-demo-card">
+                <div class="modal-title" style="color:#EF4444">⚠ Delete saved data?</div>
+                <div class="modal-body" style="margin-bottom:16px">This will permanently remove your compass answers and comparison history. This cannot be undone.</div>
+                <div class="modal-actions">
+                  <button class="ev-btn ev-btn-secondary" style="font-size:12px;padding:8px 16px">Keep Data</button>
+                  <button class="ev-btn ev-btn-primary" style="font-size:12px;padding:8px 16px;background:#EF4444;--btn-accent:#EF4444">Delete</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>`;
+    }
+
+    // ── Tables ──
+    function renderTables() {
+      return `<div class="component-grid">
+
+        <!-- Data Table -->
+        <div class="component-card" style="grid-column:span 2">
+          <div class="component-label">Data Table</div>
+          <div class="ev-table-wrap">
+            <table class="ev-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Office</th>
+                  <th>District</th>
+                  <th>Level</th>
+                  <th>Compass Match</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="font-weight:600">Alex Padilla</td>
+                  <td>U.S. Senate</td>
+                  <td>California (At-Large)</td>
+                  <td><span class="badge badge-federal">Federal</span></td>
+                  <td><div class="progress-bar-track" style="width:120px;display:inline-block;vertical-align:middle"><div class="progress-bar-fill" style="width:78%"></div></div> 78%</td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600">Katie Porter</td>
+                  <td>U.S. House</td>
+                  <td>CA-47</td>
+                  <td><span class="badge badge-federal">Federal</span></td>
+                  <td><div class="progress-bar-track" style="width:120px;display:inline-block;vertical-align:middle"><div class="progress-bar-fill" style="width:65%"></div></div> 65%</td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600">Gavin Newsom</td>
+                  <td>Governor</td>
+                  <td>California</td>
+                  <td><span class="badge badge-state">State</span></td>
+                  <td><div class="progress-bar-track" style="width:120px;display:inline-block;vertical-align:middle"><div class="progress-bar-fill" style="width:52%"></div></div> 52%</td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600">Karen Bass</td>
+                  <td>Mayor</td>
+                  <td>Los Angeles</td>
+                  <td><span class="badge badge-local">Local</span></td>
+                  <td><div class="progress-bar-track" style="width:120px;display:inline-block;vertical-align:middle"><div class="progress-bar-fill" style="width:71%"></div></div> 71%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Avatars -->
+        <div class="component-card">
+          <div class="component-label">Avatars</div>
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <div>
+              <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px">Sizes (rounded rectangle)</div>
+              <div style="display:flex;align-items:center;gap:12px">
+                <div class="avatar avatar-xs">XS</div>
+                <div class="avatar avatar-sm">SM</div>
+                <div class="avatar avatar-md">AP</div>
+                <div class="avatar avatar-lg">KP</div>
+                <div class="avatar avatar-xl">GN</div>
+              </div>
+              <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px;margin-top:16px">Portrait (4:5 ratio)</div>
+              <div style="display:flex;align-items:flex-end;gap:12px">
+                <div class="avatar avatar-sm avatar-portrait">SM</div>
+                <div class="avatar avatar-md avatar-portrait">AP</div>
+                <div class="avatar avatar-lg avatar-portrait">KP</div>
+                <div class="avatar avatar-xl avatar-portrait" style="background:#B31D09">GN</div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px">With Colors (from brand palette)</div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div class="avatar avatar-md" style="background:#00647A">KB</div>
+                <div class="avatar avatar-md" style="background:#2563A0">AP</div>
+                <div class="avatar avatar-md" style="background:#7C6B9E">LN</div>
+                <div class="avatar avatar-md" style="background:#B31D09">RM</div>
+                <div class="avatar avatar-md" style="background:#7A3D2C">TC</div>
+                <div class="avatar avatar-md" style="background:#376043">JB</div>
+                <div class="avatar avatar-md" style="background:#4D4263">GN</div>
+              </div>
+              <div style="font-size:10px;color:var(--faint);margin-top:6px">Teal · Ocean · Dusk · Coral 800 · Terracotta 700 · Sage 700 · Dusk 700</div>
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px">Avatar Group</div>
+              <div class="avatar-group">
+                <div class="avatar avatar-md" style="background:#B31D09">KB</div>
+                <div class="avatar avatar-md" style="background:#00647A">AP</div>
+                <div class="avatar avatar-md" style="background:#376043">KP</div>
+                <div class="avatar avatar-md" style="background:#7C6B9E">GN</div>
+                <div class="avatar avatar-md avatar-count">+8</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="component-card">
+          <div class="component-label">Stat Cards</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div style="background:var(--bg);border-radius:10px;padding:16px;border:1px solid var(--border)">
+              <div style="font-size:28px;font-weight:800;color:var(--teal)">791</div>
+              <div style="font-size:12px;font-weight:500;color:var(--muted)">Politicians</div>
+            </div>
+            <div style="background:var(--bg);border-radius:10px;padding:16px;border:1px solid var(--border)">
+              <div style="font-size:28px;font-weight:800;color:var(--stat-coral)">21</div>
+              <div style="font-size:12px;font-weight:500;color:var(--muted)">Topics</div>
+            </div>
+            <div style="background:var(--bg);border-radius:10px;padding:16px;border:1px solid var(--border)">
+              <div style="font-size:28px;font-weight:800;color:var(--stat-yellow)">$142M</div>
+              <div style="font-size:12px;font-weight:500;color:var(--muted)">Budget Tracked</div>
+            </div>
+            <div style="background:var(--bg);border-radius:10px;padding:16px;border:1px solid var(--border)">
+              <div style="font-size:28px;font-weight:800;color:var(--heading)">4</div>
+              <div style="font-size:12px;font-weight:500;color:var(--muted)">Cities</div>
+            </div>
+          </div>
+        </div>
+
+      </div>`;
+    }
+
+    // ── Radar Chart ──
+    function renderRadarChart() {
+      const presets = [
+        { name: 'Coral / Sky Blue', user: '#FF5740', compare: '#59B1C5', userLabel: 'Coral', compareLabel: 'Sky Blue' },
+        { name: 'Dusk / Sage', user: '#7C6B9E', compare: '#5A9A6E', userLabel: 'Dusk', compareLabel: 'Sage' },
+        { name: 'Honey / Ocean', user: '#D4940B', compare: '#2563A0', userLabel: 'Honey', compareLabel: 'Ocean' },
+        { name: 'Teal / Terracotta', user: '#00647A', compare: '#C2674A', userLabel: 'Teal', compareLabel: 'Terracotta' },
+      ];
+
+      // Build the SVG radar chart inline
+      function radarSVG(userColor, compareColor, id) {
+        const size = 300;
+        const cx = size / 2, cy = size / 2;
+        const r = 110;
+        const topics = ['Economy', 'Healthcare', 'Education', 'Environment', 'Immigration', 'Gun Policy', 'Housing'];
+        const userData = [0.8, 0.6, 0.9, 0.7, 0.4, 0.5, 0.75];
+        const compData = [0.5, 0.8, 0.6, 0.9, 0.7, 0.3, 0.6];
+        const n = topics.length;
+
+        let guides = '';
+        for (let ring = 1; ring <= 4; ring++) {
+          const rr = (ring / 4) * r;
+          let pts = [];
+          for (let i = 0; i < n; i++) {
+            const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+            pts.push(`${cx + rr * Math.cos(angle)},${cy + rr * Math.sin(angle)}`);
+          }
+          guides += `<polygon points="${pts.join(' ')}" fill="none" stroke="var(--border)" stroke-width="1"/>`;
+        }
+
+        // Spokes
+        let spokes = '';
+        for (let i = 0; i < n; i++) {
+          const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+          spokes += `<line x1="${cx}" y1="${cy}" x2="${cx + r * Math.cos(angle)}" y2="${cy + r * Math.sin(angle)}" stroke="var(--border)" stroke-width="1"/>`;
+        }
+
+        // Data polygons
+        function dataPolygon(data, color, opacity) {
+          let pts = [];
+          for (let i = 0; i < n; i++) {
+            const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+            const v = data[i] * r;
+            pts.push(`${cx + v * Math.cos(angle)},${cy + v * Math.sin(angle)}`);
+          }
+          return `<polygon points="${pts.join(' ')}" fill="${color}" fill-opacity="${opacity}" stroke="${color}" stroke-width="2.5" stroke-linejoin="round"/>`;
+        }
+
+        // Labels
+        let labels = '';
+        for (let i = 0; i < n; i++) {
+          const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+          const lx = cx + (r + 24) * Math.cos(angle);
+          const ly = cy + (r + 24) * Math.sin(angle);
+          const anchor = Math.abs(Math.cos(angle)) < 0.1 ? 'middle' : Math.cos(angle) > 0 ? 'start' : 'end';
+          labels += `<text x="${lx}" y="${ly + 4}" text-anchor="${anchor}" font-size="11" font-weight="600" fill="var(--heading)" font-family="Manrope">${topics[i]}</text>`;
+        }
+
+        // Dots
+        let dots = '';
+        for (let i = 0; i < n; i++) {
+          const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+          const uv = userData[i] * r;
+          dots += `<circle cx="${cx + uv * Math.cos(angle)}" cy="${cy + uv * Math.sin(angle)}" r="4" fill="${userColor}" stroke="white" stroke-width="1.5"/>`;
+          const cv = compData[i] * r;
+          dots += `<circle cx="${cx + cv * Math.cos(angle)}" cy="${cy + cv * Math.sin(angle)}" r="4" fill="${compareColor}" stroke="white" stroke-width="1.5"/>`;
+        }
+
+        return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="radar-svg" id="${id}">
+          ${guides}${spokes}
+          ${dataPolygon(compData, compareColor, 0.2)}
+          ${dataPolygon(userData, userColor, 0.3)}
+          ${dots}${labels}
+        </svg>`;
+      }
+
+      return `
+        <div class="radar-container">
+          <div class="radar-svg-wrap" id="radar-preview">
+            ${radarSVG(presets[0].user, presets[0].compare, 'radar-main')}
+            <div style="display:flex;gap:20px;justify-content:center;margin-top:12px">
+              <div style="display:flex;align-items:center;gap:6px">
+                <span id="legend-user-dot" style="width:12px;height:12px;border-radius:3px;background:${presets[0].user}"></span>
+                <span style="font-size:12px;font-weight:600;color:var(--heading)">Your Compass</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px">
+                <span id="legend-compare-dot" style="width:12px;height:12px;border-radius:3px;background:${presets[0].compare}"></span>
+                <span style="font-size:12px;font-weight:600;color:var(--heading)">Politician</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="radar-controls">
+            <div style="font-size:14px;font-weight:700;color:var(--heading);margin-bottom:12px">Color Presets</div>
+            <div class="radar-preset-grid">
+              ${presets.map((p, i) =>
+                `<button class="radar-preset${i === 0 ? ' active' : ''}" onclick="applyRadarPreset(${i})">${p.name}</button>`
+              ).join('')}
+            </div>
+
+            <div style="font-size:14px;font-weight:700;color:var(--heading);margin:20px 0 12px">Custom Colors</div>
+            <div class="color-picker-row">
+              <span class="color-picker-label">Your data</span>
+              <input type="color" class="color-picker-input" id="radar-user-color" value="${presets[0].user}" oninput="updateRadarCustom()">
+              <input type="text" class="color-picker-hex" id="radar-user-hex" value="${presets[0].user}" oninput="updateRadarFromHex('user')">
+            </div>
+            <div class="color-picker-row">
+              <span class="color-picker-label">Compare</span>
+              <input type="color" class="color-picker-input" id="radar-compare-color" value="${presets[0].compare}" oninput="updateRadarCustom()">
+              <input type="text" class="color-picker-hex" id="radar-compare-hex" value="${presets[0].compare}" oninput="updateRadarFromHex('compare')">
+            </div>
+
+            <div style="font-size:12px;color:var(--muted);margin-top:16px;line-height:1.6">
+              <strong style="color:var(--heading)">Why this matters:</strong> As an antipartisan platform, our color choices must avoid any political association.
+              Letting users choose their own colors adds personalization while keeping the experience neutral.
+              The presets above are all carefully chosen to avoid partisan connotations.
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Radar chart interactivity (must be global)
+    window.radarPresets = [
+      { user: '#FF5740', compare: '#59B1C5' },
+      { user: '#7C6B9E', compare: '#5A9A6E' },
+      { user: '#D4940B', compare: '#2563A0' },
+      { user: '#00647A', compare: '#C2674A' },
+    ];
+
+    window.applyRadarPreset = function(idx) {
+      const p = window.radarPresets[idx];
+      document.querySelectorAll('.radar-preset').forEach((b, i) => b.classList.toggle('active', i === idx));
+      document.getElementById('radar-user-color').value = p.user;
+      document.getElementById('radar-compare-color').value = p.compare;
+      document.getElementById('radar-user-hex').value = p.user;
+      document.getElementById('radar-compare-hex').value = p.compare;
+      updateRadarColors(p.user, p.compare);
+    };
+
+    window.updateRadarCustom = function() {
+      const user = document.getElementById('radar-user-color').value;
+      const compare = document.getElementById('radar-compare-color').value;
+      document.getElementById('radar-user-hex').value = user.toUpperCase();
+      document.getElementById('radar-compare-hex').value = compare.toUpperCase();
+      document.querySelectorAll('.radar-preset').forEach(b => b.classList.remove('active'));
+      updateRadarColors(user, compare);
+    };
+
+    window.updateRadarFromHex = function(which) {
+      const hex = document.getElementById(`radar-${which}-hex`).value;
+      if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+        document.getElementById(`radar-${which}-color`).value = hex;
+        updateRadarCustom();
+      }
+    };
+
+    function updateRadarColors(userColor, compareColor) {
+      // Update SVG polygons
+      const svg = document.getElementById('radar-main');
+      const polys = svg.querySelectorAll('polygon');
+      // Last two polygons are the data overlays (compare then user)
+      const guidePoly = polys.length - 2;
+      if (polys[polys.length - 2]) {
+        polys[polys.length - 2].setAttribute('fill', compareColor);
+        polys[polys.length - 2].setAttribute('stroke', compareColor);
+      }
+      if (polys[polys.length - 1]) {
+        polys[polys.length - 1].setAttribute('fill', userColor);
+        polys[polys.length - 1].setAttribute('stroke', userColor);
+      }
+      // Update dots
+      const circles = svg.querySelectorAll('circle');
+      for (let i = 0; i < circles.length; i += 2) {
+        circles[i].setAttribute('fill', userColor);
+        if (circles[i + 1]) circles[i + 1].setAttribute('fill', compareColor);
+      }
+      // Update legend
+      document.getElementById('legend-user-dot').style.background = userColor;
+      document.getElementById('legend-compare-dot').style.background = compareColor;
+    }
+
+    // ── Comparison & Stances ──
+    function renderComparison() {
+      return `<div class="component-grid">
+
+        <!-- Politician Selector Dropdown -->
+        <div class="component-card">
+          <div class="component-label">Politician Selector</div>
+          <div style="margin-bottom:12px">
+            <div style="position:relative">
+              <input class="ev-input" type="text" placeholder="Search politicians..." style="width:100%;padding-left:36px">
+              <svg style="position:absolute;left:12px;top:12px;width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+          </div>
+          <div class="pol-selector">
+            <button class="pol-selector-item selected">
+              <div class="avatar avatar-sm avatar-portrait" style="background:#00647A">AP</div>
+              <div><div class="pol-selector-name">Sen. Alex Padilla</div><div class="pol-selector-office">U.S. Senate · California</div></div>
+              <span class="pol-selector-check">✓</span>
+            </button>
+            <button class="pol-selector-item" onclick="this.classList.toggle('selected');this.querySelector('.pol-selector-check').textContent=this.classList.contains('selected')?'✓':''">
+              <div class="avatar avatar-sm avatar-portrait" style="background:#B31D09">KP</div>
+              <div><div class="pol-selector-name">Rep. Katie Porter</div><div class="pol-selector-office">U.S. House · District 47</div></div>
+              <span class="pol-selector-check"></span>
+            </button>
+            <button class="pol-selector-item" onclick="this.classList.toggle('selected');this.querySelector('.pol-selector-check').textContent=this.classList.contains('selected')?'✓':''">
+              <div class="avatar avatar-sm avatar-portrait" style="background:#376043">GN</div>
+              <div><div class="pol-selector-name">Gov. Gavin Newsom</div><div class="pol-selector-office">Governor · California</div></div>
+              <span class="pol-selector-check"></span>
+            </button>
+            <button class="pol-selector-item" onclick="this.classList.toggle('selected');this.querySelector('.pol-selector-check').textContent=this.classList.contains('selected')?'✓':''">
+              <div class="avatar avatar-sm avatar-portrait" style="background:#7C6B9E">KB</div>
+              <div><div class="pol-selector-name">Mayor Karen Bass</div><div class="pol-selector-office">Mayor · Los Angeles</div></div>
+              <span class="pol-selector-check"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Legislative Scores -->
+        <div class="component-card">
+          <div class="component-label">Legislative Scores</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            ${[
+              { label: 'Bills Sponsored', value: 23, max: 50, color: 'var(--teal)' },
+              { label: 'Committee Attendance', value: 89, max: 100, color: 'var(--teal)' },
+              { label: 'Bipartisan Bills', value: 12, max: 23, color: 'var(--stat-yellow)' },
+              { label: 'Votes Cast', value: 156, max: 180, color: 'var(--stat-coral)' },
+            ].map(s => `
+              <div class="leg-score" style="width:100%;justify-content:space-between">
+                <div class="leg-score-label">${s.label}</div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div class="leg-score-bar" style="width:80px"><div class="leg-score-fill" style="width:${(s.value/s.max)*100}%;background:${s.color}"></div></div>
+                  <div class="leg-score-value">${s.value}<span style="font-weight:400;color:var(--muted)">/${s.max}</span></div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:12px">Scores from current legislative session</div>
+        </div>
+
+        <!-- Stance Comparison (Compass-style) -->
+        <div class="component-card" style="grid-column:span 2">
+          <div class="component-label">Stance Comparison</div>
+
+          <!-- Topic selector -->
+          <div style="margin-bottom:16px">
+            <select class="ev-select" style="width:100%">
+              <option>Healthcare</option>
+              <option>Education</option>
+              <option>Environment</option>
+              <option>Immigration</option>
+            </select>
+          </div>
+
+          <!-- Legend -->
+          <div style="display:flex;gap:16px;margin-bottom:12px;font-size:12px;font-weight:600">
+            <span style="display:flex;align-items:center;gap:6px">
+              <span style="width:10px;height:10px;border-radius:50%;background:var(--stat-coral);box-shadow:0 0 0 3px color-mix(in srgb, var(--stat-coral) 20%, transparent)"></span>
+              <span style="color:var(--heading)">You</span>
+            </span>
+            <span style="display:flex;align-items:center;gap:6px">
+              <span style="width:10px;height:10px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 3px color-mix(in srgb, var(--teal) 20%, transparent)"></span>
+              <span style="color:var(--heading)">Sen. Padilla</span>
+            </span>
+          </div>
+
+          <!-- Stance options list -->
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="position:relative;padding:12px 48px 12px 16px;border-radius:12px;border:1px solid var(--border);background:color-mix(in srgb, var(--bg) 50%, var(--card));font-size:13px;color:var(--heading);cursor:pointer">
+              Strongly supports expanding ACA coverage with a public option for all citizens
+              <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;gap:4px">
+                <span style="width:10px;height:10px;border-radius:50%;background:var(--stat-coral);box-shadow:0 0 0 3px color-mix(in srgb, var(--stat-coral) 20%, transparent)"></span>
+                <span style="width:10px;height:10px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 3px color-mix(in srgb, var(--teal) 20%, transparent)"></span>
+              </span>
+            </div>
+            <div style="position:relative;padding:12px 48px 12px 16px;border-radius:12px;border:1px solid transparent;font-size:13px;color:var(--muted);cursor:pointer">
+              Supports ACA but prefers market-based reforms over public option
+            </div>
+            <div style="position:relative;padding:12px 48px 12px 16px;border-radius:12px;border:1px solid transparent;font-size:13px;color:var(--muted);cursor:pointer">
+              Neutral — open to compromise approaches
+            </div>
+            <div style="position:relative;padding:12px 48px 12px 16px;border-radius:12px;border:1px solid transparent;font-size:13px;color:var(--muted);cursor:pointer">
+              Opposes ACA expansion, prefers reducing government role in healthcare
+            </div>
+            <div style="position:relative;padding:12px 48px 12px 16px;border-radius:12px;border:1px solid transparent;font-size:13px;color:var(--muted);cursor:pointer">
+              Strongly opposes government healthcare programs
+            </div>
+          </div>
+
+          <!-- Reasoning section -->
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+            <div style="font-size:13px;color:var(--body);line-height:1.6">
+              Senator Padilla has consistently voted to expand healthcare access, co-sponsoring the Public Option Act of 2025 and voting for the ACA expansion amendment.<span class="footnote-ref">1</span>
+            </div>
+            <div style="margin-top:12px">
+              <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">References</div>
+              <a href="javascript:void(0)" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--teal);text-decoration:none;padding:4px 0">
+                <span style="width:4px;height:4px;border-radius:50%;background:var(--teal);flex-shrink:0"></span>
+                S.2025 — Public Option Act (Congress.gov)
+              </a>
+              <a href="javascript:void(0)" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--teal);text-decoration:none;padding:4px 0">
+                <span style="width:4px;height:4px;border-radius:50%;background:var(--teal);flex-shrink:0"></span>
+                Roll Call Vote #127, March 2025 (Senate.gov)
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footnotes & Sources -->
+        <div class="component-card">
+          <div class="component-label">Footnotes & Sources</div>
+          <div style="font-size:13px;color:var(--body);line-height:1.7;margin-bottom:16px">
+            Voted to expand healthcare coverage under the ACA<span class="footnote-ref">1</span> and co-sponsored the
+            public option bill in 2025.<span class="footnote-ref">2</span> Previously served as Secretary of State
+            where they modernized voter registration.<span class="footnote-ref">3</span>
+          </div>
+          <div style="background:var(--bg);border-radius:8px;padding:14px 16px;border:1px solid var(--border)">
+            <div style="font-size:12px;font-weight:700;color:var(--heading);margin-bottom:8px">Sources</div>
+            <ol class="source-list">
+              <li class="source-item">
+                <span class="source-num">1</span>
+                <div class="source-text">
+                  <a href="javascript:void(0)">S.2025 — Affordable Care Expansion Act</a>
+                  <div class="source-date">Congress.gov · Introduced Jan 2025</div>
+                </div>
+              </li>
+              <li class="source-item">
+                <span class="source-num">2</span>
+                <div class="source-text">
+                  <a href="javascript:void(0)">Roll Call Vote #127 — Public Option Act of 2025</a>
+                  <div class="source-date">Senate.gov · March 15, 2025</div>
+                </div>
+              </li>
+              <li class="source-item">
+                <span class="source-num">3</span>
+                <div class="source-text">
+                  <a href="javascript:void(0)">California Secretary of State Annual Report 2020</a>
+                  <div class="source-date">sos.ca.gov · 2020</div>
+                </div>
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- Timeline / Activity Feed -->
+        <div class="component-card">
+          <div class="component-label">Legislative Timeline</div>
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-dot filled"></div>
+              <div class="timeline-date">Mar 15, 2026</div>
+              <div class="timeline-title">Voted YES on S.2025</div>
+              <div class="timeline-desc">Affordable Care Expansion Act — passed 54-46</div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot filled"></div>
+              <div class="timeline-date">Feb 28, 2026</div>
+              <div class="timeline-title">Co-sponsored H.R.1234</div>
+              <div class="timeline-desc">DREAM Act Reauthorization — 12 co-sponsors</div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot filled"></div>
+              <div class="timeline-date">Feb 10, 2026</div>
+              <div class="timeline-title">Committee Hearing</div>
+              <div class="timeline-desc">Judiciary Committee — Immigration reform testimony</div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-date">Jan 20, 2026</div>
+              <div class="timeline-title">Session Opened</div>
+              <div class="timeline-desc">119th Congress, 2nd Session began</div>
+            </div>
+          </div>
+        </div>
+
+      </div>`;
+    }
+
+    // ── Patterns ──
+    function renderPatterns() {
+      return `<div class="pattern-grid">
+
+        <!-- Agree/Disagree -->
+        <div class="pattern-card">
+          <div class="pattern-preview">
+            <div class="action-btn-pair">
+              <button class="action-btn action-btn-disagree" title="Disagree">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#78716C" stroke-width="2.5" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+              </button>
+              <button class="action-btn action-btn-agree" title="Agree">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#0E7490" stroke-width="2.5" stroke-linecap="round"><polyline points="4 12 9 17 20 6"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="pattern-info">
+            <div class="pattern-name">Agree / Disagree Actions</div>
+            <div class="pattern-desc">Binary action buttons for evaluating content. Hover to see color states.</div>
+            <div class="pattern-apps">Used in: Read & Rank</div>
+          </div>
+        </div>
+
+        <!-- Coach Mark -->
+        <div class="pattern-card">
+          <div class="pattern-preview" style="min-height:200px;padding-bottom:100px">
+            <div class="coachmark-demo">
+              <div class="coachmark-spotlight">Take the Quiz</div>
+              <div class="coachmark-tooltip">
+                Answer questions on 7 topics to build your political compass
+                <div class="tip-buttons">
+                  <button class="tip-btn tip-btn-skip">Skip</button>
+                  <button class="tip-btn" style="background:var(--teal);color:var(--btn-text, #fff);border-radius:4px">Next →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="pattern-info">
+            <div class="pattern-name">Coach Mark / Tooltip</div>
+            <div class="pattern-desc">Spotlight overlay for guided tours. Highlights a UI element with a tooltip below.</div>
+            <div class="pattern-apps">Used in: Compass, Read & Rank</div>
+          </div>
+        </div>
+
+        <!-- Progress Steps -->
+        <div class="pattern-card">
+          <div class="pattern-preview">
+            <div class="progress-steps">
+              <div class="progress-step done">✓</div>
+              <div class="progress-line done"></div>
+              <div class="progress-step done">✓</div>
+              <div class="progress-line done"></div>
+              <div class="progress-step current">3</div>
+              <div class="progress-line upcoming"></div>
+              <div class="progress-step upcoming">4</div>
+              <div class="progress-line upcoming"></div>
+              <div class="progress-step upcoming">5</div>
+            </div>
+          </div>
+          <div class="pattern-info">
+            <div class="pattern-name">Progress / Phase Steps</div>
+            <div class="pattern-desc">Multi-step flow indicator. Shows completed, current, and upcoming steps.</div>
+            <div class="pattern-apps">Used in: Read & Rank, Compass Quiz, Civic Trivia</div>
+          </div>
+        </div>
+
+        <!-- Accordion -->
+        <div class="pattern-card">
+          <div class="pattern-preview" style="flex-direction:column;align-items:stretch;width:100%">
+            <div class="accordion-item open" onclick="this.classList.toggle('open')">
+              <button class="accordion-header">Healthcare <span class="accordion-chevron">▾</span></button>
+              <div class="accordion-body">Supports expanding ACA coverage. Voted for prescription drug price negotiation in 2024.</div>
+            </div>
+            <div class="accordion-item" onclick="this.classList.toggle('open')">
+              <button class="accordion-header">Education <span class="accordion-chevron">▾</span></button>
+              <div class="accordion-body">Advocates for increased public school funding and student loan forgiveness programs.</div>
+            </div>
+            <div class="accordion-item" onclick="this.classList.toggle('open')">
+              <button class="accordion-header">Environment <span class="accordion-chevron">▾</span></button>
+              <div class="accordion-body">Co-sponsored clean energy legislation. Supports carbon pricing mechanisms.</div>
+            </div>
+          </div>
+          <div class="pattern-info">
+            <div class="pattern-name">Accordion / Expandable</div>
+            <div class="pattern-desc">Collapsible sections for stance details, legislative records, and topic breakdowns.</div>
+            <div class="pattern-apps">Used in: Essentials, Compass, Stance Details</div>
+          </div>
+        </div>
+
+        <!-- Toast / Feedback -->
+        <div class="pattern-card">
+          <div class="pattern-preview" style="flex-direction:column;gap:8px;align-items:flex-start">
+            <div class="toast-demo toast-success">✓ Stance saved successfully</div>
+            <div class="toast-demo toast-error">✕ Failed to load representatives</div>
+            <div class="toast-demo toast-info">ℹ 3 new politicians added to your area</div>
+          </div>
+          <div class="pattern-info">
+            <div class="pattern-name">Toast / Inline Feedback</div>
+            <div class="pattern-desc">Transient notifications for success, error, and info states.</div>
+            <div class="pattern-apps">Used in: All apps</div>
+          </div>
+        </div>
+
+        <!-- Badges -->
+        <div class="pattern-card">
+          <div class="pattern-preview" style="flex-wrap:wrap;gap:8px">
+            <span class="badge badge-federal">Federal</span>
+            <span class="badge badge-state">State</span>
+            <span class="badge badge-local">Local</span>
+            <span class="badge badge-inform">Inform</span>
+            <span class="badge badge-connect">Connect</span>
+            <span class="badge badge-empower">Empower</span>
+          </div>
+          <div class="pattern-info">
+            <div class="pattern-name">Badge / Chip Variants</div>
+            <div class="pattern-desc">Government tier and pillar labels. Colors adapt in dark mode.</div>
+            <div class="pattern-apps">Used in: Essentials, Compass, Read & Rank</div>
+          </div>
+        </div>
+
+        <!-- Politician Card -->
+        <!-- Politician Grid Card -->
+        <div class="pattern-card">
+          <div class="pattern-preview" style="gap:12px">
+            <div class="ev-card-interactive" style="width:160px;padding:16px;text-align:center">
+              <div class="avatar avatar-portrait avatar-lg" style="background:#00647A;margin:0 auto 10px">AP</div>
+              <div class="card-title" style="font-size:14px">Alex Padilla</div>
+              <div class="card-desc">U.S. Senate</div>
+              <span class="badge badge-federal" style="margin-top:6px">Federal</span>
+            </div>
+            <div class="ev-card-interactive" style="width:160px;padding:16px;text-align:center">
+              <div class="avatar avatar-portrait avatar-lg" style="background:#B31D09;margin:0 auto 10px">KP</div>
+              <div class="card-title" style="font-size:14px">Katie Porter</div>
+              <div class="card-desc">U.S. House · D-47</div>
+              <span class="badge badge-federal" style="margin-top:6px">Federal</span>
+            </div>
+          </div>
+          <div class="pattern-info">
+            <div class="pattern-name">Politician Grid Card</div>
+            <div class="pattern-desc">4:5 portrait avatar with rounded corners, name, office, and tier badge. Matches Essentials results layout.</div>
+            <div class="pattern-apps">Used in: Essentials Results, Compass Library</div>
+          </div>
+        </div>
+
+        <!-- Politician Profile Card -->
+        <div class="pattern-card">
+          <div class="pattern-preview" style="align-items:flex-start;width:100%">
+            <div class="profile-card" style="width:100%">
+              <div class="profile-header">
+                <div class="avatar avatar-portrait avatar-profile" style="background:#00647A">AP</div>
+                <div class="profile-info">
+                  <div class="profile-name">Alex Padilla</div>
+                  <div class="profile-office">United States Senator · California</div>
+                  <div class="profile-meta">
+                    <span class="badge badge-federal">Federal</span>
+                    <span class="profile-stat"><strong>Since 2021</strong> · 5 years in office</span>
+                  </div>
+                  <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:4px">
+                    ${[
+                      { label: 'Bills', value: '23', color: 'var(--teal)' },
+                      { label: 'Votes', value: '156', color: 'var(--stat-coral)' },
+                      { label: 'Committees', value: '4', color: 'var(--stat-yellow)' },
+                    ].map(s => `
+                      <div class="leg-score">
+                        <div class="leg-score-label">${s.label}</div>
+                        <div class="leg-score-value" style="color:${s.color}">${s.value}</div>
+                      </div>
+                    `).join('')}
+                  </div>
+                  <div class="profile-actions">
+                    <button class="ev-btn ev-btn-primary" style="font-size:12px;padding:8px 16px">Compare</button>
+                    <button class="ev-btn ev-btn-secondary" style="font-size:12px;padding:8px 16px">Legislative Record</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="pattern-info">
+            <div class="pattern-name">Politician Profile Header</div>
+            <div class="pattern-desc">Full profile layout with portrait photo, name, office, stats, and action buttons. 4:5 aspect ratio on the photo.</div>
+            <div class="pattern-apps">Used in: Essentials Profile, Candidate Profile</div>
+          </div>
+        </div>
+
+        <!-- Countdown Timer -->
+        <div class="pattern-card">
+          <div class="pattern-preview" style="gap:24px">
+            ${[
+              { time: 25, offset: 32, color: '#3A9BB0', label: 'Plenty' },
+              { time: 12, offset: 107, color: '#F59E0B', label: 'Warning' },
+              { time: 4, offset: 171, color: '#FF5740', label: 'Urgent' },
+            ].map(t => `
+              <div style="text-align:center">
+                <div style="position:relative;width:72px;height:72px">
+                  <svg width="72" height="72" viewBox="0 0 72 72">
+                    <circle cx="36" cy="36" r="30" fill="none" stroke="var(--border)" stroke-width="4"/>
+                    <circle cx="36" cy="36" r="30" fill="none" stroke="${t.color}" stroke-width="4"
+                      stroke-dasharray="188.5" stroke-dashoffset="${t.offset}" stroke-linecap="round"
+                      transform="rotate(-90 36 36)"/>
+                  </svg>
+                  <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:var(--heading);font-family:Manrope">${t.time}</div>
+                </div>
+                <div style="font-size:11px;font-weight:600;color:${t.color};margin-top:6px">${t.label}</div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="pattern-info">
+            <div class="pattern-name">Countdown Timer</div>
+            <div class="pattern-desc">Circular progress countdown in 3 phases: Teal (plenty of time) → Amber (warning) → Coral (urgent).</div>
+            <div class="pattern-apps">Used in: Civic Trivia, Validation Quests</div>
+          </div>
+        </div>
+
+        <!-- Tab Navigation with Pillar Colors -->
+        <div class="pattern-card">
+          <div class="pattern-preview" style="flex-direction:column;gap:16px;align-items:flex-start;width:100%">
+            <div class="ev-nav">
+              <button class="ev-nav-item active">${pillarIcon('#FED12F', 16)}Inform</button>
+              <button class="ev-nav-item" onclick="this.parentElement.querySelectorAll('.ev-nav-item').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${pillarIcon('#3A9BB0', 16)}Connect</button>
+              <button class="ev-nav-item" onclick="this.parentElement.querySelectorAll('.ev-nav-item').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${pillarIcon('#FF5740', 16)}Empower</button>
+              <button class="ev-nav-item" onclick="this.parentElement.querySelectorAll('.ev-nav-item').forEach(b=>b.classList.remove('active'));this.classList.add('active')">All</button>
+            </div>
+          </div>
+          <div class="pattern-info">
+            <div class="pattern-name">Pillar Tab Navigation</div>
+            <div class="pattern-desc">Tab bar with pillar color dots. Click to switch active tab. Used to filter content by pillar.</div>
+            <div class="pattern-apps">Used in: Cross-pillar views, Dashboard</div>
+          </div>
+        </div>
+
+        <!-- Dropdown Menu -->
+        <div class="pattern-card">
+          <div class="pattern-preview" style="align-items:flex-start">
+            <div class="ev-menu">
+              <div class="ev-menu-label">Pillars</div>
+              <button class="ev-menu-item">
+                ${pillarIcon('#FED12F', 18)}
+                Inform
+                <span class="menu-arrow">›</span>
+              </button>
+              <button class="ev-menu-item" style="background:var(--bg)">
+                ${pillarIcon('#3A9BB0', 18)}
+                Connect
+                <span class="menu-badge">4</span>
+              </button>
+              <button class="ev-menu-item">
+                ${pillarIcon('#FF5740', 18)}
+                Empower
+                <span class="menu-arrow">›</span>
+              </button>
+              <div class="ev-menu-divider"></div>
+              <div class="ev-menu-label">Account</div>
+              <button class="ev-menu-item">
+                <span class="menu-icon" style="color:var(--muted)">👤</span>
+                Profile
+              </button>
+              <button class="ev-menu-item">
+                <span class="menu-icon" style="color:var(--muted)">⚙</span>
+                Settings
+              </button>
+            </div>
+          </div>
+          <div class="pattern-info">
+            <div class="pattern-name">Dropdown Menu</div>
+            <div class="pattern-desc">Grouped menu with pillar colors, badges, nested arrows, and dividers. Hover items to preview.</div>
+            <div class="pattern-apps">Used in: Navigation, Admin</div>
+          </div>
+        </div>
+
+        <!-- Sidebar Navigation -->
+        <div class="pattern-card">
+          <div class="pattern-preview" style="align-items:flex-start">
+            <div class="ev-sidebar">
+              <div class="ev-sidebar-group">Inform</div>
+              <button class="ev-sidebar-item" onclick="this.closest('.ev-sidebar').querySelectorAll('.ev-sidebar-item').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
+                ${pillarIcon('#FED12F', 14)} Badges
+              </button>
+              <button class="ev-sidebar-item" onclick="this.closest('.ev-sidebar').querySelectorAll('.ev-sidebar-item').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
+                ${pillarIcon('#FED12F', 14)} Treasury
+              </button>
+              <div class="ev-sidebar-group">Connect</div>
+              <button class="ev-sidebar-item active">
+                ${pillarIcon('#3A9BB0', 14)} Essentials
+              </button>
+              <div class="ev-sidebar-nested">
+                <button class="ev-sidebar-item" onclick="this.closest('.ev-sidebar').querySelectorAll('.ev-sidebar-item').forEach(b=>b.classList.remove('active'));this.classList.add('active')" style="font-size:12px">
+                  Federal
+                </button>
+                <button class="ev-sidebar-item" onclick="this.closest('.ev-sidebar').querySelectorAll('.ev-sidebar-item').forEach(b=>b.classList.remove('active'));this.classList.add('active')" style="font-size:12px">
+                  State
+                </button>
+                <button class="ev-sidebar-item" onclick="this.closest('.ev-sidebar').querySelectorAll('.ev-sidebar-item').forEach(b=>b.classList.remove('active'));this.classList.add('active')" style="font-size:12px">
+                  Local
+                </button>
+              </div>
+              <button class="ev-sidebar-item" onclick="this.closest('.ev-sidebar').querySelectorAll('.ev-sidebar-item').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
+                ${pillarIcon('#3A9BB0', 14)} CouncilScribe
+              </button>
+              <div class="ev-sidebar-group">Empower</div>
+              <button class="ev-sidebar-item" onclick="this.closest('.ev-sidebar').querySelectorAll('.ev-sidebar-item').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
+                ${pillarIcon('#FF5740', 14)} Compass
+              </button>
+              <button class="ev-sidebar-item" onclick="this.closest('.ev-sidebar').querySelectorAll('.ev-sidebar-item').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
+                ${pillarIcon('#FF5740', 14)} Read & Rank
+              </button>
+            </div>
+          </div>
+          <div class="pattern-info">
+            <div class="pattern-name">Sidebar Navigation</div>
+            <div class="pattern-desc">Vertical nav with pillar groups, colored dots, nested items, and active state. Click to navigate.</div>
+            <div class="pattern-apps">Used in: Dashboard, Admin, Multi-tool views</div>
+          </div>
+        </div>
+
+        <!-- Mobile Drawer -->
+        <div class="pattern-card">
+          <div class="pattern-preview" style="padding:0;overflow:hidden">
+            <div class="drawer-demo">
+              <div class="drawer-phone-bar"></div>
+              <div style="padding:16px;font-size:11px;color:var(--muted);text-align:center;margin-top:40px">
+                Page content behind drawer
+              </div>
+              <div class="drawer-sheet">
+                <div class="drawer-handle"></div>
+                <div style="font-size:15px;font-weight:700;color:var(--heading);margin-bottom:12px">Select Level</div>
+                <button class="ev-menu-item" style="padding:12px;border-radius:8px">
+                  <span class="badge badge-federal">Federal</span>
+                  <span style="font-size:13px;color:var(--heading);font-weight:500">12 officials</span>
+                  <span class="menu-arrow" style="margin-left:auto;color:var(--muted)">›</span>
+                </button>
+                <button class="ev-menu-item" style="padding:12px;border-radius:8px">
+                  <span class="badge badge-state">State</span>
+                  <span style="font-size:13px;color:var(--heading);font-weight:500">28 officials</span>
+                  <span class="menu-arrow" style="margin-left:auto;color:var(--muted)">›</span>
+                </button>
+                <button class="ev-menu-item" style="padding:12px;border-radius:8px">
+                  <span class="badge badge-local">Local</span>
+                  <span style="font-size:13px;color:var(--heading);font-weight:500">45 officials</span>
+                  <span class="menu-arrow" style="margin-left:auto;color:var(--muted)">›</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="pattern-info">
+            <div class="pattern-name">Mobile Bottom Drawer</div>
+            <div class="pattern-desc">Slide-up sheet for mobile actions. Drag handle, grouped options, badges with counts.</div>
+            <div class="pattern-apps">Used in: Essentials (mobile), Compass (mobile)</div>
+          </div>
+        </div>
+
+        <!-- Labeled Dividers -->
+        <div class="pattern-card">
+          <div class="pattern-preview" style="flex-direction:column;align-items:stretch;width:100%;gap:0">
+            <div class="section-divider">
+              <div class="section-divider-label">${pillarIcon('#00647A', 14)} Federal Officials</div>
+              <div class="section-divider-line"></div>
+              <div class="section-divider-count">12 found</div>
+            </div>
+            <div style="height:32px"></div>
+            <div class="section-divider">
+              <div class="section-divider-label">${pillarIcon('#FED12F', 14)} State Officials</div>
+              <div class="section-divider-line"></div>
+              <div class="section-divider-count">28 found</div>
+            </div>
+            <div style="height:32px"></div>
+            <div class="labeled-divider"><span class="labeled-divider-text">or continue with</span></div>
+            <div style="height:16px"></div>
+            <div class="labeled-divider"><span class="labeled-divider-text">Sources & References</span></div>
+          </div>
+          <div class="pattern-info">
+            <div class="pattern-name">Labeled Dividers</div>
+            <div class="pattern-desc">Section breaks with labels, pillar icons, and counts. Two styles: header dividers and inline dividers.</div>
+            <div class="pattern-apps">Used in: Essentials (tier sections), Profile pages</div>
+          </div>
+        </div>
+
+        <!-- Notification Badges -->
+        <div class="pattern-card">
+          <div class="pattern-preview" style="gap:32px">
+            <div style="text-align:center">
+              <div class="notif-wrap">
+                <button class="ev-btn ev-btn-secondary" style="font-size:12px;padding:8px 14px">Messages</button>
+                <span class="notif-dot"></span>
+              </div>
+              <div style="font-size:10px;color:var(--muted);margin-top:8px">Dot</div>
+            </div>
+            <div style="text-align:center">
+              <div class="notif-wrap">
+                <button class="ev-btn ev-btn-secondary" style="font-size:12px;padding:8px 14px">Updates</button>
+                <span class="notif-count">3</span>
+              </div>
+              <div style="font-size:10px;color:var(--muted);margin-top:8px">Count</div>
+            </div>
+            <div style="text-align:center">
+              <div class="notif-wrap">
+                <button class="ev-btn ev-btn-secondary" style="font-size:12px;padding:8px 14px">Stances</button>
+                <span class="notif-count">12</span>
+              </div>
+              <div style="font-size:10px;color:var(--muted);margin-top:8px">Large count</div>
+            </div>
+            <div style="text-align:center">
+              <div class="notif-wrap">
+                <div class="avatar avatar-md" style="background:#00647A">AP</div>
+                <span class="notif-dot"></span>
+              </div>
+              <div style="font-size:10px;color:var(--muted);margin-top:8px">On avatar</div>
+            </div>
+          </div>
+          <div class="pattern-info">
+            <div class="pattern-name">Notification Badges</div>
+            <div class="pattern-desc">Dot indicators and count badges. Coral color for urgency. Works on buttons, avatars, and nav items.</div>
+            <div class="pattern-apps">Used in: Navigation, Data Entry, Staging review</div>
+          </div>
+        </div>
+
+      </div>`;
+    }
+
+    function renderSemantic() {
+      function flattenTokens(obj, prefix = '') {
+        const result = [];
+        for (const [key, value] of Object.entries(obj)) {
+          const path = prefix ? `${prefix}.${key}` : key;
+          if (typeof value === 'string') {
+            result.push({ path, value });
+          } else if (typeof value === 'object') {
+            result.push(...flattenTokens(value, path));
+          }
+        }
+        return result;
+      }
+
+      const lightTokens = flattenTokens(semanticTokens.light);
+      const darkTokens = flattenTokens(semanticTokens.dark);
+
+      let out = `<div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border)">
+              <th style="text-align:left;padding:8px 12px;color:var(--muted);font-weight:600">Token</th>
+              <th style="text-align:left;padding:8px 12px;color:var(--muted);font-weight:600">Light</th>
+              <th style="text-align:left;padding:8px 12px;color:var(--muted);font-weight:600">Dark</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+      for (let i = 0; i < lightTokens.length; i++) {
+        const lt = lightTokens[i];
+        const dt = darkTokens[i];
+        const isColor = lt.value.startsWith('#');
+        out += `<tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:8px 12px;font-family:monospace;color:var(--heading)">${lt.path}</td>
+          <td style="padding:8px 12px">
+            <span style="display:inline-flex;align-items:center;gap:8px">
+              ${isColor ? `<span style="display:inline-block;width:18px;height:18px;border-radius:3px;background:${lt.value};border:1px solid var(--border)"></span>` : ''}
+              <code style="color:var(--muted);cursor:pointer" onclick="copyHex('${lt.value}')">${lt.value}</code>
+            </span>
+          </td>
+          <td style="padding:8px 12px">
+            <span style="display:inline-flex;align-items:center;gap:8px">
+              ${isColor ? `<span style="display:inline-block;width:18px;height:18px;border-radius:3px;background:${dt.value};border:1px solid var(--border)"></span>` : ''}
+              <code style="color:var(--muted);cursor:pointer" onclick="copyHex('${dt.value}')">${dt.value}</code>
+            </span>
+          </td>
+        </tr>`;
+      }
+
+      out += '</tbody></table></div>';
+      return out;
+    }
+
+    // ── Render All ──
+    const content = document.getElementById('content');
+    content.innerHTML = sections.map(s => `
+      <div class="section" id="${s.id}">
+        <h2 class="section-title">${s.title}</h2>
+        <p class="section-desc">${
+          s.id === 'colors' ? 'Foundation color scales. Click any hex to copy. ★ marks the brand base color.' :
+          s.id === 'typography' ? 'Manrope is the primary typeface across all Empowered Vote products.' :
+          s.id === 'spacing' ? '4px base unit. Consistent spacing creates visual rhythm across all products.' :
+          s.id === 'components' ? 'Interactive elements with hover, active, focus, and disabled states. Try hovering, clicking, and tabbing.' :
+          s.id === 'forms' ? 'Form controls including selects, checkboxes, radios, textareas, and validation states.' :
+          s.id === 'feedback' ? 'Alerts, toasts, tooltips, and empty states for communicating status to users.' :
+          s.id === 'loading' ? 'Spinners, skeleton screens, progress bars, and empty states.' :
+          s.id === 'navigation' ? 'Breadcrumbs, pagination, tabs, and menus for wayfinding.' :
+          s.id === 'tables' ? 'Data tables and avatar components for displaying structured information.' :
+          s.id === 'radar' ? 'Dual-overlay radar chart for comparing user compass vs. politician stances. Try the color presets or pick your own.' :
+          s.id === 'comparison' ? 'Politician selection, stance comparison tables, legislative scores, and source citations.' :
+          s.id === 'patterns' ? 'Reusable UI patterns found across Empowered Vote apps. Each adapts to light/dark mode.' :
+          s.id === 'pillars' ? 'Each pillar has a dedicated accent color. Inform = Yellow, Empower = Coral, Connect = Teal.' :
+          s.id === 'dataviz' ? '10 chart hues × 5 shades. Base shade (outlined) for segments, lighter for subcategories.' :
+          s.id === 'semantic' ? 'Semantic tokens map to different values in light and dark modes. All dark mode colors meet WCAG AA (4.5:1+) contrast.' : ''
+        }</p>
+        ${s.render()}
+      </div>
+    `).join('');
+
+    // ── Theme Toggle ──
+    window.toggleTheme = () => {
+      const html = document.documentElement;
+      const isDark = html.getAttribute('data-theme') === 'dark';
+      if (isDark) {
+        html.removeAttribute('data-theme');
+      } else {
+        html.setAttribute('data-theme', 'dark');
+      }
+      const nowDark = html.getAttribute('data-theme') === 'dark';
+      document.querySelector('.sun-icon').style.display = nowDark ? 'none' : 'block';
+      document.querySelector('.moon-icon').style.display = nowDark ? 'block' : 'none';
+    };
+  </script>
+</body>
+</html>
