@@ -65,7 +65,7 @@ function buildTitleAndSubtitle(pol) {
   })();
 
   const subtitle = (() => {
-    if (dashIdx > 0) return cleanTitle.slice(dashIdx + 3);
+    if (dashIdx > 0) return normalizeDistrictSubtitle(cleanTitle.slice(dashIdx + 3));
     // NATIONAL_JUDICIAL: show court name as subtitle (e.g. "Supreme Court of the United States")
     if (pol.district_type === 'NATIONAL_JUDICIAL')
       return cleanChamber || null;
@@ -166,6 +166,22 @@ function extractLinkedIn(pol) {
 }
 
 /** Format an address object for display */
+/** Capitalize first letter of each word (for contact_type display) */
+function capitalize(str) {
+  if (!str) return str;
+  return str.replace(/\b\w/g, c => c.toUpperCase());
+}
+
+/** Normalize district subtitle for consistent display
+ *  e.g. "Indiana 9th Congressional District" → "District 9" */
+function normalizeDistrictSubtitle(raw) {
+  if (!raw) return raw;
+  // Match patterns like "Indiana 9th Congressional District" or "California 33rd Congressional District"
+  const match = raw.match(/(\d+)(?:st|nd|rd|th)\s+Congressional\s+District/i);
+  if (match) return `District ${match[1]}`;
+  return raw;
+}
+
 function formatAddress(addr) {
   const lines = [addr.address_1, addr.address_2, addr.address_3].filter(Boolean);
   const cityState = [addr.city, addr.state].filter(Boolean).join(', ');
@@ -315,7 +331,7 @@ export default function PoliticianProfile({
 
   // Group addresses
   const addresses = (pol.addresses || []).map(addr => ({
-    type: addr.contact_type || addr.type || 'Office',
+    type: capitalize(addr.contact_type || addr.type || 'office'),
     lines: formatAddress(addr),
   })).filter(a => a.lines.length > 0);
 
@@ -326,7 +342,7 @@ export default function PoliticianProfile({
   const socialWebsiteUrls = [];  // social platform URLs detected from websites list
 
   (pol.contacts || []).forEach(c => {
-    const cType = c.contact_type || 'Office';
+    const cType = capitalize(c.contact_type || 'office');
     if (c.phone && c.phone.trim()) {
       if (!phonesByType[cType]) phonesByType[cType] = [];
       phonesByType[cType].push(c.phone.trim());
