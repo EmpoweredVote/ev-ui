@@ -12,11 +12,20 @@ const ROLE_ORDER = {
 
 function getRoleRank(position) {
   if (!position) return 99;
-  const lower = position.toLowerCase().trim();
+  const lower = formatPosition(position).toLowerCase();
   for (const [key, rank] of Object.entries(ROLE_ORDER)) {
     if (lower.includes(key)) return rank;
   }
   return 99;
+}
+
+/** Convert snake_case/kebab-case position to Title Case (e.g. "ranking_member" → "Ranking Member") */
+function formatPosition(position) {
+  if (!position) return '';
+  return position
+    .replace(/[_-]/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase())
+    .trim();
 }
 
 /**
@@ -137,7 +146,7 @@ export default function CommitteeTable({
                 )}
               </td>
               <td style={{ ...styles.cell, ...styles.positionCell }}>
-                {committee.position}
+                {formatPosition(committee.position)}
               </td>
             </tr>
           ))}
