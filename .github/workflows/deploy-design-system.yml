@@ -3,7 +3,7 @@ name: Deploy Design System
 on:
   push:
     branches: [main]
-    paths: [design-system/**]
+    paths: [design-system/**, src/tokens.js]
   workflow_dispatch:
 
 permissions:
@@ -23,6 +23,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Copy tokens into design-system
+        run: cp src/tokens.js design-system/tokens.js
 
       - uses: actions/configure-pages@v5
 
