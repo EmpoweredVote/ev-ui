@@ -266,6 +266,7 @@ export default function PoliticianProfile({
   judicialRecord,
   politicianId,
   onNavigateToRecord,
+  imageFocalPoint,
 }) {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const pol = politician;
@@ -452,6 +453,7 @@ export default function PoliticianProfile({
       height: '100%',
       borderRadius: borderRadius.lg,
       objectFit: 'cover',
+      objectPosition: imageFocalPoint ?? 'center 20%',
       background: colors.borderLight,
     },
     placeholder: {

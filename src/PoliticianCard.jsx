@@ -27,6 +27,7 @@ export default function PoliticianCard({
   variant = 'horizontal',
   style = {},
   badge,
+  imageFocalPoint,
 }) {
   const isHorizontal = variant === 'horizontal';
 
@@ -67,6 +68,7 @@ export default function PoliticianCard({
       width: '100%',
       height: '100%',
       objectFit: 'cover',
+      objectPosition: imageFocalPoint ?? 'center 20%',
     },
     imagePlaceholder: {
       width: '100%',
