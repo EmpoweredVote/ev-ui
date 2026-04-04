@@ -48,10 +48,64 @@ export function CompassIcon({ size = 16, color = 'currentColor' }) {
 }
 
 /**
- * BranchIcon — represents a government branch / landmark (Lucide "landmark" pattern)
- * @param {{ size?: number, color?: string }} props
+ * BranchIcon — represents a government branch with branch-specific SVG
+ * @param {{ size?: number, color?: string, branch?: 'executive'|'legislative'|'judicial' }} props
  */
-export function BranchIcon({ size = 16, color = 'currentColor' }) {
+export function BranchIcon({ size = 16, color = 'currentColor', branch }) {
+  let paths;
+  switch (branch) {
+    case 'executive':
+      paths = (
+        <>
+          <path d="M3 21h18" />
+          <path d="M5 21V7l8-4v18" />
+          <path d="M19 21V11l-6-4" />
+          <path d="M9 9v.01" />
+          <path d="M9 12v.01" />
+          <path d="M9 15v.01" />
+          <path d="M9 18v.01" />
+          <path d="M5 21h14" />
+          <line x1="13" y1="5" x2="13" y2="3" />
+          <line x1="13" y1="3" x2="15" y2="4" />
+        </>
+      );
+      break;
+    case 'legislative':
+      paths = (
+        <>
+          <path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4" />
+          <path d="M19 17V5a2 2 0 0 0-2-2H4" />
+          <path d="M15 8h-5" />
+          <path d="M15 12h-5" />
+        </>
+      );
+      break;
+    case 'judicial':
+      paths = (
+        <>
+          <path d="M12 3v19" />
+          <path d="M5 8l7-5 7 5" />
+          <path d="M3 13l2-5 2 5a3 3 0 0 1-4 0z" />
+          <path d="M17 13l2-5 2 5a3 3 0 0 1-4 0z" />
+          <path d="M8 21h8" />
+        </>
+      );
+      break;
+    default:
+      // Landmark fallback — preserves backward compatibility
+      paths = (
+        <>
+          <path d="M10 18v-7" />
+          <path d="M11.12 2.198a2 2 0 0 1 1.76.006l7.866 3.847c.476.233.31.949-.22.949H3.474c-.53 0-.695-.716-.22-.949z" />
+          <path d="M14 18v-7" />
+          <path d="M18 18v-7" />
+          <path d="M3 22h18" />
+          <path d="M6 18v-7" />
+        </>
+      );
+      break;
+  }
+
   return (
     <svg
       width={size}
@@ -64,12 +118,7 @@ export function BranchIcon({ size = 16, color = 'currentColor' }) {
       strokeLinejoin="round"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path d="M10 18v-7" />
-      <path d="M11.12 2.198a2 2 0 0 1 1.76.006l7.866 3.847c.476.233.31.949-.22.949H3.474c-.53 0-.695-.716-.22-.949z" />
-      <path d="M14 18v-7" />
-      <path d="M18 18v-7" />
-      <path d="M3 22h18" />
-      <path d="M6 18v-7" />
+      {paths}
     </svg>
   );
 }

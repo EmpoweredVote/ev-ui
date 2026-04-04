@@ -69,7 +69,7 @@ export const tierColors = {
     text:   colorScales.teal['500'],   // #00657C — 6.66:1 on white, AA
   },
   local: {
-    bg:     colorScales.teal['050'],   // #F5F9FA
+    bg:     '#FFFFFF',                 // #FFFFFF — white, lightest tier
     accent: colorScales.teal['200'],   // #C0E8F2 — decorative only
     text:   colorScales.teal['600'],   // #005366 — 8.1:1 on white, AA
   },
