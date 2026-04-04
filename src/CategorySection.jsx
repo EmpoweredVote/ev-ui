@@ -38,7 +38,7 @@ export default function CategorySection({
       display: 'inline-flex',
       alignItems: 'center',
       padding: `${spacing[2]} ${spacing[4]}`,
-      backgroundColor: tierStyle?.bg ?? colors.bgWhite,
+      backgroundColor: colors.bgWhite,
       border: `1px solid ${tierStyle?.accent ?? colors.borderMedium}`,
       borderRadius: borderRadius.lg,
       fontFamily: fonts.primary,

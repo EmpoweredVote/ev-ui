@@ -59,17 +59,17 @@ export const colorScales = {
 
 export const tierColors = {
   federal: {
-    bg:     colorScales.teal['100'],   // #E4F3F6
+    bg:     '#FFFFFF',                 // white — lightest tier
     accent: colorScales.teal['700'],   // #003E4D
     text:   colorScales.teal['700'],   // #003E4D — 7.5:1 on white, AA
   },
   state: {
-    bg:     colorScales.teal['050'],   // #F5F9FA
+    bg:     '#F7FBFC',                 // gentle teal wash — midpoint between white and 050
     accent: colorScales.teal['500'],   // #00657C
     text:   colorScales.teal['500'],   // #00657C — 6.66:1 on white, AA
   },
   local: {
-    bg:     '#FFFFFF',                 // #FFFFFF — white, lightest tier
+    bg:     '#EDF6F8',                 // #EDF6F8 — between 050 and 100, darkest tier
     accent: colorScales.teal['200'],   // #C0E8F2 — decorative only
     text:   colorScales.teal['600'],   // #005366 — 8.1:1 on white, AA
   },
