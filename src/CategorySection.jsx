@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { colors, fonts, fontWeights, fontSizes, spacing, borderRadius } from './tokens';
+import { colors, fonts, fontWeights, fontSizes, spacing, borderRadius, tierColors } from './tokens';
 
 /**
  * CategorySection component for grouping politicians by category
@@ -17,8 +17,11 @@ export default function CategorySection({
   websiteUrl,
   children,
   style = {},
+  tier,
 }) {
   const [showTooltip, setShowTooltip] = useState(false);
+
+  const tierStyle = tier ? tierColors[tier] : null;
 
   const styles = {
     section: {
@@ -35,13 +38,13 @@ export default function CategorySection({
       display: 'inline-flex',
       alignItems: 'center',
       padding: `${spacing[2]} ${spacing[4]}`,
-      backgroundColor: colors.bgWhite,
-      border: `1px solid ${colors.borderMedium}`,
+      backgroundColor: tierStyle?.bg ?? colors.bgWhite,
+      border: `1px solid ${tierStyle?.accent ?? colors.borderMedium}`,
       borderRadius: borderRadius.lg,
       fontFamily: fonts.primary,
       fontWeight: fontWeights.medium,
       fontSize: fontSizes.base,
-      color: colors.textPrimary,
+      color: tierStyle?.text ?? colors.textPrimary,
     },
     infoButton: {
       width: '20px',

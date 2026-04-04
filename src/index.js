@@ -23,3 +23,6 @@ export * from "./tokens.js";
 
 // Profile Components
 export { default as StanceAccordion } from "./StanceAccordion.jsx";
+
+// Icons
+export { BallotIcon, CompassIcon, BranchIcon } from './icons.js';
