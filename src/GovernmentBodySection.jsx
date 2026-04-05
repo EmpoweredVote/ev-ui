@@ -50,11 +50,11 @@ export default function GovernmentBodySection({
       transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)',
     },
     link: {
-      fontSize: fontSizes.xs,
-      color: '#59b0c4',
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: colors.textMuted,
       textDecoration: 'none',
-      marginLeft: 'auto',
-      fontFamily: fonts.primary,
     },
     content: {
       display: expanded ? 'block' : 'none',
@@ -78,7 +78,6 @@ export default function GovernmentBodySection({
         aria-label={`${expanded ? 'Collapse' : 'Expand'} ${title}`}
       >
         <span style={styles.title}>{title}</span>
-        <span style={styles.toggle} aria-hidden="true">▼</span>
         {websiteUrl && (
           <a
             href={websiteUrl}
@@ -88,9 +87,13 @@ export default function GovernmentBodySection({
             onClick={(e) => e.stopPropagation()}
             aria-label={`Visit ${title} website`}
           >
-            {websiteUrl.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')} ↗
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '14px', height: '14px' }}>
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+              <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" stroke="currentColor" strokeWidth="2" />
+            </svg>
           </a>
         )}
+        <span style={styles.toggle} aria-hidden="true">▼</span>
       </div>
       <div style={styles.content}>
         {children}
