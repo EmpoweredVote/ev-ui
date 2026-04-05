@@ -44,22 +44,24 @@ export default function SubGroupSection({ title, websiteUrl, children }) {
 
   return (
     <div style={styles.section}>
-      <div style={styles.header}>
-        <span style={styles.label}>{title}</span>
-        {websiteUrl && (
-          <a
-            href={websiteUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={styles.link}
-          >
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '12px', height: '12px' }}>
-              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-              <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" stroke="currentColor" strokeWidth="2" />
-            </svg>
-          </a>
-        )}
-      </div>
+      {title && (
+        <div style={styles.header}>
+          <span style={styles.label}>{title}</span>
+          {websiteUrl && (
+            <a
+              href={websiteUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={styles.link}
+            >
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '12px', height: '12px' }}>
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" stroke="currentColor" strokeWidth="2" />
+              </svg>
+            </a>
+          )}
+        </div>
+      )}
       <div style={styles.grid} className="ev-subgroup-grid">
         {children}
       </div>
