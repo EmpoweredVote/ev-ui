@@ -57,6 +57,7 @@ export default function PoliticianCard({
       transition: 'box-shadow 0.2s ease, transform 0.2s ease',
       position: 'relative',
       minHeight: isHorizontal ? '96px' : undefined,
+      height: '100%',
       ...style,
     },
     imageWrapper: {
