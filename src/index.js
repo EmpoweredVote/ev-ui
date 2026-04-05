@@ -6,6 +6,7 @@ export { default as FilterSidebar } from "./FilterSidebar.jsx";
 export { default as PoliticianCard } from "./PoliticianCard.jsx";
 export { default as CategorySection } from "./CategorySection.jsx";
 export { default as SubGroupSection } from "./SubGroupSection.jsx";
+export { default as GovernmentBodySection } from "./GovernmentBodySection.jsx";
 export { default as SocialLinks } from "./SocialLinks.jsx";
 export { default as IssueTags } from "./IssueTags.jsx";
 export { default as CommitteeTable } from "./CommitteeTable.jsx";
