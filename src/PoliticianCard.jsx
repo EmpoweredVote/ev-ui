@@ -89,6 +89,8 @@ export default function PoliticianCard({
       flex: 1,
       padding: isHorizontal ? `${spacing[2]} ${spacing[3]}` : spacing[3],
       minWidth: 0,
+      display: 'flex',
+      flexDirection: 'column',
     },
     name: {
       fontFamily: fonts.primary,
@@ -272,7 +274,7 @@ export default function PoliticianCard({
           <p style={styles.subtitle}>{subtitle}</p>
         )}
         {footer && (
-          <div style={{ marginTop: spacing[1] }}>
+          <div style={{ marginTop: 'auto', marginLeft: '-5px' }}>
             {footer}
           </div>
         )}
