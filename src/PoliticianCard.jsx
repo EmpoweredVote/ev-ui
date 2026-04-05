@@ -15,6 +15,7 @@ import { colors, fonts, fontWeights, fontSizes, spacing, borderRadius, shadows }
  * @param {'horizontal' | 'vertical'} props.variant - Card layout variant
  * @param {Object} props.style - Additional styles
  * @param {string} props.badge - Optional badge label (e.g., "Candidate") shown as coral pill
+ * @param {React.ReactNode} [props.footer] - Optional content rendered below subtitle (e.g., icon badges)
  */
 export default function PoliticianCard({
   id,
@@ -28,6 +29,7 @@ export default function PoliticianCard({
   style = {},
   badge,
   imageFocalPoint,
+  footer,
 }) {
   const isHorizontal = variant === 'horizontal';
 
@@ -54,7 +56,7 @@ export default function PoliticianCard({
       cursor: onClick ? 'pointer' : 'default',
       transition: 'box-shadow 0.2s ease, transform 0.2s ease',
       position: 'relative',
-      height: isHorizontal ? '96px' : undefined,
+      minHeight: isHorizontal ? '96px' : undefined,
       ...style,
     },
     imageWrapper: {
@@ -268,6 +270,11 @@ export default function PoliticianCard({
         <p style={styles.title}>{title}</p>
         {subtitle && (
           <p style={styles.subtitle}>{subtitle}</p>
+        )}
+        {footer && (
+          <div style={{ marginTop: spacing[1] }}>
+            {footer}
+          </div>
         )}
       </div>
 
