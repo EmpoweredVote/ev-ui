@@ -3,10 +3,10 @@
  * Import in any app's tailwind config or CSS:
  *
  * Tailwind v4 (CSS):
- *   @import "@chrisandrewsedu/ev-ui/tailwind-preset";
+ *   @import "@empoweredvote/ev-ui/tailwind-preset";
  *
  * Tailwind v3 (config):
- *   presets: [require('@chrisandrewsedu/ev-ui/tailwind-preset')]
+ *   presets: [require('@empoweredvote/ev-ui/tailwind-preset')]
  */
 
 import {
