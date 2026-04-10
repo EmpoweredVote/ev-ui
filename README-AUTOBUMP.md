@@ -45,12 +45,26 @@ Once `build-check.yml` passes on the PR, auto-merge completes the merge, and Ren
 7. Add the new repo to the `matrix.consumer` list in `ev-ui/.github/workflows/publish.yml`
 8. Update this file's "Current consumers" list
 
-## Required secrets
+## Authentication
 
-- **ev-ui repo:** `NPM_TOKEN` (npm automation token), `DISPATCH_TOKEN` (fine-grained GitHub PAT)
-- **Consumer repos:** `DISPATCH_TOKEN` only
+### npm publishing — Trusted Publishing (OIDC)
 
-The `DISPATCH_TOKEN` is a fine-grained Personal Access Token with access to ev-ui and all consumer repos. Required permissions: **Contents: Read/Write**, **Pull requests: Read/Write**, **Actions: Read/Write**, **Metadata: Read**. Use the same token across all repos to simplify rotation.
+This workflow uses **npm trusted publishing** via OpenID Connect. There is **no `NPM_TOKEN` secret** — GitHub Actions authenticates to npm using a short-lived OIDC token generated per workflow run.
+
+**Requirements:**
+- The `publish` job must have `permissions: id-token: write`
+- Node version must be 22.14+ (runner uses `actions/setup-node@v4` with `node-version: '22'`)
+- A trusted publisher is configured on npmjs.com for `@empoweredvote/ev-ui` pointing to `EmpoweredVote/ev-ui` with workflow filename `publish.yml`
+
+**To inspect or change the trusted publisher:** https://www.npmjs.com/package/@empoweredvote/ev-ui/access → Trusted Publisher section.
+
+**Bonus:** Trusted publishing automatically generates [npm provenance attestations](https://docs.npmjs.com/generating-provenance-statements) — cryptographic proof that this package was built from this GitHub repo. You'll see a "Published with provenance" badge on npmjs.com.
+
+### Cross-repo dispatch — `DISPATCH_TOKEN`
+
+- **All 5 repos (ev-ui + 4 consumers):** `DISPATCH_TOKEN` secret
+
+The `DISPATCH_TOKEN` is a fine-grained GitHub Personal Access Token with access to ev-ui and all consumer repos. Required permissions: **Contents: Read/Write**, **Pull requests: Read/Write**, **Actions: Read/Write**, **Metadata: Read**. Use the same token across all repos to simplify rotation.
 
 ## Debugging
 
