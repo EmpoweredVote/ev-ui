@@ -1,0 +1,101 @@
+name: Publish to npm and dispatch to consumers
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to publish (e.g. v0.2.1)'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      bump_type: ${{ steps.bump.outputs.bump_type }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Determine version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if [ -n "${{ inputs.tag }}" ]; then TAG="${{ inputs.tag }}"; fi
+          VERSION="${TAG#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Determine previous tag
+        id: previous
+        run: |
+          CURRENT="${{ steps.version.outputs.tag }}"
+          PREV=$(git tag --sort=-v:refname | grep -v "^$CURRENT$" | head -n 1)
+          if [ -z "$PREV" ]; then PREV="v0.0.0"; fi
+          echo "previous=$PREV" >> "$GITHUB_OUTPUT"
+
+      - name: Compute bump type
+        id: bump
+        run: |
+          BUMP=$(node .github/scripts/bump-type.mjs \
+            "${{ steps.previous.outputs.previous }}" \
+            "${{ steps.version.outputs.tag }}")
+          echo "bump_type=$BUMP" >> "$GITHUB_OUTPUT"
+          echo "Bump type: $BUMP"
+
+      - name: Verify package.json version matches tag
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if [ "$PKG_VERSION" != "${{ steps.version.outputs.version }}" ]; then
+            echo "::error::package.json version ($PKG_VERSION) does not match tag (${{ steps.version.outputs.version }})"
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  dispatch:
+    needs: publish
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        consumer:
+          - EmpoweredVote/CompassV2
+          - EmpoweredVote/essentials
+          - EmpoweredVote/read-rank
+          - EmpoweredVote/civic-spaces
+    steps:
+      - name: Dispatch ev-ui-published to ${{ matrix.consumer }}
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.DISPATCH_TOKEN }}
+          repository: ${{ matrix.consumer }}
+          event-type: ev-ui-published
+          client-payload: |
+            {
+              "version": "${{ needs.publish.outputs.version }}",
+              "bump_type": "${{ needs.publish.outputs.bump_type }}"
+            }
