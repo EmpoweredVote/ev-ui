@@ -84,16 +84,25 @@ jobs:
       fail-fast: false
       matrix:
         consumer:
-          - EmpoweredVote/CompassV2
-          - EmpoweredVote/essentials
-          - EmpoweredVote/read-rank
-          - EmpoweredVote/civic-spaces
+          - CompassV2
+          - essentials
+          - read-rank
+          - civic-spaces
     steps:
+      - name: Mint installation token for ${{ matrix.consumer }}
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: EmpoweredVote
+          repositories: ${{ matrix.consumer }}
+
       - name: Dispatch ev-ui-published to ${{ matrix.consumer }}
         uses: peter-evans/repository-dispatch@v4
         with:
-          token: ${{ secrets.DISPATCH_TOKEN }}
-          repository: ${{ matrix.consumer }}
+          token: ${{ steps.app-token.outputs.token }}
+          repository: EmpoweredVote/${{ matrix.consumer }}
           event-type: ev-ui-published
           client-payload: |
             {
