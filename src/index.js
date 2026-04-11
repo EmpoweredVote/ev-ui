@@ -16,6 +16,7 @@ export { default as LegislativeRecord } from "./LegislativeRecord.jsx";
 export { default as JudicialScorecard } from "./JudicialScorecard.jsx";
 export { JudicialRecordDetail } from "./JudicialRecordDetail.jsx";
 export { default as AuthForm } from "./AuthForm.jsx";
+export { default as TopicTierBadge } from "./TopicTierBadge.jsx";
 
 // Hooks
 export { default as useMediaQuery } from "./useMediaQuery.js";
