@@ -17,6 +17,9 @@ export { default as JudicialScorecard } from "./JudicialScorecard.jsx";
 export { JudicialRecordDetail } from "./JudicialRecordDetail.jsx";
 export { default as AuthForm } from "./AuthForm.jsx";
 export { default as TopicTierBadge } from "./TopicTierBadge.jsx";
+export { default as CompassCoverageCallout } from "./CompassCoverageCallout.jsx";
+export { default as ExpandCompassNudge } from "./ExpandCompassNudge.jsx";
+export { computeTierCoverage } from "./computeTierCoverage.js";
 
 // Hooks
 export { default as useMediaQuery } from "./useMediaQuery.js";
