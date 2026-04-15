@@ -16,7 +16,6 @@ import Header from './Header.jsx';
 
 // Standard navigation configuration for all EV apps
 const defaultNavItems = [
-  { label: 'About Us', href: 'https://empowered.vote/about' },
   {
     label: 'Features',
     href: '#',
@@ -24,12 +23,10 @@ const defaultNavItems = [
       { label: 'Political Compass', href: 'https://compass.empowered.vote' },
       { label: 'Find Representatives', href: 'https://essentials.empowered.vote' },
       { label: 'Read & Rank', href: 'https://readrank.empowered.vote' },
-      { label: 'Treasury Tracker', href: 'https://ev-prototypes.netlify.app/treasury-tracker/dist' },
-      { label: 'Empowered Badges', href: 'https://ev-prototypes.netlify.app/empowered-badges/dist' },
+      { label: 'Treasury Tracker', href: 'https://treasurytracker.empowered.vote' },
+      { label: 'Empowered Badges', href: 'https://badges.empowered.vote' },
     ],
   },
-  { label: 'Volunteer', href: 'https://empowered.vote/volunteer' },
-  { label: 'FAQ', href: 'https://empowered.vote/faq' },
 ];
 
 const defaultCtaButton = {
