@@ -85,7 +85,7 @@ export default function StanceAccordion({
     if (contextCache.current.has(topicId)) return;
     try {
       const res = await fetch(
-        `${apiUrl}/compass/politicians/${politicianId}/${topicId}/context`,
+        `${apiUrl}/api/compass/politicians/${politicianId}/${topicId}/context`,
         { credentials: 'include' }
       );
       if (res.status === 404) {
@@ -112,7 +112,7 @@ export default function StanceAccordion({
     if (quotesCache.current !== null) return;
     try {
       const res = await fetch(
-        `${apiUrl}/essentials/quotes?politician_id=${politicianId}`,
+        `${apiUrl}/api/essentials/quotes?politician_id=${politicianId}`,
         { credentials: 'include' }
       );
       if (res.ok) {
