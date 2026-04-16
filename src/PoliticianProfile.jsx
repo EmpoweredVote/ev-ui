@@ -510,6 +510,15 @@ export default function PoliticianProfile({
       marginBottom: spacing[3],
       lineHeight: 1.5,
     },
+    bioText: {
+      fontFamily: fonts.primary,
+      fontSize: fontSizes.sm,
+      color: '#6A7282',
+      margin: 0,
+      marginTop: spacing[1],
+      marginBottom: spacing[3],
+      lineHeight: 1.5,
+    },
     metaRow: {
       display: 'flex',
       alignItems: 'center',
@@ -661,6 +670,10 @@ export default function PoliticianProfile({
 
             {pol.office_description && (
               <p style={styles.officeDesc}>{pol.office_description}</p>
+            )}
+
+            {pol.bio_text && (
+              <p style={styles.bioText}>{pol.bio_text}</p>
             )}
 
             {/* Term + Years in Office */}
