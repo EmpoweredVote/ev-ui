@@ -4,6 +4,8 @@ export { default as Header } from "./Header.jsx";
 export { default as SiteHeader, defaultNavItems, defaultCtaButton } from "./SiteHeader.jsx";
 export { default as FilterSidebar } from "./FilterSidebar.jsx";
 export { default as PoliticianCard } from "./PoliticianCard.jsx";
+export { default as CompassCardHorizontal } from "./CompassCardHorizontal.jsx";
+export { default as IconOverlay } from "./IconOverlay.jsx";
 export { default as CategorySection } from "./CategorySection.jsx";
 export { default as SubGroupSection } from "./SubGroupSection.jsx";
 export { default as GovernmentBodySection } from "./GovernmentBodySection.jsx";
