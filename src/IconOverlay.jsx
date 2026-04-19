@@ -107,6 +107,7 @@ export default function IconOverlay({ ballot, hasStances, branch, onCompassClick
         alignItems: 'center',
         justifyContent: 'flex-start',
         padding: 0,
+        marginLeft: '-4px', // offset icon wrapper padding so icons align flush-left with text
       }}
     >
       {ballot && (
