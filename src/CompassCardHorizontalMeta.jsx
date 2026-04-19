@@ -83,22 +83,6 @@ export default function CompassCardHorizontalMeta({
         branch={politician.branch || null}
       />
 
-      {/* Running unopposed banner — elections surface only */}
-      {surface === 'elections' && politician.running_unopposed && (
-        <div style={{
-          backgroundColor: colors.infoLight,
-          borderLeft: `3px solid ${colors.evMutedBlue}`,
-          borderRadius: borderRadius.md,
-          padding: `${spacing[1]} ${spacing[2]}`,
-          fontFamily: fonts.primary,
-          fontSize: fontSizes.xs,
-          fontWeight: fontWeights.regular,
-          color: colors.evMutedBlue,
-          marginTop: spacing[1],
-        }}>
-          Running unopposed
-        </div>
-      )}
     </div>
   );
 }

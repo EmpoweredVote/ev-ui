@@ -205,8 +205,26 @@ export default function CompassCardHorizontal({
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
     >
-      <div style={slotStyle}>
+      <div style={{ ...slotStyle, position: 'relative' }}>
         {view === 'portrait' ? renderPortrait() : renderCompass()}
+        {surface === 'elections' && politician.running_unopposed && (
+          <span style={{
+            position: 'absolute',
+            bottom: spacing[2],
+            left: spacing[2],
+            backgroundColor: colors.evMutedBlue,
+            color: '#FFFFFF',
+            fontFamily: fonts.primary,
+            fontWeight: fontWeights.semibold,
+            fontSize: fontSizes.xs,
+            lineHeight: 1,
+            padding: `${spacing[1]} ${spacing[2]}`,
+            borderRadius: borderRadius.full,
+            zIndex: 1,
+          }}>
+            Running unopposed
+          </span>
+        )}
       </div>
       <CompassCardHorizontalMeta
         politician={politician}
