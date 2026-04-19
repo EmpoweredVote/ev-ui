@@ -208,22 +208,23 @@ export default function CompassCardHorizontal({
       <div style={{ ...slotStyle, position: 'relative' }}>
         {view === 'portrait' ? renderPortrait() : renderCompass()}
         {surface === 'elections' && politician.running_unopposed && (
-          <span style={{
+          <div style={{
             position: 'absolute',
-            bottom: spacing[2],
-            left: spacing[2],
-            backgroundColor: colors.evMutedBlue,
-            color: '#FFFFFF',
-            fontFamily: fonts.primary,
-            fontWeight: fontWeights.semibold,
-            fontSize: fontSizes.xs,
-            lineHeight: 1,
-            padding: `${spacing[1]} ${spacing[2]}`,
-            borderRadius: borderRadius.full,
-            zIndex: 1,
+            bottom: '8px',
+            left: 0,
+            width: '100%',
+            backgroundColor: 'rgba(0,0,0,0.55)',
+            color: '#fff',
+            fontSize: '8px',
+            fontWeight: 700,
+            letterSpacing: '0.4px',
+            textAlign: 'center',
+            textTransform: 'uppercase',
+            padding: '3px 0',
+            pointerEvents: 'none',
           }}>
-            Running unopposed
-          </span>
+            Running Unopposed
+          </div>
         )}
       </div>
       <CompassCardHorizontalMeta
