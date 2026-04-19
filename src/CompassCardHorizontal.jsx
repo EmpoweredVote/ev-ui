@@ -45,22 +45,21 @@ export default function CompassCardHorizontal({
     position: 'relative',
     display: 'flex',
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[4],
+    alignItems: 'stretch',
     backgroundColor: tierVisuals?.bg ?? colors.bgWhite,
     border: `1px solid ${colors.borderLight}`,
     borderRadius: borderRadius.xl,
-    padding: spacing[4],
+    overflow: 'hidden', // clips slot corners via card border-radius — no padding needed
     boxShadow: focused ? focus.ring : hovered ? shadows.cardHover : shadows.md,
     transform: hovered ? 'translateY(-2px)' : 'none',
     transition: `box-shadow ${duration.normal} ease, transform ${duration.normal} ease`,
     cursor: onClick ? 'pointer' : 'default',
     fontFamily: fonts.primary,
     outline: 'none',
-    minHeight: '44px',
   };
 
-  const slotStyle = { width: SLOT_WIDTH, flexShrink: 0, overflow: 'hidden' };
+  // slot stretches to full card height; minHeight ensures card is at least radar-sized
+  const slotStyle = { width: SLOT_WIDTH, flexShrink: 0, overflow: 'hidden', position: 'relative', minHeight: RADAR_SIZE };
 
   function renderCompass() {
     if (!userAnswers || userAnswers.length === 0) {
@@ -153,7 +152,7 @@ export default function CompassCardHorizontal({
           alt={`${politician.full_name} portrait`}
           style={{
             width: '100%',
-            height: SLOT_WIDTH, // square 260px — grid uniformity (Pitfall 2, D-10)
+            height: '100%',
             objectFit: 'cover',
             objectPosition: politician.imageFocalPoint ?? 'center 20%',
             display: 'block',
@@ -163,7 +162,7 @@ export default function CompassCardHorizontal({
       );
     }
 
-    // Initials fallback — evMutedBlue bg, white text
+    // Initials fallback — evMutedBlue bg, white text, fills slot
     const parts = (politician?.full_name || '').split(' ').filter(Boolean);
     const initials = (parts.length >= 2
       ? parts[0][0] + parts[parts.length - 1][0]
@@ -172,7 +171,7 @@ export default function CompassCardHorizontal({
     return (
       <div style={{
         width: '100%',
-        height: SLOT_WIDTH,
+        height: '100%',
         backgroundColor: colors.evMutedBlue,
         color: colors.textWhite,
         display: 'flex',
@@ -205,8 +204,12 @@ export default function CompassCardHorizontal({
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
     >
-      <div style={{ ...slotStyle, position: 'relative' }}>
-        {view === 'portrait' ? renderPortrait() : renderCompass()}
+      <div style={slotStyle}>
+        {view === 'portrait' ? renderPortrait() : (
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: spacing[3], boxSizing: 'border-box' }}>
+            {renderCompass()}
+          </div>
+        )}
         {surface === 'elections' && politician.running_unopposed && (
           <div style={{
             position: 'absolute',
@@ -227,11 +230,13 @@ export default function CompassCardHorizontal({
           </div>
         )}
       </div>
-      <CompassCardHorizontalMeta
-        politician={politician}
-        surface={surface}
-        userAnswers={userAnswers}
-      />
+      <div style={{ flex: 1, minWidth: 0, padding: spacing[4], paddingLeft: spacing[3] }}>
+        <CompassCardHorizontalMeta
+          politician={politician}
+          surface={surface}
+          userAnswers={userAnswers}
+        />
+      </div>
     </div>
   );
 }
