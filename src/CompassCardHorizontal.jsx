@@ -213,7 +213,7 @@ export default function CompassCardHorizontal({
         {surface === 'elections' && politician.running_unopposed && (
           <div style={{
             position: 'absolute',
-            bottom: '25%',
+            bottom: 0,
             left: 0,
             width: '100%',
             backgroundColor: 'rgba(0,0,0,0.35)',
