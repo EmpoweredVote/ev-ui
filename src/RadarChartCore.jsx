@@ -52,8 +52,9 @@ export default function RadarChartCore({
   const hasCompareData = Object.keys(compareData).length > 0;
   const centerPoints = spokes.map(() => `${centerX},${centerY}`).join(" ");
   let comparePoints = null;
+  let compareCoords = null;
   if (hasCompareData) {
-    const cpts = spokes.map(([shortTitle], index) => {
+    const ccoords = spokes.map(([shortTitle], index) => {
       const value = compareData[shortTitle] ?? 0;
       const topic = topics.find((t) => t.short_title === shortTitle);
       const max = topic?.stances?.length || 10;
@@ -64,9 +65,10 @@ export default function RadarChartCore({
       const r = (adjusted / 10) * radius;
       const x = centerX + r * Math.sin(angle);
       const y = centerY - r * Math.cos(angle);
-      return `${x},${y}`;
+      return [x, y];
     });
-    comparePoints = cpts.join(" ");
+    compareCoords = ccoords;
+    comparePoints = ccoords.map((p) => p.join(",")).join(" ");
   }
 
   // Track whether compareData was present in the previous render.
@@ -234,8 +236,8 @@ export default function RadarChartCore({
           key="user-static"
           points={targetPoints}
           style={{
-            fill: "rgba(255, 87, 64, 0.4)",
-            stroke: "rgb(255, 87, 64)",
+            fill: "rgba(124, 107, 158, 0.4)",
+            stroke: "#7C6B9E",
             strokeWidth: 3,
           }}
         />
@@ -244,12 +246,24 @@ export default function RadarChartCore({
           key="user-animated"
           points={spring.points}
           style={{
-            fill: "rgba(255, 87, 64, 0.4)",
-            stroke: "rgb(255, 87, 64)",
+            fill: "rgba(124, 107, 158, 0.4)",
+            stroke: "#7C6B9E",
             strokeWidth: 3,
           }}
         />
       )}
+
+      {pointsArr.map(([cx, cy], i) => (
+        <circle
+          key={`user-dot-${i}`}
+          cx={cx}
+          cy={cy}
+          r={5}
+          fill="#7C6B9E"
+          stroke="#FFFFFF"
+          strokeWidth={2}
+        />
+      ))}
 
       {hasCompareData && comparePoints ? (
         countChanged || compareJustAppeared ? (
@@ -257,8 +271,8 @@ export default function RadarChartCore({
             key="compare-static"
             points={comparePoints}
             style={{
-              fill: "rgba(89, 176, 196, 0.3)",
-              stroke: "rgb(89, 176, 196)",
+              fill: "rgba(90, 154, 110, 0.3)",
+              stroke: "#5A9A6E",
               strokeWidth: 2,
             }}
           />
@@ -267,13 +281,25 @@ export default function RadarChartCore({
             key="compare-animated"
             points={compareSpring.points}
             style={{
-              fill: "rgba(89, 176, 196, 0.3)",
-              stroke: "rgb(89, 176, 196)",
+              fill: "rgba(90, 154, 110, 0.3)",
+              stroke: "#5A9A6E",
               strokeWidth: 2,
             }}
           />
         )
       ) : null}
+
+      {hasCompareData && compareCoords && compareCoords.map(([cx, cy], i) => (
+        <circle
+          key={`compare-dot-${i}`}
+          cx={cx}
+          cy={cy}
+          r={4}
+          fill="#5A9A6E"
+          stroke="#FFFFFF"
+          strokeWidth={2}
+        />
+      ))}
 
       {spokes.map(([shortTitle], i) => {
         const angle = (2 * Math.PI * i) / numSpokes;
