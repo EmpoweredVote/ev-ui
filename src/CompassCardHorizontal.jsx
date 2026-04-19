@@ -45,7 +45,7 @@ export default function CompassCardHorizontal({
     position: 'relative',
     display: 'flex',
     flexDirection: 'row',
-    alignItems: 'stretch',
+    alignItems: 'center',
     backgroundColor: tierVisuals?.bg ?? colors.bgWhite,
     border: `1px solid ${colors.borderLight}`,
     borderRadius: borderRadius.xl,
@@ -58,8 +58,8 @@ export default function CompassCardHorizontal({
     outline: 'none',
   };
 
-  // slot stretches to full card height; minHeight ensures card is at least radar-sized
-  const slotStyle = { width: SLOT_WIDTH, flexShrink: 0, overflow: 'hidden', position: 'relative', minHeight: RADAR_SIZE };
+  // fixed square slot — portrait and compass render at same 260×260 dimensions
+  const slotStyle = { width: SLOT_WIDTH, height: SLOT_WIDTH, flexShrink: 0, overflow: 'hidden', position: 'relative' };
 
   function renderCompass() {
     if (!userAnswers || userAnswers.length === 0) {
@@ -213,10 +213,10 @@ export default function CompassCardHorizontal({
         {surface === 'elections' && politician.running_unopposed && (
           <div style={{
             position: 'absolute',
-            bottom: '8px',
+            bottom: '25%',
             left: 0,
             width: '100%',
-            backgroundColor: 'rgba(0,0,0,0.55)',
+            backgroundColor: 'rgba(0,0,0,0.35)',
             color: '#fff',
             fontSize: '8px',
             fontWeight: 700,
