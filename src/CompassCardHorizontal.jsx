@@ -73,7 +73,7 @@ export default function CompassCardHorizontal({
     // We build a simple topics list from the answers array and extract values.
     let topics = [];
     let data = {};
-    let compareData = null;
+    let compareData = {};
 
     try {
       if (Array.isArray(userAnswers) && userAnswers.length > 0) {
