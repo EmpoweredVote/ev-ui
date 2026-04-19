@@ -1,3 +1,4 @@
+import React from 'react';
 import { colorScales, borderRadius } from './tokens';
 
 export default function PlaceholderRadar({ size = 250, name = '' }) {
