@@ -218,12 +218,12 @@ export default function CompassCardHorizontal({
             width: '100%',
             backgroundColor: 'rgba(0,0,0,0.35)',
             color: '#fff',
-            fontSize: '8px',
+            fontSize: '14px',
             fontWeight: 700,
             letterSpacing: '0.4px',
             textAlign: 'center',
             textTransform: 'uppercase',
-            padding: '3px 0',
+            padding: '6px 0',
             pointerEvents: 'none',
           }}>
             Running Unopposed
