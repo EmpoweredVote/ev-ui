@@ -218,7 +218,7 @@ export default function CompassCardHorizontal({
             width: '100%',
             backgroundColor: 'rgba(0,0,0,0.35)',
             color: '#fff',
-            fontSize: '14px',
+            fontSize: '12px',
             fontWeight: 700,
             letterSpacing: '0.4px',
             textAlign: 'center',
