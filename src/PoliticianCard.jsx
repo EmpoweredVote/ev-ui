@@ -62,7 +62,8 @@ export default function PoliticianCard({
     },
     imageWrapper: {
       width: isHorizontal ? '90px' : '100%',
-      height: isHorizontal ? undefined : 'auto',
+      height: isHorizontal ? '100%' : 'auto',
+      maxHeight: isHorizontal ? '200px' : undefined,
       aspectRatio: isHorizontal ? undefined : '4/5',
       flexShrink: 0,
       overflow: 'hidden',
