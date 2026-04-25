@@ -198,30 +198,40 @@ export default function CompassCardHorizontal({
       <div style={{
         width: '100%',
         height: '100%',
-        position: 'relative',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
+        gap: '8px',
+        padding: '12px 14px',
+        boxSizing: 'border-box',
+        backgroundColor: colorScales.teal['050'],
       }}>
-        <PlaceholderRadar size={RADAR_SIZE} name={politician?.full_name || ''} />
+        <PlaceholderRadar size={140} name={politician?.full_name || ''} />
+        <p style={{
+          margin: 0,
+          fontSize: fontSizes.xs,
+          color: colors.textMuted,
+          textAlign: 'center',
+          lineHeight: 1.4,
+          fontFamily: fonts.primary,
+        }}>
+          Calibrate your compass to see how you align with {politician?.full_name || 'this official'}
+        </p>
         <button
           type="button"
           onClick={onBuildCompass || undefined}
           onMouseEnter={() => setEmptyCtaHovered(true)}
           onMouseLeave={() => setEmptyCtaHovered(false)}
           style={{
-            position: 'absolute',
-            bottom: '12px',
-            left: '50%',
-            transform: 'translateX(-50%)',
             minWidth: '160px',
-            height: '44px',
-            padding: `0 ${spacing[4]}`,
+            height: '40px',
+            padding: '0 16px',
             backgroundColor: emptyCtaHovered
               ? semanticTokens.light.buttonPrimary.background.hovered
               : semanticTokens.light.buttonPrimary.background.default,
             color: colors.textWhite,
-            fontSize: fontSizes.sm,
+            fontSize: fontSizes.xs,
             fontWeight: fontWeights.semibold,
             fontFamily: fonts.primary,
             borderRadius: borderRadius.full,
@@ -229,9 +239,10 @@ export default function CompassCardHorizontal({
             cursor: onBuildCompass ? 'pointer' : 'default',
             whiteSpace: 'nowrap',
             transition: `background ${duration.normal} ease`,
+            flexShrink: 0,
           }}
         >
-          Build your compass
+          Calibrate your compass
         </button>
       </div>
     );
