@@ -193,6 +193,97 @@ export default function CompassCardHorizontal({
     );
   }
 
+  function renderEmptyVariant() {
+    return (
+      <div style={{
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <PlaceholderRadar size={RADAR_SIZE} name={politician?.full_name || ''} />
+        <button
+          type="button"
+          onClick={onBuildCompass || undefined}
+          onMouseEnter={() => setEmptyCtaHovered(true)}
+          onMouseLeave={() => setEmptyCtaHovered(false)}
+          style={{
+            position: 'absolute',
+            bottom: '12px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            minWidth: '160px',
+            height: '44px',
+            padding: `0 ${spacing[4]}`,
+            backgroundColor: emptyCtaHovered
+              ? semanticTokens.light.buttonPrimary.background.hovered
+              : semanticTokens.light.buttonPrimary.background.default,
+            color: colors.textWhite,
+            fontSize: fontSizes.sm,
+            fontWeight: fontWeights.semibold,
+            fontFamily: fonts.primary,
+            borderRadius: borderRadius.full,
+            border: 'none',
+            cursor: onBuildCompass ? 'pointer' : 'default',
+            whiteSpace: 'nowrap',
+            transition: `background ${duration.normal} ease`,
+          }}
+        >
+          Build your compass
+        </button>
+      </div>
+    );
+  }
+
+  function renderUnavailablePlate() {
+    return (
+      <div style={{
+        width: '100%',
+        height: '100%',
+        backgroundColor: colorScales.teal['050'],
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: spacing[4],
+        boxSizing: 'border-box',
+      }}>
+        <p style={{
+          fontSize: fontSizes.sm,
+          fontWeight: fontWeights.semibold,
+          lineHeight: 1.4,
+          color: colors.textMuted,
+          textAlign: 'center',
+          maxWidth: '180px',
+          margin: 0,
+          fontFamily: fonts.primary,
+        }}>
+          Compass currently unavailable for this role.
+        </p>
+      </div>
+    );
+  }
+
+  function renderSlotContent() {
+    if (view === 'portrait') return renderPortrait();
+    if (variant === 'empty') return renderEmptyVariant();
+    if (variant === 'administrative' || variant === 'judicial') return renderUnavailablePlate();
+    return (
+      <div style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: spacing[3],
+        boxSizing: 'border-box',
+      }}>
+        {renderCompass()}
+      </div>
+    );
+  }
+
   return (
     <div
       role="article"
@@ -212,11 +303,7 @@ export default function CompassCardHorizontal({
       onBlur={() => setFocused(false)}
     >
       <div style={slotStyle}>
-        {view === 'portrait' ? renderPortrait() : (
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: spacing[3], boxSizing: 'border-box' }}>
-            {renderCompass()}
-          </div>
-        )}
+        {renderSlotContent()}
         {surface === 'elections' && politician.running_unopposed && (
           <div style={{
             position: 'absolute',
