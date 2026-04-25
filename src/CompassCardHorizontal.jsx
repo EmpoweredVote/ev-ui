@@ -23,7 +23,7 @@ import { buildAnswerMapByShortTitle } from './compassHelpers.js';
  *   tierVisuals    {object|null}   — { bg, accent, text } for tier-specific card background
  *   view           {string}        — 'compass' | 'portrait' (default: 'compass')
  *   surface        {string}        — 'representatives' | 'elections' (default: 'representatives')
- *   variant        {string}        — 'compass' | 'empty' | 'administrative' | 'judicial' (default: 'compass')
+ *   variant        {string}        — 'compass' | 'empty' | 'administrative' | 'judicial' | 'no-stances' (default: 'compass')
  *   onBuildCompass {Function|null} — called when empty-variant CTA clicked; parent owns deep-link URL
  *   onClick        {Function}      — optional click handler (replaces internal navigate)
  */
@@ -248,7 +248,7 @@ export default function CompassCardHorizontal({
     );
   }
 
-  function renderUnavailablePlate() {
+  function renderUnavailablePlate(message = 'Compass currently unavailable for this role.') {
     return (
       <div style={{
         width: '100%',
@@ -270,7 +270,7 @@ export default function CompassCardHorizontal({
           margin: 0,
           fontFamily: fonts.primary,
         }}>
-          Compass currently unavailable for this role.
+          {message}
         </p>
       </div>
     );
@@ -280,6 +280,10 @@ export default function CompassCardHorizontal({
     if (view === 'portrait') return renderPortrait();
     if (variant === 'empty') return renderEmptyVariant();
     if (variant === 'administrative' || variant === 'judicial') return renderUnavailablePlate();
+    if (variant === 'no-stances') {
+      const name = politician?.full_name || 'this official';
+      return renderUnavailablePlate(`No compass stances on file for ${name} yet.`);
+    }
     return (
       <div style={{
         width: '100%',
