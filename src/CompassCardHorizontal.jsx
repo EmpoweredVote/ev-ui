@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
   colors, fonts, fontWeights, fontSizes,
   spacing, borderRadius, shadows, focus, duration,
+  semanticTokens,
+  colorScales,
 } from './tokens';
 import RadarChartCore from './RadarChartCore.jsx';
 import PlaceholderRadar from './PlaceholderRadar.jsx';
@@ -16,12 +18,14 @@ import { buildAnswerMapByShortTitle } from './compassHelpers.js';
  * Router-agnostic and context-agnostic. No router or context imports.
  *
  * Props:
- *   politician   {object}       — required politician data
- *   userAnswers  {Array|null}   — user compass answers; null/[] → PlaceholderRadar
- *   tierVisuals  {object|null}  — { bg, accent, text } for tier-specific card background
- *   view         {string}       — 'compass' | 'portrait' (default: 'compass')
- *   surface      {string}       — 'representatives' | 'elections' (default: 'representatives')
- *   onClick      {Function}     — optional click handler (replaces internal navigate)
+ *   politician     {object}        — required politician data
+ *   userAnswers    {Array|null}    — user compass answers; null/[] → PlaceholderRadar
+ *   tierVisuals    {object|null}   — { bg, accent, text } for tier-specific card background
+ *   view           {string}        — 'compass' | 'portrait' (default: 'compass')
+ *   surface        {string}        — 'representatives' | 'elections' (default: 'representatives')
+ *   variant        {string}        — 'compass' | 'empty' | 'administrative' | 'judicial' (default: 'compass')
+ *   onBuildCompass {Function|null} — called when empty-variant CTA clicked; parent owns deep-link URL
+ *   onClick        {Function}      — optional click handler (replaces internal navigate)
  */
 
 const RADAR_SIZE = 250;
@@ -33,11 +37,14 @@ export default function CompassCardHorizontal({
   tierVisuals = null,
   view = 'compass',
   surface = 'representatives',
+  variant = 'compass',
+  onBuildCompass = null,
   onClick,
 }) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [emptyCtaHovered, setEmptyCtaHovered] = useState(false);
 
   useEffect(() => { setImgError(false); }, [politician?.photo_origin_url]);
 
