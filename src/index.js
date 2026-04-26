@@ -28,7 +28,9 @@ export { computeTierCoverage } from "./computeTierCoverage.js";
 // Hooks
 export { default as useMediaQuery } from "./useMediaQuery.js";
 
-// Cross-subdomain shared client state (guest users)
+// Cross-subdomain shared client state (guest + authed users)
+// evContext exposes get/set/clear/subscribe (guest slice) plus
+// getAuthedSlice/setAuthedSlice/clearAuthedSlice for userId-stamped authed mirror.
 export { evContext } from "./evContext.js";
 
 // Design Tokens

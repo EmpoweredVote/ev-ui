@@ -160,6 +160,88 @@ export const evContext = {
   },
 
   /**
+   * Read the userId-stamped authed slice for the given user.
+   *
+   * Stored shape:
+   *   { compass?, address?, verdicts?, authed?: { userId, compass?, address?, verdicts? } }
+   *
+   * - Returns null if there is no stored value, no `authed` body, or the stored
+   *   `authed.userId` does not match the requested `userId` (mismatch = inert).
+   * - Otherwise returns `{ compass, address, verdicts }` with undefined keys
+   *   omitted.
+   *
+   * Used by logged-in consumers to do SWR-style hydration: render this slice
+   * synchronously on mount, then replace silently when the API responds.
+   */
+  async getAuthedSlice(userId) {
+    if (!userId) return null;
+    const current = await this.get();
+    if (!current || !current.authed || typeof current.authed !== 'object') return null;
+    if (current.authed.userId !== userId) return null;
+    const out = {};
+    if (current.authed.compass !== undefined) out.compass = current.authed.compass;
+    if (current.authed.address !== undefined) out.address = current.authed.address;
+    if (current.authed.verdicts !== undefined) out.verdicts = current.authed.verdicts;
+    return out;
+  },
+
+  /**
+   * Mirror an authed write into the userId-stamped `authed` slice.
+   *
+   * - `patch` may contain any subset of `{ compass, address, verdicts }`.
+   *   Unrecognized keys are dropped.
+   * - If the existing `authed.userId` matches `userId`, the patch is merged
+   *   with the prior authed body (per-domain shallow merge — the patch's
+   *   compass/address/verdicts replace the prior values).
+   * - If it does not match (user switch), the prior authed body is stomped.
+   * - Guest top-level keys (compass, address, verdicts at the root) are
+   *   preserved untouched.
+   *
+   * Returns false on falsy `userId` or empty patch; otherwise returns the
+   * underlying `set()` result.
+   */
+  async setAuthedSlice(userId, patch) {
+    if (!userId) return false;
+    if (!patch || typeof patch !== 'object') return false;
+    const allowed = {};
+    if (patch.compass !== undefined) allowed.compass = patch.compass;
+    if (patch.address !== undefined) allowed.address = patch.address;
+    if (patch.verdicts !== undefined) allowed.verdicts = patch.verdicts;
+    if (Object.keys(allowed).length === 0) return false;
+
+    const current = (await this.get()) || {};
+    const priorAuthed = current.authed && current.authed.userId === userId
+      ? current.authed
+      : null;
+    const nextAuthed = { userId };
+    if (priorAuthed) {
+      if (priorAuthed.compass !== undefined) nextAuthed.compass = priorAuthed.compass;
+      if (priorAuthed.address !== undefined) nextAuthed.address = priorAuthed.address;
+      if (priorAuthed.verdicts !== undefined) nextAuthed.verdicts = priorAuthed.verdicts;
+    }
+    if (allowed.compass !== undefined) nextAuthed.compass = allowed.compass;
+    if (allowed.address !== undefined) nextAuthed.address = allowed.address;
+    if (allowed.verdicts !== undefined) nextAuthed.verdicts = allowed.verdicts;
+
+    return this.set({ ...current, authed: nextAuthed });
+  },
+
+  /**
+   * Remove the `authed` slice entirely (preserving guest top-level keys).
+   *
+   * Provided for completeness — consumers in the v2026.4.5 wiring plan must
+   * NOT call this on logout. The slice is intended to go inert via userId
+   * mismatch, so a re-login as the same user can rehydrate from cache.
+   */
+  async clearAuthedSlice() {
+    const current = await this.get();
+    if (!current || typeof current !== 'object') return true;
+    if (!('authed' in current)) return true;
+    const { authed: _omit, ...rest } = current;
+    return this.set(rest);
+  },
+
+  /**
    * Subscribe to live updates. Fires when this tab or any other tab
    * (any subdomain) writes to the store. Returns an unsubscribe function.
    */
