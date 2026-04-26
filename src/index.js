@@ -33,6 +33,9 @@ export { default as useMediaQuery } from "./useMediaQuery.js";
 // getAuthedSlice/setAuthedSlice/clearAuthedSlice for userId-stamped authed mirror.
 export { evContext } from "./evContext.js";
 
+// 260426-mw6 — guest → authed promotion hook
+export { useEvContextPromotion } from "./useEvContextPromotion.js";
+
 // Design Tokens
 export * from "./tokens.js";
 

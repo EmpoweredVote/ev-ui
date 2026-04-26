@@ -182,6 +182,9 @@ export const evContext = {
     if (current.authed.compass !== undefined) out.compass = current.authed.compass;
     if (current.authed.address !== undefined) out.address = current.authed.address;
     if (current.authed.verdicts !== undefined) out.verdicts = current.authed.verdicts;
+    if (current.authed.promotionDismissed !== undefined) {
+      out.promotionDismissed = current.authed.promotionDismissed;
+    }
     return out;
   },
 
@@ -207,6 +210,13 @@ export const evContext = {
     if (patch.compass !== undefined) allowed.compass = patch.compass;
     if (patch.address !== undefined) allowed.address = patch.address;
     if (patch.verdicts !== undefined) allowed.verdicts = patch.verdicts;
+    // 260426-mw6: promotionDismissed is a per-userId per-domain dismissal stamp
+    // used by useEvContextPromotion. Allowed alongside the mirror keys so the
+    // hook can write through the same helper. Patch values are deep-merged
+    // into the prior promotionDismissed map (per-domain replace).
+    if (patch.promotionDismissed !== undefined) {
+      allowed.promotionDismissed = patch.promotionDismissed;
+    }
     if (Object.keys(allowed).length === 0) return false;
 
     const current = (await this.get()) || {};
@@ -218,10 +228,22 @@ export const evContext = {
       if (priorAuthed.compass !== undefined) nextAuthed.compass = priorAuthed.compass;
       if (priorAuthed.address !== undefined) nextAuthed.address = priorAuthed.address;
       if (priorAuthed.verdicts !== undefined) nextAuthed.verdicts = priorAuthed.verdicts;
+      if (priorAuthed.promotionDismissed !== undefined) {
+        nextAuthed.promotionDismissed = priorAuthed.promotionDismissed;
+      }
     }
     if (allowed.compass !== undefined) nextAuthed.compass = allowed.compass;
     if (allowed.address !== undefined) nextAuthed.address = allowed.address;
     if (allowed.verdicts !== undefined) nextAuthed.verdicts = allowed.verdicts;
+    // promotionDismissed: deep-merge per-domain so writing { compass: true }
+    // does not clobber an earlier { address: true } stamp.
+    if (allowed.promotionDismissed !== undefined && allowed.promotionDismissed !== null
+        && typeof allowed.promotionDismissed === 'object') {
+      const prior = (priorAuthed && priorAuthed.promotionDismissed && typeof priorAuthed.promotionDismissed === 'object')
+        ? priorAuthed.promotionDismissed
+        : {};
+      nextAuthed.promotionDismissed = { ...prior, ...allowed.promotionDismissed };
+    }
 
     return this.set({ ...current, authed: nextAuthed });
   },
