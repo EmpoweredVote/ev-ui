@@ -77,13 +77,15 @@ function onMessage(event) {
 
   if (data.type === 'ev-context:value' || data.type === 'ev-context:ack') {
     const id = data.requestId;
-    if (id && pendingRequests.has(id)) {
+    const wasPending = id && pendingRequests.has(id);
+    if (wasPending) {
       const { resolve, timeout } = pendingRequests.get(id);
       clearTimeout(timeout);
       pendingRequests.delete(id);
       resolve(data.type === 'ev-context:value' ? (data.value ?? null) : data.ok);
     }
-    if (data.type === 'ev-context:value') {
+    // Only notify subscribers for unsolicited value broadcasts, not replies to our own get()
+    if (data.type === 'ev-context:value' && !wasPending) {
       lastValue = data.value ?? null;
       notifySubscribers();
     }
