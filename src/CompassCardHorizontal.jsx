@@ -28,12 +28,13 @@ import { buildAnswerMapByShortTitle } from './compassHelpers.js';
  *   onClick        {Function}      — optional click handler (replaces internal navigate)
  */
 
-const RADAR_SIZE = 250;
-const SLOT_WIDTH = 260; // RADAR_SIZE + 10 label-bleed wrapper (Pitfall 1)
+const RADAR_SIZE = 400;
+const SLOT_WIDTH = 420; // RADAR_SIZE + label-bleed wrapper (Pitfall 1)
 
 export default function CompassCardHorizontal({
   politician,
   userAnswers = null,
+  invertedSpokes = {},
   tierVisuals = null,
   view = 'compass',
   surface = 'representatives',
@@ -136,7 +137,7 @@ export default function CompassCardHorizontal({
         topics={topics}
         data={data}
         compareData={compareData}
-        invertedSpokes={{}}
+        invertedSpokes={invertedSpokes || {}}
         onToggleInversion={() => {}}
         onReplaceTopic={() => {}}
         size={RADAR_SIZE}

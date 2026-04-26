@@ -14,6 +14,7 @@ export default function RadarChartCore({
   labelFontSize = 18,
   padding = 80,
   labelOffset = 20,
+  tightFit = false,
 }) {
   const radius = size / 2 - 40;
   const centerX = size / 2;
@@ -135,6 +136,24 @@ export default function RadarChartCore({
   const rightPadding = symmetricPadding;
   const verticalPadding = padding;
 
+  // tightFit: shrink viewBox vertically to actual content extent so sparse-spoke
+  // charts (e.g., 3-topic radar) don't render with large empty space below.
+  let tightTop = -verticalPadding;
+  let tightHeight = size + verticalPadding * 2;
+  if (tightFit && numSpokes > 0) {
+    let yMin = Infinity, yMax = -Infinity;
+    for (let i = 0; i < numSpokes; i++) {
+      const angle = (2 * Math.PI * i) / numSpokes;
+      const y = centerY - radius * Math.cos(angle);
+      if (y < yMin) yMin = y;
+      if (y > yMax) yMax = y;
+    }
+    // Reserve room for up to two lines of label text (single-pass wrap at ~12 chars)
+    const labelMargin = labelOffset + labelFontSize * 1.4 + labelFontSize * 1.1;
+    tightTop = yMin - labelMargin;
+    tightHeight = (yMax + labelMargin) - tightTop;
+  }
+
   const guidePolygons = [];
   for (let level = 1; level <= 5; level++) {
     const scale = level / 5;
@@ -153,7 +172,7 @@ export default function RadarChartCore({
   return (
     <svg
       className="w-full h-auto max-h-full"
-      viewBox={`-${leftPadding} -${verticalPadding} ${size + leftPadding + rightPadding} ${size + verticalPadding * 2}`}
+      viewBox={`-${leftPadding} ${tightTop} ${size + leftPadding + rightPadding} ${tightHeight}`}
       preserveAspectRatio="xMidYMid meet"
     >
       {guidePolygons}
@@ -222,6 +241,7 @@ export default function RadarChartCore({
             fill={isUnansweredLabel ? "#9ca3af" : undefined}
             style={{ cursor: "pointer", userSelect: "none", fontSize: fSize }}
           >
+            {isUnansweredLabel && <title>No stance on file for this topic.</title>}
             {lines.map((ln, idx) => (
               <tspan key={idx} x={labelX} dy={idx === 0 ? "0" : `${lineHeight}`}>
                 {ln}
@@ -253,17 +273,26 @@ export default function RadarChartCore({
         />
       )}
 
-      {pointsArr.map(([cx, cy], i) => (
-        <circle
-          key={`user-dot-${i}`}
-          cx={cx}
-          cy={cy}
-          r={5}
-          fill="#7C6B9E"
-          stroke="#FFFFFF"
-          strokeWidth={2}
-        />
-      ))}
+      {pointsArr.map(([cx, cy], i) => {
+        const shortTitle = spokes[i][0];
+        const userVal = spokes[i][1];
+        if (!userVal || Number(userVal) === 0) return null; // unanswered — don't draw a dot at center
+        const compareVal = compareData[shortTitle];
+        const matches = hasCompareData
+          && userVal !== 0 && compareVal !== 0 && compareVal != null
+          && Number(userVal) === Number(compareVal);
+        return (
+          <circle
+            key={`user-dot-${i}`}
+            cx={cx}
+            cy={cy}
+            r={matches ? 8 : 7}
+            fill={matches ? '#fed12e' : '#7C6B9E'}
+            stroke="#FFFFFF"
+            strokeWidth={3}
+          />
+        );
+      })}
 
       {hasCompareData && comparePoints ? (
         countChanged || compareJustAppeared ? (
@@ -289,17 +318,25 @@ export default function RadarChartCore({
         )
       ) : null}
 
-      {hasCompareData && compareCoords && compareCoords.map(([cx, cy], i) => (
-        <circle
-          key={`compare-dot-${i}`}
-          cx={cx}
-          cy={cy}
-          r={4}
-          fill="#5A9A6E"
-          stroke="#FFFFFF"
-          strokeWidth={2}
-        />
-      ))}
+      {hasCompareData && compareCoords && compareCoords.map(([cx, cy], i) => {
+        const shortTitle = spokes[i][0];
+        const userVal = spokes[i][1];
+        const compareVal = compareData[shortTitle];
+        if (!compareVal || Number(compareVal) === 0) return null; // politician unanswered — skip dot
+        const matches = userVal !== 0 && compareVal !== 0 && compareVal != null
+          && Number(userVal) === Number(compareVal);
+        return (
+          <circle
+            key={`compare-dot-${i}`}
+            cx={cx}
+            cy={cy}
+            r={matches ? 8 : 7}
+            fill={matches ? '#fed12e' : '#5A9A6E'}
+            stroke="#FFFFFF"
+            strokeWidth={3}
+          />
+        );
+      })}
 
       {spokes.map(([shortTitle], i) => {
         const angle = (2 * Math.PI * i) / numSpokes;

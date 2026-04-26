@@ -79,7 +79,7 @@ export default function CompassCardHorizontalMeta({
       {/* Affordance icon strip */}
       <IconOverlay
         ballot={politician.ballot || null}
-        hasStances={Boolean(userAnswers && userAnswers.length > 0) || Boolean(politician.hasStances)}
+        hasStances={false}
         branch={politician.branch || null}
       />
 

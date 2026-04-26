@@ -5,6 +5,8 @@ export { default as SiteHeader, defaultNavItems, defaultCtaButton } from "./Site
 export { default as FilterSidebar } from "./FilterSidebar.jsx";
 export { default as PoliticianCard } from "./PoliticianCard.jsx";
 export { default as CompassCardHorizontal } from "./CompassCardHorizontal.jsx";
+export { default as CompassCardVertical } from "./CompassCardVertical.jsx";
+export { default as CompassKey } from "./CompassKey.jsx";
 export { default as IconOverlay } from "./IconOverlay.jsx";
 export { default as CategorySection } from "./CategorySection.jsx";
 export { default as SubGroupSection } from "./SubGroupSection.jsx";
@@ -25,6 +27,9 @@ export { computeTierCoverage } from "./computeTierCoverage.js";
 
 // Hooks
 export { default as useMediaQuery } from "./useMediaQuery.js";
+
+// Cross-subdomain shared client state (guest users)
+export { evContext } from "./evContext.js";
 
 // Design Tokens
 export * from "./tokens.js";

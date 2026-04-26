@@ -9,7 +9,7 @@ import { colors, fonts, fontWeights, fontSizes, spacing } from './tokens';
  * @param {string} [props.websiteUrl] - Optional inline link after label
  * @param {React.ReactNode} props.children - PoliticianCard components
  */
-export default function SubGroupSection({ title, websiteUrl, children }) {
+export default function SubGroupSection({ title, websiteUrl, children, gridTemplateColumns, gap, justifyContent }) {
   const styles = {
     section: {
       marginBottom: spacing[4],
@@ -37,8 +37,10 @@ export default function SubGroupSection({ title, websiteUrl, children }) {
     },
     grid: {
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(min(250px, 100%), 1fr))',
-      gap: spacing[2],
+      gridTemplateColumns: gridTemplateColumns || 'repeat(auto-fill, minmax(min(250px, 100%), 1fr))',
+      gap: gap || spacing[2],
+      justifyContent: justifyContent || undefined,
+      width: '100%',
     },
   };
 
