@@ -336,7 +336,7 @@ export default function CompassCardHorizontal({
             padding: '6px 0',
             pointerEvents: 'none',
           }}>
-            Running Unopposed
+            {typeof politician.running_unopposed === 'string' ? politician.running_unopposed : 'Running Unopposed'}
           </div>
         )}
       </div>

@@ -368,7 +368,7 @@ export default function CompassCardVertical({
           textTransform: 'uppercase', padding: '6px 0',
           borderRadius: borderRadius.sm,
         }}>
-          Running Unopposed
+          {typeof politician.running_unopposed === 'string' ? politician.running_unopposed : 'Running Unopposed'}
         </div>
       )}
 
