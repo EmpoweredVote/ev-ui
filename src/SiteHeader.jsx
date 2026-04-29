@@ -27,6 +27,10 @@ const defaultNavItems = [
       { label: 'Empowered Badges', href: 'https://badges.empowered.vote' },
     ],
   },
+  {
+    label: 'Feedback',
+    href: 'https://ev-landing.empowered.vote/feedback.html',
+  },
 ];
 
 const defaultCtaButton = {
