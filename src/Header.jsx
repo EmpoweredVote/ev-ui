@@ -9,7 +9,10 @@ import useMediaQuery from './useMediaQuery';
  * @param {string} props.logoSrc - URL for the logo image
  * @param {string} props.logoAlt - Alt text for logo (default: "Empowered Vote")
  * @param {Array} props.navItems - Navigation items [{label, href, dropdown?}]
- * @param {Object} props.ctaButton - CTA button config {label, href}
+ * @param {Object} props.ctaButton - Primary CTA button config {label, href}
+ * @param {React.ReactNode|Object} props.secondaryAction - Secondary action rendered next to CTA.
+ *   Either a React node (e.g. <FeedbackButton />) or a config object {label, href, target, rel}
+ *   that renders as a small ghost-style pill button.
  * @param {string} props.currentPath - Current path for active state
  * @param {Function} props.onNavigate - SPA navigation handler
  * @param {Object} props.style - Additional styles for the header container
@@ -19,6 +22,7 @@ export default function Header({
   logoAlt = 'Empowered Vote',
   navItems = [],
   ctaButton,
+  secondaryAction,
   currentPath,
   onNavigate,
   profileMenu,
@@ -130,6 +134,22 @@ export default function Header({
       cursor: 'pointer',
       textDecoration: 'none',
       display: 'inline-block',
+    },
+    secondaryAction: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      backgroundColor: 'transparent',
+      color: colors.evTeal,
+      fontFamily: fonts.primary,
+      fontWeight: fontWeights.bold,
+      fontSize: fontSizes.base,
+      padding: `${spacing[2]} ${spacing[5]}`,
+      borderRadius: borderRadius.full || '999px',
+      border: `1.5px solid ${colors.evTeal}`,
+      cursor: 'pointer',
+      textDecoration: 'none',
+      lineHeight: 1.2,
+      transition: 'background-color 0.15s ease, color 0.15s ease',
     },
     mobileMenuButton: {
       display: isMobile ? 'block' : 'none',
@@ -321,8 +341,33 @@ export default function Header({
           ))}
         </nav>
 
-        {/* Right side: CTA + Profile */}
-        <div style={{ display: isMobile ? 'none' : 'flex', alignItems: 'center', gap: spacing[4] }}>
+        {/* Right side: secondary action + CTA + Profile */}
+        <div style={{ display: isMobile ? 'none' : 'flex', alignItems: 'center', gap: spacing[3] }}>
+          {secondaryAction && React.isValidElement(secondaryAction) && secondaryAction}
+          {secondaryAction && !React.isValidElement(secondaryAction) && (
+            <a
+              href={secondaryAction.href}
+              target={secondaryAction.target || '_self'}
+              rel={secondaryAction.target === '_blank' ? 'noopener noreferrer' : (secondaryAction.rel || undefined)}
+              onClick={(e) => {
+                if (secondaryAction.target !== '_blank') {
+                  handleNavClick(e, secondaryAction.href);
+                }
+              }}
+              style={styles.secondaryAction}
+              className="ev-header-secondary"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = colors.evTeal;
+                e.currentTarget.style.color = colors.textWhite;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = colors.evTeal;
+              }}
+            >
+              {secondaryAction.label}
+            </a>
+          )}
           {ctaButton && (
             <a
               href={ctaButton.href}
@@ -504,6 +549,27 @@ export default function Header({
             </React.Fragment>
           );
         })}
+        {secondaryAction && React.isValidElement(secondaryAction) && (
+          <div style={{ marginTop: spacing[4], textAlign: 'center' }}>
+            {secondaryAction}
+          </div>
+        )}
+        {secondaryAction && !React.isValidElement(secondaryAction) && (
+          <a
+            href={secondaryAction.href}
+            target={secondaryAction.target || '_self'}
+            rel={secondaryAction.target === '_blank' ? 'noopener noreferrer' : (secondaryAction.rel || undefined)}
+            onClick={(e) => {
+              if (secondaryAction.target !== '_blank') {
+                handleNavClick(e, secondaryAction.href);
+              }
+              setMobileMenuOpen(false);
+            }}
+            style={{ ...styles.secondaryAction, marginTop: spacing[4], textAlign: 'center', justifyContent: 'center' }}
+          >
+            {secondaryAction.label}
+          </a>
+        )}
         {ctaButton && (
           <a
             href={ctaButton.href}
