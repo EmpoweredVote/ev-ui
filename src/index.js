@@ -4,6 +4,10 @@ export { default as Header } from "./Header.jsx";
 export { default as SiteHeader, defaultNavItems, defaultCtaButton } from "./SiteHeader.jsx";
 export { default as FilterSidebar } from "./FilterSidebar.jsx";
 export { default as PoliticianCard } from "./PoliticianCard.jsx";
+export { default as CompassCardHorizontal } from "./CompassCardHorizontal.jsx";
+export { default as CompassCardVertical } from "./CompassCardVertical.jsx";
+export { default as CompassKey } from "./CompassKey.jsx";
+export { default as IconOverlay } from "./IconOverlay.jsx";
 export { default as CategorySection } from "./CategorySection.jsx";
 export { default as SubGroupSection } from "./SubGroupSection.jsx";
 export { default as GovernmentBodySection } from "./GovernmentBodySection.jsx";
@@ -24,6 +28,14 @@ export { computeTierCoverage } from "./computeTierCoverage.js";
 // Hooks
 export { default as useMediaQuery } from "./useMediaQuery.js";
 
+// Cross-subdomain shared client state (guest + authed users)
+// evContext exposes get/set/clear/subscribe (guest slice) plus
+// getAuthedSlice/setAuthedSlice/clearAuthedSlice for userId-stamped authed mirror.
+export { evContext } from "./evContext.js";
+
+// 260426-mw6 — guest → authed promotion hook
+export { useEvContextPromotion } from "./useEvContextPromotion.js";
+
 // Design Tokens
 export * from "./tokens.js";
 
@@ -33,5 +45,5 @@ export { default as StanceAccordion } from "./StanceAccordion.jsx";
 // Icons
 export { BallotIcon, CompassIcon, BranchIcon } from './icons.js';
 
-// Cross-subdomain context broker
-export { evContext } from './evContext.js';
+// Feedback
+export { default as FeedbackButton } from './FeedbackButton.jsx';

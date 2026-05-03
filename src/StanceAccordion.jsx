@@ -105,7 +105,9 @@ export default function StanceAccordion({
   }
 
   /**
-   * Fetch all quotes for this politician once and store in quotesCache.
+   * Fetch quotes for this politician once and store in quotesCache.
+   * The backend filters by politician_id when provided; this client-side
+   * cache holds only quotes for the current politician.
    * Subsequent calls return immediately (no-op).
    */
   async function ensureQuotesFetched() {
@@ -199,10 +201,13 @@ export default function StanceAccordion({
         const fullTopic = topicById[topicId];
         const questionText = fullTopic?.question_text;
 
-        // Filter quotes for this topic — match on topic_key (preferred) or short_title fallback
+        // Filter quotes for this politician and topic.
+        // candidateId guard is a defensive check — the backend already filters by
+        // politician_id, but this ensures correctness if the cache is ever shared.
         const topicQuotes = quotesCache.current
           ? quotesCache.current.filter((q) => {
               if (!q.issue) return false;
+              if (q.candidateId && q.candidateId !== politicianId) return false;
               if (topic.topic_key) return q.issue === topic.topic_key;
               return topic.short_title && q.issue.toLowerCase() === topic.short_title.toLowerCase();
             })
