@@ -17,6 +17,7 @@ import useMediaQuery from './useMediaQuery';
 export default function Header({
   logoSrc,
   logoAlt = 'Empowered Vote',
+  logoHref = 'https://login.empowered.vote/profile',
   navItems = [],
   ctaButton,
   currentPath,
@@ -294,8 +295,8 @@ export default function Header({
       <div style={styles.container}>
         {/* Logo */}
         <a
-          href="/"
-          onClick={(e) => handleNavClick(e, '/')}
+          href={logoHref}
+          onClick={(e) => handleNavClick(e, logoHref)}
           style={{ display: 'flex', alignItems: 'center' }}
         >
           {logoSrc ? (
