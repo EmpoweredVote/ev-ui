@@ -32,3 +32,6 @@ export { default as StanceAccordion } from "./StanceAccordion.jsx";
 
 // Icons
 export { BallotIcon, CompassIcon, BranchIcon } from './icons.js';
+
+// Cross-subdomain context broker
+export { evContext } from './evContext.js';
