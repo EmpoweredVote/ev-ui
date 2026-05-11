@@ -1,6 +1,7 @@
 import React from "react";
 import { animated, useSpring } from "@react-spring/web";
 import { useRef, useEffect } from "react";
+import { useTheme } from "./useTheme";
 
 export default function RadarChartCore({
   topics,
@@ -16,6 +17,7 @@ export default function RadarChartCore({
   labelOffset = 20,
   tightFit = false,
 }) {
+  const { isDark } = useTheme();
   const radius = size / 2 - 40;
   const centerX = size / 2;
   const centerY = size / 2;
@@ -165,7 +167,7 @@ export default function RadarChartCore({
       ring.push(`${x},${y}`);
     }
     guidePolygons.push(
-      <polygon key={level} points={ring.join(" ")} fill="none" stroke="#ccc" />,
+      <polygon key={level} points={ring.join(" ")} fill="none" stroke={isDark ? "#374151" : "#ccc"} />,
     );
   }
 
@@ -189,7 +191,7 @@ export default function RadarChartCore({
             y1={centerY}
             x2={x}
             y2={y}
-            stroke={isUnanswered ? "#9ca3af" : "black"}
+            stroke={isUnanswered ? (isDark ? "#6b7280" : "#9ca3af") : (isDark ? "#d1d5db" : "black")}
             strokeDasharray={isUnanswered ? "4 3" : undefined}
             opacity={isUnanswered ? 0.6 : 1}
           />
@@ -238,7 +240,7 @@ export default function RadarChartCore({
             dominantBaseline={isBottom ? "hanging" : "auto"}
             onClick={() => onReplaceTopic(shortTitle)}
             className="text-xl font-medium mb-1 md:text-base md:font-normal"
-            fill={isUnansweredLabel ? "#9ca3af" : undefined}
+            fill={isUnansweredLabel ? (isDark ? "#6b7280" : "#9ca3af") : (isDark ? "#d1d5db" : undefined)}
             style={{ cursor: "pointer", userSelect: "none", fontSize: fSize }}
           >
             {isUnansweredLabel && <title>No stance on file for this topic.</title>}
