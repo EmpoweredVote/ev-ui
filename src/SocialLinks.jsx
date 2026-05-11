@@ -31,6 +31,7 @@ export default function SocialLinks({
   linkedin,
   extraLinks = [],
   size = 'md',
+  darkMode = false,
   style = {},
 }) {
   const iconSizes = {
@@ -57,14 +58,14 @@ export default function SocialLinks({
       ...style,
     },
     link: {
-      color: '#6A7282',
+      color: darkMode ? '#9ca3af' : '#6A7282',
       transition: 'color 0.2s ease, border-color 0.2s ease',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       width: boxSize,
       height: boxSize,
-      border: '1px solid #E5E7EB',
+      border: `1px solid ${darkMode ? 'rgba(255,255,255,0.15)' : '#E5E7EB'}`,
       borderRadius: '10px',
     },
     icon: {
@@ -218,8 +219,8 @@ export default function SocialLinks({
             e.currentTarget.style.borderColor = colors.evTeal;
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.color = '#6A7282';
-            e.currentTarget.style.borderColor = '#E5E7EB';
+            e.currentTarget.style.color = darkMode ? '#9ca3af' : '#6A7282';
+            e.currentTarget.style.borderColor = darkMode ? 'rgba(255,255,255,0.15)' : '#E5E7EB';
           }}
         >
           {link.icon}

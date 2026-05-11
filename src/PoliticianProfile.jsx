@@ -93,7 +93,14 @@ function getTierLabel(districtType, officeTitle) {
 }
 
 /** Tier badge colors */
-function getTierColors(tier) {
+function getTierColors(tier, darkMode) {
+  if (darkMode) {
+    switch (tier) {
+      case 'FEDERAL': return { bg: 'rgba(30,64,175,0.25)', text: '#93c5fd' };
+      case 'STATE':   return { bg: 'rgba(22,101,52,0.25)', text: '#86efac' };
+      default:        return { bg: 'rgba(126,34,206,0.25)', text: '#d8b4fe' };
+    }
+  }
   switch (tier) {
     case 'FEDERAL': return { bg: '#EFF6FF', text: '#1E40AF' };
     case 'STATE':   return { bg: '#F0FDF4', text: '#166534' };
@@ -267,6 +274,7 @@ export default function PoliticianProfile({
   politicianId,
   onNavigateToRecord,
   imageFocalPoint,
+  darkMode = false,
 }) {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const pol = politician;
@@ -312,7 +320,7 @@ export default function PoliticianProfile({
 
   // Tier badge
   const tier = getTierLabel(pol.district_type, pol.office_title);
-  const tierColors = tier ? getTierColors(tier) : null;
+  const tierColors = tier ? getTierColors(tier, darkMode) : null;
 
   // Title & subtitle (no party)
   const { title: roleTitle, subtitle: roleSubtitle } = buildTitleAndSubtitle(pol);
@@ -392,7 +400,7 @@ export default function PoliticianProfile({
   // ── Styles ─────────────────────────────────────────────────────────
 
   const divider = {
-    borderTop: '1px solid #E5E7EB',
+    borderTop: `1px solid ${darkMode ? '#374151' : '#E5E7EB'}`,
     margin: `${spacing[6]} 0`,
   };
 
@@ -403,7 +411,7 @@ export default function PoliticianProfile({
     fontFamily: fonts.primary,
     fontWeight: fontWeights.semibold,
     fontSize: '18px',
-    color: '#101828',
+    color: darkMode ? '#f3f4f6' : '#101828',
     margin: 0,
     marginBottom: spacing[4],
   };
@@ -429,7 +437,7 @@ export default function PoliticianProfile({
       padding: 0,
     },
     card: {
-      background: colors.bgWhite,
+      background: darkMode ? '#1a2235' : colors.bgWhite,
       borderRadius: borderRadius.lg,
       boxShadow: shadows.lg,
       padding: isMobile ? spacing[4] : spacing[8],
@@ -489,7 +497,7 @@ export default function PoliticianProfile({
       fontFamily: fonts.primary,
       fontWeight: fontWeights.bold,
       fontSize: isMobile ? fontSizes['2xl'] : '30px',
-      color: '#101828',
+      color: darkMode ? '#f3f4f6' : '#101828',
       margin: 0,
       marginBottom: spacing[1],
       lineHeight: 1.2,
@@ -498,14 +506,14 @@ export default function PoliticianProfile({
       fontFamily: fonts.primary,
       fontWeight: fontWeights.regular,
       fontSize: isMobile ? fontSizes.base : fontSizes.lg,
-      color: '#364153',
+      color: darkMode ? '#d1d5db' : '#364153',
       margin: 0,
       marginBottom: spacing[1],
     },
     officeDesc: {
       fontFamily: fonts.primary,
       fontSize: fontSizes.base,
-      color: '#6A7282',
+      color: darkMode ? '#9ca3af' : '#6A7282',
       margin: 0,
       marginBottom: spacing[3],
       lineHeight: 1.5,
@@ -513,7 +521,7 @@ export default function PoliticianProfile({
     bioText: {
       fontFamily: fonts.primary,
       fontSize: fontSizes.sm,
-      color: '#6A7282',
+      color: darkMode ? '#9ca3af' : '#6A7282',
       margin: 0,
       marginTop: spacing[1],
       marginBottom: spacing[3],
@@ -533,7 +541,7 @@ export default function PoliticianProfile({
       gap: spacing[1],
       fontFamily: fonts.primary,
       fontSize: fontSizes.sm,
-      color: '#6A7282',
+      color: darkMode ? '#9ca3af' : '#6A7282',
     },
     submitBtn: {
       display: 'inline-flex',
@@ -577,7 +585,7 @@ export default function PoliticianProfile({
       fontSize: '11px',
       letterSpacing: '0.05em',
       textTransform: 'uppercase',
-      color: '#6A7282',
+      color: darkMode ? '#9ca3af' : '#6A7282',
       margin: 0,
       marginBottom: spacing[1],
       display: 'flex',
@@ -587,13 +595,13 @@ export default function PoliticianProfile({
     contactValue: {
       fontFamily: fonts.primary,
       fontSize: fontSizes.sm,
-      color: '#364153',
+      color: darkMode ? '#d1d5db' : '#364153',
       lineHeight: 1.6,
       margin: 0,
       marginBottom: spacing[2],
     },
     contactLink: {
-      color: '#364153',
+      color: darkMode ? '#59b0c4' : '#364153',
       textDecoration: 'none',
       wordBreak: 'break-all',
     },
@@ -601,7 +609,7 @@ export default function PoliticianProfile({
       fontFamily: fonts.primary,
       fontWeight: fontWeights.medium,
       fontSize: '12px',
-      color: '#9CA3AF',
+      color: darkMode ? '#6b7280' : '#9CA3AF',
       margin: 0,
       marginBottom: spacing[1],
     },
@@ -835,6 +843,7 @@ export default function PoliticianProfile({
                       linkedin={linkedinUrl}
                       extraLinks={socialWebsiteUrls}
                       size="sm"
+                      darkMode={darkMode}
                       style={{ marginTop: allWebsites.length > 0 ? '8px' : 0 }}
                     />
                   )}
