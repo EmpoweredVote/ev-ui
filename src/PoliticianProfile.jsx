@@ -49,6 +49,25 @@ function qualifyLocalTitle(baseTitle, pol) {
   return `${prefix} ${baseTitle}`;
 }
 
+/**
+ * Derive a card subtitle from the seat designation embedded in the office title,
+ * scoped to local offices. Returns "Ward N" | "District N" | "At-Large" | null.
+ * Keeps each jurisdiction's own term (e.g. SLC councils say "Ward", Ogden says
+ * "District") rather than normalizing, and surfaces at-large seats that carry the
+ * marker in their title (e.g. "Council At-Large Seat A") regardless of district_id.
+ */
+function deriveSeatSubtitle(pol, cleanTitle) {
+  const dt = pol.district_type || '';
+  if (!dt.startsWith('LOCAL') && dt !== 'COUNTY') return null;
+  const t = cleanTitle || '';
+  if (/\bat[- ]large\b/i.test(t)) return 'At-Large';
+  let m = t.match(/\bward\s+(\d+)/i);
+  if (m) return `Ward ${m[1]}`;
+  m = t.match(/\bdistrict\s+(\d+)/i);
+  if (m) return `District ${m[1]}`;
+  return null;
+}
+
 function buildTitleAndSubtitle(pol) {
   const cleanTitle = stripRetain(pol.office_title);
   const cleanChamber = stripRetain(pol.chamber_name);
@@ -73,6 +92,11 @@ function buildTitleAndSubtitle(pol) {
     // NATIONAL_JUDICIAL: show court name as subtitle (e.g. "Supreme Court of the United States")
     if (pol.district_type === 'NATIONAL_JUDICIAL')
       return cleanChamber || null;
+    // Seat designation embedded in the office title takes priority for local offices,
+    // so each jurisdiction's own term wins (SLC "Ward 3", Ogden "District 2", at-large
+    // seats "At-Large") even when district_id is null or shared across seats.
+    const seatFromTitle = deriveSeatSubtitle(pol, cleanTitle);
+    if (seatFromTitle) return seatFromTitle;
     if (pol.district_id && /^[1-9]\d*$/.test(pol.district_id))
       return `District ${pol.district_id}`;
     if (pol.district_id === '0' && !/(_EXEC)$/.test(pol.district_type))
