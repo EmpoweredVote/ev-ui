@@ -16,6 +16,7 @@ export default function RadarChartCore({
   padding = 80,
   labelOffset = 20,
   tightFit = false,
+  maxLabelLines = 2,
 }) {
   const { isDark } = useTheme();
   const radius = size / 2 - 40;
@@ -96,7 +97,7 @@ export default function RadarChartCore({
   const labelMeta = spokes.map(([shortTitle], i) => {
     const angle = (2 * Math.PI * i) / numSpokes;
     const baseFSize = labelFontSize;
-    const lines = wrapLabel(shortTitle, 12);
+    const lines = wrapLabel(shortTitle, 12, maxLabelLines);
     const longestLineLen = lines.reduce(
       (max, ln) => (ln.length > max ? ln.length : max),
       0,
@@ -150,8 +151,11 @@ export default function RadarChartCore({
       if (y < yMin) yMin = y;
       if (y > yMax) yMax = y;
     }
-    // Reserve room for up to two lines of label text (single-pass wrap at ~12 chars)
-    const labelMargin = labelOffset + labelFontSize * 1.4 + labelFontSize * 1.1;
+    // Reserve room for up to maxLabelLines lines of label text. Base on the
+    // EFFECTIVE rendered font size (same floor adaptiveFontSize applies), since
+    // consumers like MiniCompass pass labelFontSize=0 yet labels still render at 10px.
+    const effLabelFSize = adaptiveFontSize(12, labelFontSize);
+    const labelMargin = labelOffset + effLabelFSize * 1.1 * maxLabelLines;
     tightTop = yMin - labelMargin;
     tightHeight = (yMax + labelMargin) - tightTop;
   }
@@ -212,7 +216,7 @@ export default function RadarChartCore({
         const isBottom = cosA < -0.5;
         const baseFSize = labelFontSize;
         // Single pass wrap at ~12 chars, then pick font size based on longest line
-        const lines = wrapLabel(shortTitle, 12);
+        const lines = wrapLabel(shortTitle, 12, maxLabelLines);
         const longestLine = lines.reduce(
           (max, ln) => (ln.length > max ? ln.length : max),
           0,
@@ -371,7 +375,7 @@ function adaptiveFontSize(longestLineLen, baseFSize) {
   return Math.max(baseFSize, 10);
 }
 
-function wrapLabel(label, maxChars = 12) {
+function wrapLabel(label, maxChars = 12, maxLines = 2) {
   const str = String(label);
   // Split on "/" first (handles "Medicare/Medicaid" → ["Medicare/", "Medicaid"])
   let rawWords;
@@ -398,10 +402,10 @@ function wrapLabel(label, maxChars = 12) {
     }
   }
   if (line) lines.push(line);
-  // Enforce max 2 lines: combine any overflow onto line 2
-  if (lines.length > 2) {
-    const overflow = lines.splice(2).join(" ");
-    lines[1] = lines[1] + " " + overflow;
+  // Enforce max lines: combine any overflow onto the last allowed line
+  if (lines.length > maxLines) {
+    const overflow = lines.splice(maxLines).join(" ");
+    lines[maxLines - 1] = lines[maxLines - 1] + " " + overflow;
   }
   return lines;
 }

@@ -16,6 +16,7 @@ import { colors, fonts, fontWeights, fontSizes, spacing, borderRadius, shadows }
  * @param {Object} props.style - Additional styles
  * @param {string} props.badge - Optional badge label (e.g., "Candidate") shown as coral pill
  * @param {React.ReactNode} [props.footer] - Optional content rendered below subtitle (e.g., icon badges)
+ * @param {string} [props.imageWidth] - Photo column width for the horizontal variant (default '90px')
  */
 export default function PoliticianCard({
   id,
@@ -30,6 +31,7 @@ export default function PoliticianCard({
   badge,
   imageFocalPoint,
   footer,
+  imageWidth = '90px',
 }) {
   const isHorizontal = variant === 'horizontal';
 
@@ -61,20 +63,25 @@ export default function PoliticianCard({
       ...style,
     },
     imageWrapper: {
-      width: isHorizontal ? '90px' : '100%',
+      // Horizontal: relative box whose height comes from the card (flex stretch),
+      // so the photo fills the card height instead of dictating it. Absolutely
+      // positioned children below mean a wider photo can't inflate the card.
+      position: isHorizontal ? 'relative' : undefined,
+      width: isHorizontal ? imageWidth : '100%',
       height: isHorizontal ? '100%' : 'auto',
-      maxHeight: isHorizontal ? '200px' : undefined,
       aspectRatio: isHorizontal ? undefined : '4/5',
       flexShrink: 0,
       overflow: 'hidden',
     },
     image: {
+      ...(isHorizontal ? { position: 'absolute', top: 0, left: 0 } : {}),
       width: '100%',
       height: '100%',
       objectFit: 'cover',
       objectPosition: imageFocalPoint ?? 'center 20%',
     },
     imagePlaceholder: {
+      ...(isHorizontal ? { position: 'absolute', top: 0, left: 0 } : {}),
       width: '100%',
       height: '100%',
       backgroundColor: colors.evTeal,
