@@ -31,9 +31,25 @@ const defaultNavItems = [
       { label: 'Find Representatives', href: 'https://essentials.empowered.vote' },
       { label: 'Read & Rank', href: 'https://readrank.empowered.vote' },
       { label: 'Treasury Tracker', href: 'https://treasurytracker.empowered.vote' },
+      { label: 'Civic Trivia', href: 'https://ctc.empowered.vote' },
       { label: 'Empowered Badges', href: 'https://badges.empowered.vote' },
     ],
   },
+];
+
+/**
+ * Canonical inline cross-app nav links for the EV header.
+ *
+ * Pass to `<Header navItems={evAppLinks} />` to render one top-level link per
+ * app (no dropdown). The Header marks the current app active by matching the
+ * link hostname against window.location.hostname. Labels are short to fit the
+ * bar; the current app stays visible (and underlined) rather than hidden.
+ */
+const evAppLinks = [
+  { label: 'Compass',            href: 'https://compass.empowered.vote' },
+  { label: 'Find Representatives', href: 'https://essentials.empowered.vote' },
+  { label: 'Treasury Tracker',   href: 'https://treasurytracker.empowered.vote' },
+  { label: 'Civic Trivia',       href: 'https://ctc.empowered.vote' },
 ];
 
 const defaultCtaButton = {
@@ -84,4 +100,4 @@ export default function SiteHeader({
   );
 }
 
-export { defaultNavItems, defaultCtaButton };
+export { defaultNavItems, defaultCtaButton, evAppLinks };

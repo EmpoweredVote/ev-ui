@@ -16,30 +16,97 @@ function getDisplayUrl(url) {
   }
 }
 
+// Comparison dot colors — from the EV dataViz palette (tokens.js).
+// Antipartisan: neutral dusk/sage pairing, never party colors.
+const USER_DOT = '#7C6B9E';            // Dusk — "You"
+const POL_DOT_LIGHT = '#5A9A6E';       // Sage — politician (light)
+const POL_DOT_DARK = '#6DD28C';        // brighter sage for dark surfaces
+
+/**
+ * Resolve the color palette for the current theme. Drives every color from the
+ * `darkMode` prop (mirrors RadarChartCore) so the component is self-contained and
+ * does not depend on consumer `!important` overrides.
+ */
+function palette(darkMode) {
+  return darkMode
+    ? {
+        rowBorder: 'rgba(255,255,255,0.08)',
+        rowHover: '#1e2a3a',          // ev-navy-elevated
+        title: '#f3f4f6',
+        chipLabel: '#d1d5db',
+        sectionLabel: '#9ca3af',     // 6.24:1 on #1a2235 ✓ AA
+        reasoning: '#d1d5db',
+        chevron: '#9ca3af',          // 6.24:1 — bumped from #6b7280 (3.28) for clarity
+        pillActiveBg: '#1e2a3a',
+        pillActiveBorder: 'rgba(255,255,255,0.14)',
+        pillIdleText: '#9ca3af',     // 6.24:1 ✓ AA
+        pillActiveText: '#f3f4f6',
+        link: '#59b0c4',             // 6.37:1 ✓ AA
+        sourceText: '#9ca3af',
+        quoteText: '#d1d5db',
+        quoteBorder: 'rgba(255,255,255,0.14)',
+        emptyText: '#9ca3af',        // 6.24:1 — bumped from #6b7280 (3.28, failed AA)
+        spinnerTrack: '#374151',
+        polDot: POL_DOT_DARK,
+        agreedBg: 'rgba(14,116,144,0.18)',
+        agreedText: '#67e8f9',
+        disagreedBg: 'rgba(180,83,9,0.18)',
+        disagreedText: '#fbbf24',
+      }
+    : {
+        rowBorder: '#f1f1f1',
+        rowHover: '#f9fafb',
+        title: '#262626',
+        chipLabel: '#525252',
+        sectionLabel: '#6b7280',     // 4.83:1 on white — bumped from #a3a3a3 (2.52, failed AA)
+        reasoning: '#404040',
+        chevron: '#6b7280',          // 4.83:1 — bumped from #a3a3a3 (2.52, failed 3:1)
+        pillActiveBg: '#fafafa',
+        pillActiveBorder: '#e5e5e5',
+        pillIdleText: '#737373',     // 4.74:1 ✓ AA
+        pillActiveText: '#171717',
+        link: '#00657c',
+        sourceText: '#737373',
+        quoteText: '#374151',
+        quoteBorder: '#e2e8f0',
+        emptyText: '#6b7280',        // 4.83:1 — bumped from #a3a3a3 (2.52, failed AA)
+        spinnerTrack: '#e2e8f0',
+        polDot: POL_DOT_LIGHT,
+        agreedBg: '#ecfeff',
+        agreedText: '#0e7490',
+        disagreedBg: '#fffbeb',
+        disagreedText: '#b45309',
+      };
+}
+
 /**
  * StanceAccordion — vertical list of topic rows showing politician stance labels.
- * Expanding a row lazy-fetches reasoning + source links from the context endpoint,
- * and fetches all politician quotes once (cached) to display per-topic in expanded rows.
+ * Expanding a row reveals the full stance spectrum (with You / politician dots),
+ * lazy-fetched reasoning + source links, and the politician's quotes for the topic.
  * True accordion: only one row open at a time.
  *
  * Props:
  *   topics           — filtered intersection topics (from CompassCard's topicsFiltered)
  *   polAnswers       — array of { topic_id, value }
+ *   userAnswerMap    — Record<topic_id, value> — the viewer's own answers (for the "You" dot)
  *   politicianId     — politician UUID
  *   allTopics        — full topic objects with stances arrays
  *   expandedTopics   — full set of topics for "show all" toggle
- *   verdictsByTopic        — Record<string, 'agreed' | 'disagreed'> | undefined — DEPRECATED (kept for backward compat, no longer used in render)
- *   verdictsByQuote        — Record<quote_id, 'agreed' | 'disagreed'> | undefined — per-quote verdicts shown in expanded rows
+ *   darkMode         — boolean — drives the color palette
+ *   verdictsByTopic        — DEPRECATED (kept for backward compat, no longer used in render)
+ *   verdictsByQuote        — Record<quote_id, 'agreed' | 'disagreed'> | undefined — per-quote verdicts
  *   initialExpandedTopicId — topic ID to auto-open on mount (e.g. deep-linked from ReadRank)
  *   apiUrl                 — API base URL (default: 'https://api.empowered.vote')
  */
 export default function StanceAccordion({
   topics,
   polAnswers,
+  userAnswerMap = {},
   politicianId,
   allTopics,
   expandedTopics,
-  verdictsByTopic,  // Record<string, 'agreed' | 'disagreed'> | undefined — DEPRECATED, no longer rendered
+  darkMode = false,
+  verdictsByTopic,  // DEPRECATED, no longer rendered
   verdictsByQuote,  // Record<quote_id, 'agreed' | 'disagreed'> | undefined
   initialExpandedTopicId,
   apiUrl = 'https://api.empowered.vote',
@@ -49,6 +116,8 @@ export default function StanceAccordion({
   const [showAll, setShowAll] = useState(false);
   const contextCache = useRef(new Map());
   const quotesCache = useRef(null); // null = unfetched, array = fetched (may be empty)
+
+  const c = palette(darkMode);
 
   // Build lookup: topic_id -> polAnswer value
   const polAnswerMap = {};
@@ -179,27 +248,35 @@ export default function StanceAccordion({
     }
   }
 
+  const sectionLabelStyle = {
+    fontSize: '11px',
+    fontWeight: 600,
+    color: c.sectionLabel,
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+  };
+
   return (
     <div
-      className="flex flex-col"
+      className="ev-stance-panel flex flex-col"
       style={{ fontFamily: "'Manrope', sans-serif" }}
     >
-      <h3
-        className="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-2"
-        style={{ fontSize: '12px' }}
-      >
+      <h3 style={{ ...sectionLabelStyle, marginBottom: '8px' }}>
         Stance Breakdown
       </h3>
 
       {visibleTopics.map((topic) => {
         const topicId = String(topic.id);
-        const value = polAnswerMap[topicId];
-        const label = getStanceLabel(topicId, value);
+        const polValue = polAnswerMap[topicId];
+        const userValue = userAnswerMap[topicId];
+        const label = getStanceLabel(topicId, polValue);
         const isExpanded = expandedTopicId === topicId;
         const isLoading = loadingId === topicId;
         const cached = contextCache.current.get(topicId);
         const fullTopic = topicById[topicId];
         const questionText = fullTopic?.question_text;
+        const titleText = questionText || topic.short_title;
+        const stances = fullTopic?.stances || topic.stances || [];
 
         // Filter quotes for this politician and topic.
         // candidateId guard is a defensive check — the backend already filters by
@@ -214,24 +291,58 @@ export default function StanceAccordion({
           : [];
 
         return (
-          <div key={topicId} className="border-b border-neutral-100">
-            {/* Collapsed row */}
+          <div
+            key={topicId}
+            style={{ borderBottom: `1px solid ${c.rowBorder}` }}
+          >
+            {/* Collapsed row — question-led title + politician stance chip */}
             <button
               type="button"
               onClick={() => handleToggle(topicId)}
-              className="w-full flex items-center justify-between py-3 px-2 text-left cursor-pointer hover:bg-neutral-50 transition-colors"
+              className="w-full flex items-start justify-between text-left cursor-pointer"
+              style={{
+                padding: '12px 8px',
+                background: 'transparent',
+                border: 'none',
+                transition: 'background 0.15s ease',
+                borderRadius: '8px',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = c.rowHover; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
             >
-              <div className="flex flex-col min-w-0">
-                <span className="text-sm font-medium text-neutral-800 truncate">
-                  {topic.short_title}
+              <div className="flex flex-col min-w-0" style={{ gap: '5px' }}>
+                <span
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: c.title,
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {titleText}
                 </span>
-                {questionText && (
-                  <span className="text-xs text-neutral-400 mt-0.5">
-                    {questionText}
+                {/* Stance chip: sage dot + politician's current position.
+                    Wraps to full lines so the whole stance reads before expanding. */}
+                <span style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span
+                    style={{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      backgroundColor: c.polDot,
+                      flexShrink: 0,
+                      marginTop: '6px',
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: '13px',
+                      color: c.chipLabel,
+                      lineHeight: 1.45,
+                    }}
+                  >
+                    {label}
                   </span>
-                )}
-                <span className="text-xs text-neutral-500 mt-0.5">
-                  {label}
                 </span>
               </div>
 
@@ -241,12 +352,13 @@ export default function StanceAccordion({
                 height="16"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="currentColor"
+                stroke={c.chevron}
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="text-neutral-400 flex-shrink-0 ml-2"
+                className="flex-shrink-0 ml-2"
                 style={{
+                  marginTop: '3px',
                   transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
                   transition: 'transform 0.2s ease',
                 }}
@@ -264,14 +376,99 @@ export default function StanceAccordion({
               }}
             >
               <div style={{ overflow: 'hidden' }}>
-                <div className="px-2 pb-4">
+                <div style={{ padding: '4px 8px 16px' }}>
+                  {/* Stance spectrum — full scale with You / politician dots.
+                      Read-only on the profile (editing belongs to the compass tool). */}
+                  {stances.length > 0 && (
+                    <>
+                      {/* Legend */}
+                      {(userValue > 0 || polValue > 0) && (
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '14px',
+                            marginBottom: '8px',
+                            fontSize: '12px',
+                            color: c.sourceText,
+                          }}
+                        >
+                          {userValue > 0 && (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                              <span style={{ width: '9px', height: '9px', borderRadius: '50%', backgroundColor: USER_DOT }} />
+                              You
+                            </span>
+                          )}
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ width: '9px', height: '9px', borderRadius: '50%', backgroundColor: c.polDot }} />
+                            Their stance
+                          </span>
+                        </div>
+                      )}
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '14px' }}>
+                        {stances.map((stance, i) => {
+                          const stanceNum = i + 1;
+                          const isUser = userValue === stanceNum;
+                          const isPol = polValue === stanceNum;
+                          const isActive = isUser || isPol;
+                          return (
+                            <div
+                              key={i}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'flex-start',
+                                gap: '10px',
+                                padding: '10px 12px',
+                                borderRadius: '12px',
+                                fontSize: '13px',
+                                lineHeight: 1.4,
+                                border: `1px solid ${isActive ? c.pillActiveBorder : 'transparent'}`,
+                                backgroundColor: isActive ? c.pillActiveBg : 'transparent',
+                              }}
+                            >
+                              {/* Left dot rail — fixed width so every stance's text
+                                  aligns and the You / their-stance markers scan vertically. */}
+                              <span
+                                style={{
+                                  flexShrink: 0,
+                                  width: '30px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '5px',
+                                  paddingTop: '3px',
+                                }}
+                              >
+                                {isUser && (
+                                  <span style={{ width: '9px', height: '9px', borderRadius: '50%', backgroundColor: USER_DOT, boxShadow: `0 0 0 3px ${USER_DOT}33` }} />
+                                )}
+                                {isPol && (
+                                  <span style={{ width: '9px', height: '9px', borderRadius: '50%', backgroundColor: c.polDot, boxShadow: `0 0 0 3px ${c.polDot}33` }} />
+                                )}
+                              </span>
+                              <span
+                                style={{
+                                  flex: 1,
+                                  color: isActive ? c.pillActiveText : c.pillIdleText,
+                                  fontWeight: isActive ? 500 : 400,
+                                }}
+                              >
+                                {stance.text}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+
                   {isLoading && (
-                    <div className="flex items-center py-3">
+                    <div className="flex items-center" style={{ padding: '12px 0' }}>
                       <div
                         style={{
                           width: '20px',
                           height: '20px',
-                          border: '2px solid #e2e8f0',
+                          border: `2px solid ${c.spinnerTrack}`,
                           borderTopColor: '#00657c',
                           borderRadius: '50%',
                           animation: 'ev-spin 0.8s linear infinite',
@@ -284,29 +481,35 @@ export default function StanceAccordion({
                     <>
                       {cached.reasoning ? (
                         <p
-                          className="text-sm text-neutral-700 mb-3"
-                          style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}
+                          style={{
+                            fontSize: '14px',
+                            color: c.reasoning,
+                            marginBottom: '12px',
+                            whiteSpace: 'pre-wrap',
+                            lineHeight: 1.6,
+                          }}
                         >
                           {cached.reasoning}
                         </p>
                       ) : null}
 
                       {cached.sources && cached.sources.length > 0 && (
-                        <div className="mt-2">
-                          <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1.5">
+                        <div style={{ marginTop: '8px' }}>
+                          <p style={{ ...sectionLabelStyle, marginBottom: '6px' }}>
                             References
                           </p>
-                          <ol className="list-decimal list-inside space-y-1">
+                          <ol style={{ listStyle: 'decimal', listStylePosition: 'inside', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                             {cached.sources.map((src, i) => (
-                              <li key={i} className="text-xs text-neutral-600">
+                              <li key={i} style={{ fontSize: '12px', color: c.sourceText }}>
                                 <a
                                   href={src}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="inline-flex items-center gap-1.5 hover:text-[#00657c] transition-colors"
+                                  className="inline-flex items-center gap-1.5"
+                                  style={{ color: c.link }}
                                 >
                                   <Favicon url={src} />
-                                  <span className="underline underline-offset-2">
+                                  <span style={{ textDecoration: 'underline', textUnderlineOffset: '2px' }}>
                                     {getDisplayUrl(src)}
                                   </span>
                                 </a>
@@ -317,27 +520,18 @@ export default function StanceAccordion({
                       )}
 
                       {topicQuotes.length > 0 && (
-                        <div style={{ marginTop: '12px' }}>
-                          <p
-                            style={{
-                              fontSize: '11px',
-                              fontWeight: 600,
-                              color: '#737373',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.05em',
-                              marginBottom: '8px',
-                            }}
-                          >
+                        <div style={{ marginTop: '14px' }}>
+                          <p style={{ ...sectionLabelStyle, marginBottom: '8px' }}>
                             Quotes
                           </p>
                           {topicQuotes.map((quote) => {
                             const verdict = verdictsByQuote ? verdictsByQuote[quote.id] : undefined;
                             const borderColor =
                               verdict === 'agreed'
-                                ? '#0e7490'
+                                ? c.agreedText
                                 : verdict === 'disagreed'
-                                ? '#b45309'
-                                : '#e2e8f0';
+                                ? c.disagreedText
+                                : c.quoteBorder;
                             const sourceName = quote.source_name || quote.sourceName;
                             return (
                               <div
@@ -354,7 +548,7 @@ export default function StanceAccordion({
                                   style={{
                                     fontSize: '13px',
                                     fontStyle: 'italic',
-                                    color: '#374151',
+                                    color: c.quoteText,
                                     margin: 0,
                                     lineHeight: 1.5,
                                   }}
@@ -367,8 +561,8 @@ export default function StanceAccordion({
                                       display: 'inline-flex',
                                       alignItems: 'center',
                                       gap: '4px',
-                                      backgroundColor: '#ecfeff',
-                                      color: '#0e7490',
+                                      backgroundColor: c.agreedBg,
+                                      color: c.agreedText,
                                       padding: '2px 8px',
                                       borderRadius: '9999px',
                                       fontSize: '11px',
@@ -389,8 +583,8 @@ export default function StanceAccordion({
                                       display: 'inline-flex',
                                       alignItems: 'center',
                                       gap: '4px',
-                                      backgroundColor: '#fffbeb',
-                                      color: '#b45309',
+                                      backgroundColor: c.disagreedBg,
+                                      color: c.disagreedText,
                                       padding: '2px 8px',
                                       borderRadius: '9999px',
                                       fontSize: '11px',
@@ -413,7 +607,7 @@ export default function StanceAccordion({
                                     style={{
                                       display: 'block',
                                       fontSize: '11px',
-                                      color: '#00657c',
+                                      color: c.link,
                                       marginTop: '3px',
                                       textDecoration: 'none',
                                     }}
@@ -430,7 +624,7 @@ export default function StanceAccordion({
                       {!cached.reasoning &&
                         (!cached.sources || cached.sources.length === 0) &&
                         topicQuotes.length === 0 && (
-                          <p className="text-sm text-neutral-400 italic py-2">
+                          <p style={{ fontSize: '14px', color: c.emptyText, fontStyle: 'italic', padding: '8px 0' }}>
                             No detailed reasoning available for this topic.
                           </p>
                         )}
@@ -448,7 +642,7 @@ export default function StanceAccordion({
           type="button"
           onClick={() => setShowAll((v) => !v)}
           className="text-sm font-medium mt-2 px-2 py-1 self-start cursor-pointer hover:underline"
-          style={{ color: '#00657c' }}
+          style={{ color: c.link }}
         >
           {showAll ? 'Show fewer' : `Show all ${expandedTopics.length} topics`}
         </button>

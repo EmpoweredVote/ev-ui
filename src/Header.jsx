@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { colors, fonts, fontWeights, fontSizes, spacing, borderRadius } from './tokens';
+import { colors, fonts, fontWeights, fontSizes, spacing, borderRadius, semanticTokens } from './tokens';
 import useMediaQuery from './useMediaQuery';
 
 /**
@@ -27,12 +27,14 @@ export default function Header({
   currentPath,
   onNavigate,
   profileMenu,
+  darkMode = false,
+  navCollapseBreakpoint = 1024,
   style = {},
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [profileOpen, setProfileOpen] = useState(false);
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useMediaQuery(`(max-width: ${navCollapseBreakpoint}px)`);
   const profileRef = useRef(null);
 
   useEffect(() => {
@@ -53,9 +55,40 @@ export default function Header({
     }
   };
 
+  // Theme palette — darkMode switches the inline style colors. Mirrors the
+  // darkMode-prop pattern used by PoliticianProfile. Defaults to light so any
+  // consumer that doesn't pass darkMode renders exactly as before.
+  const t = darkMode
+    ? {
+        surface:    semanticTokens.dark.layerBase.background,             // #131416
+        raised:     semanticTokens.dark.layerOne.background,             // #2F3237 (dropdowns)
+        text:       colors.evLightBlue,                                  // #59B0C4 — AA on dark
+        itemText:   semanticTokens.dark.layerOne.text,                   // #D3D7DE (dropdown items)
+        muted:      semanticTokens.dark.layerBase.text,                  // #B3BBCC
+        border:     semanticTokens.dark.divider,                         // #41454E
+        hoverBg:    semanticTokens.dark.layerTwo.background,             // #41454E
+        ctaBg:      semanticTokens.dark.buttonPrimary.background.default, // #005366
+        ctaBgHover: semanticTokens.dark.buttonPrimary.background.hovered,
+        ctaText:    '#FFFFFF',
+        shadow:     '0 10px 40px rgba(0,0,0,0.5)',
+      }
+    : {
+        surface:    colors.bgWhite,
+        raised:     colors.bgWhite,
+        text:       colors.evTeal,
+        itemText:   colors.evTeal,
+        muted:      colors.textMuted,
+        border:     colors.borderLight,
+        hoverBg:    colors.bgLight,
+        ctaBg:      colors.evTeal,
+        ctaBgHover: colors.evTealDark,
+        ctaText:    colors.textWhite,
+        shadow:     '0 10px 40px rgba(0,0,0,0.1)',
+      };
+
   const styles = {
     header: {
-      backgroundColor: colors.bgWhite,
+      backgroundColor: t.surface,
       position: 'sticky',
       top: 0,
       zIndex: 50,
@@ -69,6 +102,7 @@ export default function Header({
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
+      gap: spacing[6],
     },
     logo: {
       height: '43px',
@@ -76,20 +110,24 @@ export default function Header({
     },
     nav: {
       display: isMobile ? 'none' : 'flex',
+      flex: '1 1 auto',
       alignItems: 'center',
-      gap: spacing[10],
+      justifyContent: 'center',
+      flexWrap: 'nowrap',
+      gap: spacing[8],
     },
     navItem: {
       fontFamily: fonts.primary,
-      fontWeight: fontWeights.bold,
-      fontSize: fontSizes.xl,
-      color: colors.evTeal,
+      fontWeight: fontWeights.medium,
+      fontSize: fontSizes.base,
+      color: t.text,
       textDecoration: 'none',
       cursor: 'pointer',
       display: 'flex',
       alignItems: 'center',
       gap: spacing[2],
       position: 'relative',
+      whiteSpace: 'nowrap',
     },
     navItemActive: {
       textDecoration: 'underline',
@@ -106,9 +144,9 @@ export default function Header({
       zIndex: 100,
     },
     dropdownInner: {
-      backgroundColor: colors.bgWhite,
+      backgroundColor: t.raised,
       borderRadius: borderRadius.lg,
-      boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+      boxShadow: t.shadow,
       minWidth: '200px',
       padding: spacing[2],
     },
@@ -118,14 +156,14 @@ export default function Header({
       fontFamily: fonts.primary,
       fontWeight: fontWeights.medium,
       fontSize: fontSizes.base,
-      color: colors.evTeal,
+      color: t.itemText,
       textDecoration: 'none',
       borderRadius: borderRadius.md,
       cursor: 'pointer',
     },
     ctaButton: {
-      backgroundColor: colors.evTeal,
-      color: colors.textWhite,
+      backgroundColor: t.ctaBg,
+      color: t.ctaText,
       fontFamily: fonts.primary,
       fontWeight: fontWeights.bold,
       fontSize: fontSizes.xl,
@@ -140,13 +178,13 @@ export default function Header({
       display: 'inline-flex',
       alignItems: 'center',
       backgroundColor: 'transparent',
-      color: colors.evTeal,
+      color: t.text,
       fontFamily: fonts.primary,
       fontWeight: fontWeights.bold,
       fontSize: fontSizes.base,
       padding: `${spacing[2]} ${spacing[5]}`,
       borderRadius: borderRadius.full || '999px',
-      border: `1.5px solid ${colors.evTeal}`,
+      border: `1.5px solid ${t.text}`,
       cursor: 'pointer',
       textDecoration: 'none',
       lineHeight: 1.2,
@@ -162,7 +200,7 @@ export default function Header({
     hamburger: {
       width: '24px',
       height: '2px',
-      backgroundColor: colors.evTeal,
+      backgroundColor: t.text,
       position: 'relative',
     },
     mobileMenu: {
@@ -172,25 +210,25 @@ export default function Header({
       top: '100%',
       left: 0,
       right: 0,
-      backgroundColor: colors.bgWhite,
+      backgroundColor: t.surface,
       padding: spacing[4],
-      boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+      boxShadow: t.shadow,
     },
     mobileNavItem: {
       fontFamily: fonts.primary,
-      fontWeight: fontWeights.bold,
-      fontSize: fontSizes.lg,
-      color: colors.evTeal,
+      fontWeight: fontWeights.medium,
+      fontSize: fontSizes.base,
+      color: t.text,
       textDecoration: 'none',
       padding: `${spacing[3]} 0`,
-      borderBottom: `1px solid ${colors.borderLight}`,
+      borderBottom: `1px solid ${t.border}`,
     },
     profileButton: {
       width: '40px',
       height: '40px',
       borderRadius: borderRadius.full,
-      border: `2px solid ${colors.evTeal}`,
-      backgroundColor: colors.bgLight,
+      border: `2px solid ${t.text}`,
+      backgroundColor: darkMode ? t.raised : colors.bgLight,
       cursor: 'pointer',
       display: 'flex',
       alignItems: 'center',
@@ -205,9 +243,9 @@ export default function Header({
       zIndex: 100,
     },
     profileDropdownInner: {
-      backgroundColor: colors.bgWhite,
+      backgroundColor: t.raised,
       borderRadius: borderRadius.lg,
-      boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+      boxShadow: t.shadow,
       minWidth: '160px',
       padding: spacing[2],
     },
@@ -218,7 +256,7 @@ export default function Header({
       fontFamily: fonts.primary,
       fontWeight: fontWeights.medium,
       fontSize: fontSizes.base,
-      color: colors.evTeal,
+      color: t.itemText,
       textDecoration: 'none',
       borderRadius: borderRadius.md,
       cursor: 'pointer',
@@ -228,7 +266,7 @@ export default function Header({
     },
     mobileDivider: {
       height: '1px',
-      backgroundColor: colors.borderLight,
+      backgroundColor: t.border,
       margin: `${spacing[3]} 0`,
     },
     profileLabel: {
@@ -236,8 +274,8 @@ export default function Header({
       fontFamily: fonts.primary,
       fontWeight: fontWeights.semibold,
       fontSize: fontSizes.sm,
-      color: colors.textMuted,
-      borderBottom: `1px solid ${colors.borderLight}`,
+      color: t.muted,
+      borderBottom: `1px solid ${t.border}`,
       marginBottom: spacing[1],
       overflow: 'hidden',
       textOverflow: 'ellipsis',
@@ -248,7 +286,19 @@ export default function Header({
   // Responsive styles via media query in a style tag would be better,
   // but for simplicity we'll use CSS classes that consumers can override
   const NavLink = ({ item }) => {
-    const isActive = currentPath === item.href;
+    // Cross-app links are absolute URLs, so a pathname currentPath never equals
+    // them — also treat a link as active when its hostname matches this app's.
+    const isActive =
+      currentPath === item.href ||
+      (typeof window !== 'undefined' &&
+        /^https?:\/\//.test(item.href) &&
+        (() => {
+          try {
+            return new URL(item.href).hostname === window.location.hostname;
+          } catch {
+            return false;
+          }
+        })());
     const hasDropdown = item.dropdown && item.dropdown.length > 0;
     const isOpen = openDropdown === item.label;
 
@@ -276,7 +326,7 @@ export default function Header({
             >
               <path
                 d="M1 1L8 8L15 1"
-                stroke={colors.evTeal}
+                stroke={t.text}
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -294,7 +344,7 @@ export default function Header({
                   onClick={(e) => handleNavClick(e, dropdownItem.href)}
                   style={styles.dropdownItem}
                   onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = colors.bgLight;
+                    e.target.style.backgroundColor = t.hoverBg;
                   }}
                   onMouseLeave={(e) => {
                     e.target.style.backgroundColor = 'transparent';
@@ -317,7 +367,7 @@ export default function Header({
         <a
           href={logoHref}
           onClick={(e) => handleNavClick(e, logoHref)}
-          style={{ display: 'flex', alignItems: 'center' }}
+          style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}
         >
           {logoSrc ? (
             <img src={logoSrc} alt={logoAlt} style={styles.logo} />
@@ -327,7 +377,7 @@ export default function Header({
                 fontFamily: fonts.primary,
                 fontWeight: fontWeights.bold,
                 fontSize: fontSizes['2xl'],
-                color: colors.evTeal,
+                color: t.text,
               }}
             >
               empowered.vote
@@ -343,7 +393,7 @@ export default function Header({
         </nav>
 
         {/* Right side: secondary action + CTA + Profile */}
-        <div style={{ display: isMobile ? 'none' : 'flex', alignItems: 'center', gap: spacing[3] }}>
+        <div style={{ display: isMobile ? 'none' : 'flex', alignItems: 'center', gap: spacing[3], flexShrink: 0 }}>
           {secondaryAction && React.isValidElement(secondaryAction) && secondaryAction}
           {secondaryAction && !React.isValidElement(secondaryAction) && (
             <a
@@ -358,12 +408,12 @@ export default function Header({
               style={styles.secondaryAction}
               className="ev-header-secondary"
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = colors.evTeal;
-                e.currentTarget.style.color = colors.textWhite;
+                e.currentTarget.style.backgroundColor = t.text;
+                e.currentTarget.style.color = darkMode ? t.surface : colors.textWhite;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = colors.evTeal;
+                e.currentTarget.style.color = t.text;
               }}
             >
               {secondaryAction.label}
@@ -376,10 +426,10 @@ export default function Header({
               style={styles.ctaButton}
               className="ev-header-cta"
               onMouseEnter={(e) => {
-                e.target.style.backgroundColor = colors.evTealDark;
+                e.target.style.backgroundColor = t.ctaBgHover;
               }}
               onMouseLeave={(e) => {
-                e.target.style.backgroundColor = colors.evTeal;
+                e.target.style.backgroundColor = t.ctaBg;
               }}
             >
               {ctaButton.label}
@@ -400,7 +450,7 @@ export default function Header({
                   height="20"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke={colors.evTeal}
+                  stroke={t.text}
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -430,7 +480,7 @@ export default function Header({
                             }}
                             style={styles.profileDropdownItem}
                             onMouseEnter={(e) => {
-                              e.target.style.backgroundColor = colors.bgLight;
+                              e.target.style.backgroundColor = t.hoverBg;
                             }}
                             onMouseLeave={(e) => {
                               e.target.style.backgroundColor = 'transparent';
@@ -449,7 +499,7 @@ export default function Header({
                           }}
                           style={styles.profileDropdownItem}
                           onMouseEnter={(e) => {
-                            e.target.style.backgroundColor = colors.bgLight;
+                            e.target.style.backgroundColor = t.hoverBg;
                           }}
                           onMouseLeave={(e) => {
                             e.target.style.backgroundColor = 'transparent';
@@ -482,7 +532,7 @@ export default function Header({
                 left: 0,
                 width: '100%',
                 height: '2px',
-                backgroundColor: colors.evTeal,
+                backgroundColor: t.text,
               }}
             />
             <span
@@ -492,7 +542,7 @@ export default function Header({
                 left: 0,
                 width: '100%',
                 height: '2px',
-                backgroundColor: colors.evTeal,
+                backgroundColor: t.text,
               }}
             />
           </div>
@@ -594,7 +644,7 @@ export default function Header({
                   ...styles.mobileNavItem,
                   fontWeight: fontWeights.medium,
                   fontSize: fontSizes.sm,
-                  color: colors.textMuted,
+                  color: t.muted,
                   cursor: 'default',
                   display: 'block',
                   borderBottom: 'none',
