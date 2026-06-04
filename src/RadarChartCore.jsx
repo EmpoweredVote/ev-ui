@@ -17,6 +17,7 @@ export default function RadarChartCore({
   labelOffset = 20,
   tightFit = false,
   maxLabelLines = 2,
+  showLabels = true,
 }) {
   const { isDark } = useTheme();
   const radius = size / 2 - 40;
@@ -96,6 +97,9 @@ export default function RadarChartCore({
   // Pre-compute label metadata for dynamic horizontal padding
   const labelMeta = spokes.map(([shortTitle], i) => {
     const angle = (2 * Math.PI * i) / numSpokes;
+    const sinA = Math.sin(angle);
+    const side = sinA < -0.1 ? "left" : sinA > 0.1 ? "right" : "center";
+    if (!showLabels) return { estimatedWidth: 0, side };
     const baseFSize = labelFontSize;
     const lines = wrapLabel(shortTitle, 12, maxLabelLines);
     const longestLineLen = lines.reduce(
@@ -104,9 +108,6 @@ export default function RadarChartCore({
     );
     const fSize = adaptiveFontSize(longestLineLen, baseFSize);
     const estimatedWidth = longestLineLen * fSize * 0.6;
-    const sinA = Math.sin(angle);
-    // Left side: angle > Math.PI (sin < 0); right side: angle > 0 && angle < Math.PI (sin > 0)
-    const side = sinA < -0.1 ? "left" : sinA > 0.1 ? "right" : "center";
     return { estimatedWidth, side };
   });
 
@@ -117,7 +118,8 @@ export default function RadarChartCore({
     .filter((m) => m.side === "right")
     .map((m) => m.estimatedWidth);
 
-  const minPadding = 40;
+  // No labels → need only a small margin for dot radius / visual breathing room
+  const minPadding = showLabels ? 40 : 10;
   const maxPadding = padding * 2;
   const rawLeftPadding = Math.min(
     Math.max(
@@ -151,11 +153,11 @@ export default function RadarChartCore({
       if (y < yMin) yMin = y;
       if (y > yMax) yMax = y;
     }
-    // Reserve room for up to maxLabelLines lines of label text. Base on the
-    // EFFECTIVE rendered font size (same floor adaptiveFontSize applies), since
-    // consumers like MiniCompass pass labelFontSize=0 yet labels still render at 10px.
+    // Reserve room for label text (or just a small breathing margin when labels are hidden).
     const effLabelFSize = adaptiveFontSize(12, labelFontSize);
-    const labelMargin = labelOffset + effLabelFSize * 1.1 * maxLabelLines;
+    const labelMargin = showLabels
+      ? labelOffset + effLabelFSize * 1.1 * maxLabelLines
+      : 8;
     tightTop = yMin - labelMargin;
     tightHeight = (yMax + labelMargin) - tightTop;
   }
@@ -202,7 +204,7 @@ export default function RadarChartCore({
         );
       })}
 
-      {spokes.map(([shortTitle], i) => {
+      {showLabels && spokes.map(([shortTitle], i) => {
         const angle = (2 * Math.PI * i) / numSpokes;
         const anchor =
           angle > Math.PI

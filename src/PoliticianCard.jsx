@@ -32,8 +32,12 @@ export default function PoliticianCard({
   imageFocalPoint,
   footer,
   imageWidth = '90px',
+  contentStyle = {},
 }) {
   const isHorizontal = variant === 'horizontal';
+  // Compute the natural 3:4 height for the image column so the photo is always portrait
+  const imageWidthPx = parseInt(imageWidth, 10) || 90;
+  const imageMinHeight = isHorizontal ? Math.ceil(imageWidthPx * 4 / 3) : undefined;
 
   const handleCardClick = (e) => {
     // Don't trigger card click if compass button was clicked
@@ -58,15 +62,14 @@ export default function PoliticianCard({
       cursor: onClick ? 'pointer' : 'default',
       transition: 'box-shadow 0.2s ease, transform 0.2s ease',
       position: 'relative',
-      minHeight: isHorizontal ? '130px' : undefined,
+      minHeight: imageMinHeight,
       height: '100%',
       ...style,
     },
     imageWrapper: {
-      // Horizontal: relative box whose height comes from the card (flex stretch),
-      // so the photo fills the card height instead of dictating it. Absolutely
-      // positioned children below mean a wider photo can't inflate the card.
-      position: isHorizontal ? 'relative' : undefined,
+      // Horizontal: fixed width with 3:4 aspect ratio so portrait photos look
+      // consistent regardless of card content height.
+      position: 'relative',
       width: isHorizontal ? imageWidth : '100%',
       height: isHorizontal ? '100%' : 'auto',
       aspectRatio: isHorizontal ? undefined : '4/5',
@@ -100,6 +103,7 @@ export default function PoliticianCard({
       minWidth: 0,
       display: 'flex',
       flexDirection: 'column',
+      ...contentStyle,
     },
     name: {
       fontFamily: fonts.primary,
