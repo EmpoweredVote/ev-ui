@@ -18,6 +18,7 @@ export default function RadarChartCore({
   tightFit = false,
   maxLabelLines = 2,
   showLabels = true,
+  dotRadius = 5,
 }) {
   const { isDark } = useTheme();
   const radius = size / 2 - 40;
@@ -294,7 +295,7 @@ export default function RadarChartCore({
             key={`user-dot-${i}`}
             cx={cx}
             cy={cy}
-            r={matches ? 8 : 7}
+            r={matches ? dotRadius * (8 / 7) : dotRadius}
             fill={matches ? '#fed12e' : '#7C6B9E'}
             stroke="#FFFFFF"
             strokeWidth={3}
@@ -338,7 +339,7 @@ export default function RadarChartCore({
             key={`compare-dot-${i}`}
             cx={cx}
             cy={cy}
-            r={matches ? 8 : 7}
+            r={matches ? dotRadius * (8 / 7) : dotRadius}
             fill={matches ? '#fed12e' : '#5A9A6E'}
             stroke="#FFFFFF"
             strokeWidth={3}
