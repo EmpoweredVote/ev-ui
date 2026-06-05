@@ -297,7 +297,7 @@ export default function RadarChartCore({
             cy={cy}
             r={matches ? dotRadius * (8 / 7) : dotRadius}
             fill={matches ? '#fed12e' : '#7C6B9E'}
-            stroke="#FFFFFF"
+            stroke={matches ? '#fed12e' : '#7C6B9E'}
             strokeWidth={3}
           />
         );
@@ -341,7 +341,7 @@ export default function RadarChartCore({
             cy={cy}
             r={matches ? dotRadius * (8 / 7) : dotRadius}
             fill={matches ? '#fed12e' : '#5A9A6E'}
-            stroke="#FFFFFF"
+            stroke={matches ? '#fed12e' : '#5A9A6E'}
             strokeWidth={3}
           />
         );
