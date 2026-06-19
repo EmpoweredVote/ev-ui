@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-19
 **Repos:** `ev-ui` (shared component library) + consuming apps: `CompassV2`, `essentials`,
-`read-rank`, `treasury-tracker`
+`read-rank`. (`treasury-tracker` is deferred to a separate effort — see Follow-up.)
 
 ## Problem
 
@@ -14,7 +14,9 @@
      carries no `?feature=`/`?url=` context, and only shows when logged in.
    - **essentials** has a Feedback item (both states) but points at the **alpha** domain
      (`alpha.empowered.vote/feedback`) via its own local URL builder.
-   - **read-rank** and **treasury-tracker** have **no** Feedback item at all.
+   - **read-rank** has **no** Feedback item at all.
+   - **treasury-tracker** also has no Feedback item and a broken logo, but it sits on a very old
+     ev-ui (`^0.2.0`) and is deferred to a separate effort (see Follow-up).
 
 2. **Header logo points to the login page on some apps.** `Header`'s default `logoHref` is
    `https://login.empowered.vote/profile`. compass and treasury-tracker do not override it, so
@@ -28,13 +30,13 @@
 | compass (CompassV2) | `^0.9.0` | raw `Header` | broken (inherits default) | yes, dead URL, logged-in only |
 | essentials | `^0.9.4` | raw `Header` | ✅ explicit | yes (both states), alpha URL |
 | read-rank | `^0.9.4` | raw `Header` | ✅ explicit | none |
-| treasury-tracker | `^0.2.0` ⚠️ | raw `Header` via local `AppHeader` wrapper | broken (inherits default) | none |
+| treasury-tracker | `^0.2.0` ⚠️ | raw `Header` via local `AppHeader` wrapper | broken (inherits default) | none — **deferred** |
 
 ## Goals
 
-- Put a working "Feedback" link in the profile dropdown of compass, essentials, read-rank, and
-  treasury-tracker — visible to everyone (logged-in *and* logged-out) — that opens the real feedback
-  page pre-tagged with the current tool and page URL.
+- Put a working "Feedback" link in the profile dropdown of compass, essentials, and read-rank —
+  visible to everyone (logged-in *and* logged-out) — that opens the real feedback page pre-tagged
+  with the current tool and page URL.
 - All four apps build that URL via the shared `getFeedbackUrl()` helper from `ev-ui` (single source
   of truth for feature detection + URL tagging) — replacing compass's dead link and essentials'
   local alpha builder.
@@ -106,16 +108,13 @@ and logged-out profile-menu branches. `getFeedbackUrl()` auto-detects the featur
   `Sign out`) and the logged-out branch (`Sign in`).
 - Logo: already correct, no change.
 
-**B4. treasury-tracker** — `src/App.tsx` (+ `package.json`)
-- **Upgrade `@empoweredvote/ev-ui` from `^0.2.0` to the latest published version.** This is the
-  highest-risk step (8 minor versions; the `Header`/`AppHeader` prop surface and other ev-ui usage
-  may have changed). Must be smoke-tested: header renders, profile menu works, no console errors,
-  theme toggle and any other ev-ui components still behave.
-- Add `{ label: "Feedback", href: getFeedbackUrl() }` to both profile-menu branches (logged-in:
-  `Profile`, `EV Financials`, `Sign out`; logged-out: `Sign in`).
-- Logo: fixed automatically by the A1 default once upgraded — `AppHeader` does not pass `logoHref`.
-  Verify after upgrade; if `AppHeader`/`onNavigate` interferes, pass `logoHref="https://empowered.vote"`
-  explicitly.
+## Follow-up (separate effort) — treasury-tracker
+
+Out of scope for this spec. treasury-tracker is on ev-ui `^0.2.0` and needs an upgrade to the latest
+published version before it can use `getFeedbackUrl()` and inherit the logo fix — an 8-minor-version
+jump with real breaking-change risk across its `Header`/`AppHeader` usage and other ev-ui imports.
+That upgrade, the Feedback profile item (both menu branches), and the logo verification will be
+handled as their own tracked task with dedicated smoke-testing, decoupled from this change.
 
 ## Data Flow (Feedback)
 
@@ -131,18 +130,12 @@ and logged-out profile-menu branches. `getFeedbackUrl()` auto-detects the featur
 - **ev-ui:** `getFeedbackUrl()` returns the expected URL for a known host (feature detected) and a
   caller-supplied `feature`; `FeedbackButton` pill still renders the same href as before (now on the
   prod base URL); `index.js` exports `getFeedbackUrl`. Build the package.
-- **Each consuming app:** run it; logged-out *and* logged-in profile menus both show "Feedback";
-  clicking it opens `empowered.vote/feedback` with the correct `feature=<slug>` and current `url`;
-  the logo links to `https://empowered.vote`.
-- **treasury-tracker (extra):** after the ev-ui upgrade, smoke-test the whole header and any other
-  ev-ui-driven UI for regressions before relying on the feedback/logo behavior.
+- **Each consuming app (compass, essentials, read-rank):** run it; logged-out *and* logged-in
+  profile menus both show "Feedback"; clicking it opens `empowered.vote/feedback` with the correct
+  `feature=<slug>` and current `url`; the logo links to `https://empowered.vote`.
 
 ## Risks
 
 - Changing the shared `logoHref` default affects **all** consuming apps. This is intended — apps
   that override it (essentials, read-rank) are unaffected; the rest get the corrected target. Any
   app that *wants* the profile page can pass `logoHref` explicitly.
-- **treasury-tracker's `^0.2.0` → latest ev-ui jump is the main risk.** Breaking changes between
-  0.2 and 0.9 could affect treasury's `Header`/`AppHeader` usage or other imported components.
-  Mitigation: treat the upgrade as its own step, smoke-test thoroughly, and be ready to pin/pass
-  explicit props (e.g. `logoHref`) if defaults misbehave.
