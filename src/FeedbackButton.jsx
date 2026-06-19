@@ -10,7 +10,7 @@ import { colors, fonts, fontWeights, fontSizes, spacing, borderRadius } from './
  *
  * @param {Object} props
  * @param {string} [props.feature] - explicit feature override (skips auto-detect)
- * @param {string} [props.baseUrl] - feedback form URL (default: alpha.empowered.vote/feedback)
+ * @param {string} [props.baseUrl] - feedback form URL (default: empowered.vote/feedback)
  * @param {string} [props.label] - button text (default: "Feedback")
  * @param {'pill'|'link'} [props.variant] - visual style (default: 'pill')
  * @param {boolean} [props.includeUrl] - pass current href as ?url= (default: true)
