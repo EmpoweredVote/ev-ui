@@ -18,7 +18,7 @@ import { colors, fonts, fontWeights, fontSizes, spacing, borderRadius } from './
  * @param {Object} [props.style] - additional inline styles
  */
 
-const FEEDBACK_BASE_DEFAULT = 'https://alpha.empowered.vote/feedback';
+const FEEDBACK_BASE_DEFAULT = 'https://empowered.vote/feedback';
 
 // Hostname → feature slug. Slugs MUST match the backend Zod enum:
 // compass | essentials | readrank | treasury | badges | trivia | landing | other
@@ -32,6 +32,7 @@ export const HOST_FEATURE_MAP = {
   'alpha.empowered.vote': 'landing',
   'ev-landing.empowered.vote': 'landing',
   'ev-landing.onrender.com': 'landing',
+  'empowered.vote': 'landing',
 };
 
 export function detectFeature() {
@@ -55,9 +56,18 @@ export function detectFeature() {
   return 'other';
 }
 
-function buildHref({ baseUrl, feature, includeUrl }) {
+/**
+ * Build the canonical feedback URL.
+ * @param {Object} [opts]
+ * @param {string} [opts.feature] - explicit feature slug (skips auto-detect)
+ * @param {string} [opts.baseUrl] - feedback form URL (default: empowered.vote/feedback)
+ * @param {boolean} [opts.includeUrl] - append current href as ?url= (default: true)
+ * @returns {string}
+ */
+export function getFeedbackUrl({ feature, baseUrl = FEEDBACK_BASE_DEFAULT, includeUrl = true } = {}) {
+  const resolvedFeature = feature ?? detectFeature();
   const params = new URLSearchParams();
-  if (feature) params.set('feature', feature);
+  if (resolvedFeature) params.set('feature', resolvedFeature);
   if (includeUrl && typeof window !== 'undefined') {
     params.set('url', window.location.href);
   }
@@ -74,8 +84,7 @@ export default function FeedbackButton({
   className = '',
   style = {},
 }) {
-  const feature = featureProp ?? detectFeature();
-  const href = buildHref({ baseUrl, feature, includeUrl });
+  const href = getFeedbackUrl({ feature: featureProp, baseUrl, includeUrl });
 
   const pillStyle = {
     display: 'inline-flex',

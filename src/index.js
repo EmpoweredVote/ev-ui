@@ -47,4 +47,4 @@ export { default as StanceAccordion } from "./StanceAccordion.jsx";
 export { BallotIcon, CompassIcon, BranchIcon } from './icons.js';
 
 // Feedback
-export { default as FeedbackButton } from './FeedbackButton.jsx';
+export { default as FeedbackButton, getFeedbackUrl, detectFeature } from './FeedbackButton.jsx';

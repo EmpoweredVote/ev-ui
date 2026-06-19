@@ -20,7 +20,7 @@ import useMediaQuery from './useMediaQuery';
 export default function Header({
   logoSrc,
   logoAlt = 'Empowered Vote',
-  logoHref = 'https://login.empowered.vote/profile',
+  logoHref = 'https://empowered.vote',
   navItems = [],
   ctaButton,
   secondaryAction,
