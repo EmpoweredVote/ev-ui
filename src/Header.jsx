@@ -204,15 +204,23 @@ export default function Header({
       position: 'relative',
     },
     mobileMenu: {
+      // Compact dropdown panel anchored under the hamburger (right edge), rather
+      // than a full-bleed left:0/right:0 bar across the whole viewport.
       display: mobileMenuOpen ? 'flex' : 'none',
       flexDirection: 'column',
       position: 'absolute',
       top: '100%',
-      left: 0,
-      right: 0,
+      right: spacing[3],
+      left: 'auto',
+      width: 'min(300px, calc(100vw - 24px))',
+      maxWidth: 'calc(100vw - 24px)',
       backgroundColor: t.surface,
-      padding: spacing[4],
+      padding: spacing[3],
       boxShadow: t.shadow,
+      borderRadius: borderRadius.lg,
+      border: `1px solid ${t.border}`,
+      marginTop: spacing[2],
+      zIndex: 100,
     },
     mobileNavItem: {
       fontFamily: fonts.primary,
