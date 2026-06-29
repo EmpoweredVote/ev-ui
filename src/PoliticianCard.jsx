@@ -128,8 +128,15 @@ export default function PoliticianCard({
       overflow: 'hidden',
       textOverflow: 'ellipsis',
       display: '-webkit-box',
-      WebkitLineClamp: 2,
+      // Wrap to 3 lines so a qualified title with a trailing parenthetical
+      // (e.g. "Clark County Commissioner (District A)") drops the parenthetical
+      // to its own line instead of truncating ("…(Distric…") — important when the
+      // compass overlay narrows the content column. 3 short lines still fit within
+      // the image-driven card height, so the tile does not grow.
+      WebkitLineClamp: 3,
       WebkitBoxOrient: 'vertical',
+      // Let a long unbroken segment wrap rather than overflow under the compass.
+      overflowWrap: 'anywhere',
     },
     subtitle: {
       fontFamily: fonts.primary,
