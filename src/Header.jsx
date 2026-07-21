@@ -21,6 +21,9 @@ export default function Header({
   logoSrc,
   logoAlt = 'Empowered Vote',
   logoHref = 'https://empowered.vote',
+  centerLogoSrc,
+  centerLogoHref,
+  centerLogoAlt,
   navItems = [],
   ctaButton,
   secondaryAction,
@@ -96,6 +99,7 @@ export default function Header({
       ...style,
     },
     container: {
+      position: 'relative',
       maxWidth: '1512px',
       margin: '0 auto',
       padding: isMobile ? `${spacing[3]} ${spacing[3]}` : `${spacing[4]} ${spacing[6]}`,
@@ -107,6 +111,14 @@ export default function Header({
     logo: {
       height: '43px',
       cursor: 'pointer',
+    },
+    centerLogo: {
+      position: 'absolute',
+      left: '50%',
+      top: '50%',
+      transform: 'translate(-50%, -50%)',
+      display: 'flex',
+      alignItems: 'center',
     },
     nav: {
       display: isMobile ? 'none' : 'flex',
@@ -368,17 +380,24 @@ export default function Header({
     );
   };
 
+  // With a center (feature) logo, the left slot is the EV logo on desktop but the
+  // feature logo on mobile (so narrow screens show the feature brand only, as before).
+  const featureOnLeft = isMobile && centerLogoSrc;
+  const leftLogoSrc  = featureOnLeft ? centerLogoSrc : logoSrc;
+  const leftLogoAlt  = featureOnLeft ? (centerLogoAlt || logoAlt) : logoAlt;
+  const leftLogoHref = featureOnLeft ? (centerLogoHref || logoHref) : logoHref;
+
   return (
     <header style={styles.header}>
       <div style={styles.container}>
-        {/* Logo */}
+        {/* Logo (EV on desktop, feature on mobile when a center logo is set) */}
         <a
-          href={logoHref}
-          onClick={(e) => handleNavClick(e, logoHref)}
+          href={leftLogoHref}
+          onClick={(e) => handleNavClick(e, leftLogoHref)}
           style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}
         >
-          {logoSrc ? (
-            <img src={logoSrc} alt={logoAlt} style={styles.logo} />
+          {leftLogoSrc ? (
+            <img src={leftLogoSrc} alt={leftLogoAlt} style={styles.logo} />
           ) : (
             <span
               style={{
@@ -392,6 +411,18 @@ export default function Header({
             </span>
           )}
         </a>
+
+        {/* Center feature logo (desktop only) */}
+        {centerLogoSrc && !isMobile && (
+          <a
+            href={centerLogoHref || logoHref}
+            onClick={(e) => handleNavClick(e, centerLogoHref || logoHref)}
+            style={styles.centerLogo}
+            aria-label={centerLogoAlt || 'Feature home'}
+          >
+            <img src={centerLogoSrc} alt={centerLogoAlt || ''} style={styles.logo} />
+          </a>
+        )}
 
         {/* Desktop Navigation */}
         <nav style={styles.nav} className="ev-header-nav">
