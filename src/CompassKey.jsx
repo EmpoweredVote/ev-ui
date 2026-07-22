@@ -47,11 +47,11 @@ export default function CompassKey({ compact = false } = {}) {
 
   if (!loaded) return null;
 
-  const Swatch = ({ color, label, ring }) => (
+  const Swatch = ({ color, label }) => (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing[1] }}>
       <span style={{
-        display: 'inline-block', width: 12, height: 12, borderRadius: '50%',
-        background: color, border: `2px solid ${ring || '#fff'}`,
+        display: 'inline-block', width: 16, height: 16, borderRadius: '50%',
+        background: color,
         boxShadow: '0 0 0 1px rgba(0,0,0,0.08)',
       }} />
       <span style={{ fontSize: fontSizes.xs, color: colors.textSecondary, fontFamily: fonts.primary }}>
