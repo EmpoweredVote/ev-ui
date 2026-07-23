@@ -3,6 +3,7 @@ export { default as RadarChartCore } from "./RadarChartCore.jsx";
 export { default as PlaceholderRadar } from "./PlaceholderRadar.jsx";
 export { default as Header } from "./Header.jsx";
 export { default as SiteHeader, defaultNavItems, defaultCtaButton, evAppLinks } from "./SiteHeader.jsx";
+export { default as SiteFooter } from "./SiteFooter.jsx";
 export { default as FilterSidebar } from "./FilterSidebar.jsx";
 export { default as PoliticianCard } from "./PoliticianCard.jsx";
 export { default as CompassCardHorizontal } from "./CompassCardHorizontal.jsx";
