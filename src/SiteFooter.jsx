@@ -1,4 +1,4 @@
-import React, { useId, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { fonts, fontWeights } from './tokens';
 
 /**
@@ -17,10 +17,17 @@ import { fonts, fontWeights } from './tokens';
  * things inline styles can't express — ::placeholder, :focus-visible, the
  * slide-in transition, prefers-reduced-motion, and the small-screen layout.
  *
+ * On a successful sign-up the form slides closed (reverse of the open animation)
+ * and a fixed, bottom-center toast confirms it — matching ev-landing (#8):
+ * auto-hides after ~6s (8s for errors), can be dismissed with an ✕, and pauses
+ * its auto-hide while hovered. On error the form stays open and the toast shows
+ * in its error (coral) style.
+ *
  * Accessibility: sr-only label on the email input; the Newsletter toggle is a
  * real <button> with aria-expanded + aria-controls; the email/Subscribe controls
- * are not tab-reachable until the form is open; the confirmation is a
- * role="status" live region; motion collapses under prefers-reduced-motion.
+ * are not tab-reachable until the form is open; the toast's message span is the
+ * role="status" live region (the ✕ button sits outside it); motion collapses
+ * under prefers-reduced-motion.
  *
  * @param {Object} props
  * @param {boolean} [props.darkMode=false] - render the dark palette
@@ -57,14 +64,16 @@ export default function SiteFooter({
 }) {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [note, setNote] = useState(null); // { msg, kind: 'ok' | 'error' | null }
+  const [toast, setToast] = useState(null); // { msg, isError }
+  const [toastShown, setToastShown] = useState(false);
   const formRef = useRef(null);
   const emailRef = useRef(null);
+  const toggleRef = useRef(null);
+  const toastTimerRef = useRef(null);
 
   const uid = useId().replace(/:/g, '');
   const formId = `ev-sf-form-${uid}`;
   const emailId = `ev-sf-email-${uid}`;
-  const noteId = `ev-sf-note-${uid}`;
 
   const resolvedYear = year ?? new Date().getFullYear();
 
@@ -86,9 +95,8 @@ export default function SiteFooter({
         btnHover: '#FFFFFF',
         teal: '#1DA8C6',
         coral: '#FF6B52',
-        noteText: '#F2F2F2',
-        noteBg: 'rgba(29, 168, 198, 0.15)',
-        errorBg: 'rgba(255, 107, 82, 0.18)',
+        card: '#1C1C1F',
+        heading: '#F2F2F2',
       }
     : {
         bg: '#F7F7F8',
@@ -107,10 +115,12 @@ export default function SiteFooter({
         btnHover: '#000000',
         teal: '#00657C',
         coral: '#FF5740',
-        noteText: '#1C1C1C',
-        noteBg: 'rgba(0, 101, 124, 0.10)',
-        errorBg: 'rgba(255, 87, 64, 0.12)',
+        card: '#FFFFFF',
+        heading: '#1C1C1C',
       };
+
+  // Clear any pending auto-hide timer when the component unmounts.
+  useEffect(() => () => clearTimeout(toastTimerRef.current), []);
 
   function toggle() {
     setOpen((prev) => {
@@ -121,6 +131,26 @@ export default function SiteFooter({
       }
       return next;
     });
+  }
+
+  // Fixed toast: mirrors ev-landing's #signup-toast. Auto-hides after ~6s
+  // (8s for errors); pauses while hovered; dismissable with the ✕.
+  function showToast(msg, isError) {
+    setToast({ msg, isError: !!isError });
+    setToastShown(true);
+    clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToastShown(false), isError ? 8000 : 6000);
+  }
+  function hideToast() {
+    clearTimeout(toastTimerRef.current);
+    setToastShown(false);
+  }
+  function pauseToastHide() {
+    clearTimeout(toastTimerRef.current);
+  }
+  function resumeToastHide() {
+    clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToastShown(false), 2500);
   }
 
   function handleSubmit(e) {
@@ -138,7 +168,6 @@ export default function SiteFooter({
     };
 
     setSubmitting(true);
-    setNote({ msg: 'Adding you…', kind: null });
 
     fetch(endpoint, {
       method: 'POST',
@@ -148,14 +177,20 @@ export default function SiteFooter({
       .then((r) => r.json().catch(() => ({ ok: r.ok })))
       .then((data) => {
         if (data && data.ok) {
+          // Success: reset, slide the form closed, and confirm via the toast.
           form.reset();
-          setNote({ msg: 'You’re on the list — thanks for following the build. 🎉', kind: 'ok' });
+          setOpen(false);
+          // Move focus back to the toggle so it doesn't strand on the now
+          // aria-hidden / untabbable Subscribe button.
+          if (toggleRef.current) toggleRef.current.focus();
+          showToast('You’re on the list — thanks for following the build. 🎉', false);
         } else {
-          setNote({ msg: (data && data.error) || 'Something went wrong. Please try again.', kind: 'error' });
+          // Error: keep the form open so they can retry; toast in error style.
+          showToast((data && data.error) || 'Something went wrong. Please try again.', true);
         }
       })
       .catch(() => {
-        setNote({ msg: 'Couldn’t reach us just now. Please try again in a moment.', kind: 'error' });
+        showToast('Couldn’t reach us just now. Please try again in a moment.', true);
       })
       .then(() => setSubmitting(false));
   }
@@ -173,6 +208,10 @@ export default function SiteFooter({
     '--ev-sf-input-bg': t.inputBg,
     '--ev-sf-input-border': t.inputBorder,
     '--ev-sf-input-text': t.inputText,
+    '--ev-sf-card': t.card,
+    '--ev-sf-heading': t.heading,
+    '--ev-sf-coral': t.coral,
+    '--ev-sf-muted': t.muted,
     ...style,
   };
 
@@ -208,6 +247,7 @@ export default function SiteFooter({
           {newsletter && (
             <>
               <button
+                ref={toggleRef}
                 type="button"
                 className="ev-sf-toggle"
                 aria-expanded={open}
@@ -265,24 +305,30 @@ export default function SiteFooter({
                 </button>
               </form>
 
-              <p
-                className="ev-sf-note"
-                id={noteId}
-                role="status"
-                aria-live="polite"
-                hidden={!note}
-                style={
-                  note
-                    ? {
-                        color: t.noteText,
-                        background: note.kind === 'error' ? t.errorBg : t.noteBg,
-                        borderColor: note.kind === 'error' ? t.coral : t.teal,
-                      }
-                    : undefined
+              {/* Fixed confirmation toast. Position:fixed keeps it out of the
+                  footer's flow, so nesting it here never shifts the layout.
+                  The message span is the live region; the ✕ sits outside it. */}
+              <div
+                className={
+                  `ev-sf-toast${toastShown ? ' show' : ''}` +
+                  (toast && toast.isError ? ' is-error' : '')
                 }
+                onMouseEnter={pauseToastHide}
+                onMouseLeave={resumeToastHide}
               >
-                {note ? note.msg : ''}
-              </p>
+                <span className="ev-sf-toast-msg" role="status" aria-live="polite">
+                  {toast ? toast.msg : ''}
+                </span>
+                <button
+                  type="button"
+                  className="ev-sf-toast-close"
+                  aria-label="Dismiss"
+                  tabIndex={toastShown ? 0 : -1}
+                  onClick={hideToast}
+                >
+                  ×
+                </button>
+              </div>
             </>
           )}
         </span>
@@ -366,17 +412,51 @@ const CSS = `
 .ev-site-footer .ev-sf-btn:focus-visible {
   outline: 2px solid var(--ev-sf-focus); outline-offset: 2px;
 }
-.ev-site-footer .ev-sf-note {
-  flex-basis: 100%; width: 100%;
-  font-size: 0.82rem; line-height: 1.4;
-  margin: 12px 0 0; padding: 11px 14px;
-  border-radius: 10px; text-align: right;
-  border: 1px solid transparent;
+/* Fixed confirmation toast — bottom-center popup; never affects page layout.
+   Auto-hides (~6s / 8s errors), pauses on hover, ✕ dismisses. Ported from
+   ev-landing's .signup-toast, themed via the --ev-sf-* custom properties. */
+.ev-site-footer .ev-sf-toast {
+  position: fixed; left: 50%; bottom: 24px;
+  transform: translateX(-50%) translateY(10px);
+  max-width: calc(100vw - 32px);
+  display: flex; align-items: center; gap: 12px;
+  background: var(--ev-sf-card); color: var(--ev-sf-heading);
+  border: 1px solid var(--ev-sf-focus); border-left: 4px solid var(--ev-sf-focus);
+  border-radius: 12px; padding: 11px 12px 11px 18px;
+  font-size: 0.9rem; line-height: 1.35;
+  box-shadow: 0 10px 34px -12px rgba(0, 0, 0, 0.45);
+  opacity: 0; pointer-events: none; z-index: 1000;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.ev-site-footer .ev-sf-toast.show {
+  opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto;
+}
+.ev-site-footer .ev-sf-toast.is-error {
+  border-color: var(--ev-sf-coral); border-left-color: var(--ev-sf-coral);
+}
+.ev-site-footer .ev-sf-toast-msg { flex: 1 1 auto; }
+.ev-site-footer .ev-sf-toast-close {
+  flex: none; width: 26px; height: 26px; border-radius: 6px;
+  border: none; background: transparent; color: var(--ev-sf-muted);
+  font-size: 1.15rem; line-height: 1; cursor: pointer;
+  display: grid; place-items: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.ev-site-footer .ev-sf-toast-close:hover {
+  background: color-mix(in srgb, var(--ev-sf-focus) 14%, transparent);
+  color: var(--ev-sf-heading);
+}
+.ev-site-footer .ev-sf-toast.is-error .ev-sf-toast-close:hover {
+  background: color-mix(in srgb, var(--ev-sf-coral) 14%, transparent);
+}
+.ev-site-footer .ev-sf-toast-close:focus-visible {
+  outline: 2px solid var(--ev-sf-focus); outline-offset: 2px;
 }
 @media (prefers-reduced-motion: reduce) {
   .ev-site-footer .ev-sf-form { transition: opacity 0.2s ease; }
   .ev-site-footer .ev-sf-caret { transition: none; }
   .ev-site-footer .ev-sf-btn:hover { transform: none; }
+  .ev-site-footer .ev-sf-toast { transition: opacity 0.2s ease; }
 }
 @media (max-width: 640px) {
   .ev-site-footer .ev-sf-wrap { flex-direction: column; align-items: flex-start; gap: 10px; }
@@ -384,6 +464,5 @@ const CSS = `
 @media (max-width: 480px) {
   .ev-site-footer .ev-sf-form.open { flex-basis: 100%; max-width: 100%; margin-left: 0; }
   .ev-site-footer .ev-sf-form.open input[type="email"] { flex: 1; width: auto; }
-  .ev-site-footer .ev-sf-note { text-align: left; }
 }
 `;
