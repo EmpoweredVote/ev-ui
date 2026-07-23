@@ -88,6 +88,9 @@ jobs:
           - essentials
           - read-rank
           - civic-spaces
+          - treasury-tracker
+          - empowered-badges
+          - Civic-Trivia-Championships
     steps:
       - name: Mint installation token for ${{ matrix.consumer }}
         id: app-token
