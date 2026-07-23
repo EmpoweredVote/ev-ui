@@ -40,7 +40,7 @@ export default function RadarChartCore({
     const pct = Math.min((value / max) * 10, 10);
     const angle = (2 * Math.PI * index) / numSpokes;
     const adjusted =
-      value === 0 ? 0 : invertedSpokes[shortTitle] ? 11 - pct : pct;
+      value === 0 ? 0 : invertedSpokes[shortTitle] ? ((max + 1) * 10) / max - pct : pct;
     const r = (adjusted / 10) * radius;
     const x = centerX + r * Math.sin(angle);
     const y = centerY - r * Math.cos(angle);
@@ -67,7 +67,7 @@ export default function RadarChartCore({
       const pct = Math.min((value / max) * 10, 10);
       const angle = (2 * Math.PI * index) / numSpokes;
       const adjusted =
-        value === 0 ? 0 : invertedSpokes[shortTitle] ? 11 - pct : pct;
+        value === 0 ? 0 : invertedSpokes[shortTitle] ? ((max + 1) * 10) / max - pct : pct;
       const r = (adjusted / 10) * radius;
       const x = centerX + r * Math.sin(angle);
       const y = centerY - r * Math.cos(angle);
