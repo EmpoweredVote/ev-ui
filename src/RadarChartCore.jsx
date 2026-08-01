@@ -3,6 +3,35 @@ import { animated, useSpring } from "@react-spring/web";
 import { useRef, useEffect } from "react";
 import { useTheme } from "./useTheme";
 
+const SPRING_CONFIG = { tension: 300, friction: 30 };
+
+/**
+ * Animates an SVG polygon's `points` attribute.
+ *
+ * react-spring interpolates a string by pulling out its numbers and requires
+ * that count — its "arity" — to be identical on both ends of the animation.
+ * A polygon's arity is 2x the spoke count, so a change in spoke count makes the
+ * old and new values un-interpolable. Concretely: a DECREASE throws
+ * `The arity of each "output" value must be equal`, going from no spokes to
+ * some throws `Cannot animate between _AnimatedValue and _AnimatedString`, and
+ * an increase silently drops the extra points. All three are wrong.
+ *
+ * Callers must therefore key this component by spoke count. React then
+ * remounts it on a count change and the fresh spring starts at the new arity,
+ * so no interpolation ever spans a mismatch. Keeping the spring in here rather
+ * than in the parent is load-bearing: a spring declared in the parent is
+ * updated on every render regardless of what the parent chooses to render, so
+ * it would still throw even while a static fallback was on screen.
+ */
+function AnimatedPolygon({ points, immediate, style }) {
+  const spring = useSpring({
+    to: { points },
+    immediate,
+    config: SPRING_CONFIG,
+  });
+  return <animated.polygon points={spring.points} style={style} />;
+}
+
 export default function RadarChartCore({
   topics,
   data,
@@ -26,13 +55,17 @@ export default function RadarChartCore({
   const centerY = size / 2;
 
   const spokes = Object.entries(data);
+  // Floored at 1 only to keep the angle math below from dividing by zero.
   const numSpokes = Math.max(spokes.length, 1);
 
-  const prevCountRef = useRef(numSpokes);
-  const countChanged = numSpokes !== prevCountRef.current;
+  // Compare the raw spoke count rather than `numSpokes`: the floor above makes
+  // empty `data` indistinguishable from a single spoke, so a 0 -> 1 transition
+  // would read as "unchanged" and animate from the wrong number of points.
+  const prevCountRef = useRef(spokes.length);
+  const countChanged = spokes.length !== prevCountRef.current;
   useEffect(() => {
-    prevCountRef.current = numSpokes;
-  }, [numSpokes]);
+    prevCountRef.current = spokes.length;
+  }, [spokes.length]);
 
   const pointsArr = spokes.map(([shortTitle, value], index) => {
     const topic = topics.find((t) => t.short_title === shortTitle);
@@ -48,15 +81,8 @@ export default function RadarChartCore({
   });
 
   const targetPoints = pointsArr.map((p) => p.join(",")).join(" ");
-  const spring = useSpring({
-    to: { points: targetPoints },
-    immediate: countChanged,
-    reset: countChanged,
-    config: { tension: 300, friction: 30 },
-  });
 
   const hasCompareData = Object.keys(compareData).length > 0;
-  const centerPoints = spokes.map(() => `${centerX},${centerY}`).join(" ");
   let comparePoints = null;
   let compareCoords = null;
   if (hasCompareData) {
@@ -88,12 +114,7 @@ export default function RadarChartCore({
 
   // Animate on shape changes (spoke inversion) but be immediate on new entry
   // or spoke count changes to avoid fly-in artifacts.
-  const compareSpring = useSpring({
-    to: { points: comparePoints || centerPoints || `${centerX},${centerY}` },
-    immediate: countChanged || compareJustAppeared,
-    reset: countChanged || compareJustAppeared,
-    config: { tension: 300, friction: 30 },
-  });
+  const compareImmediate = countChanged || compareJustAppeared;
 
   // Pre-compute label metadata for dynamic horizontal padding
   const labelMeta = spokes.map(([shortTitle], i) => {
@@ -260,20 +281,11 @@ export default function RadarChartCore({
         );
       })}
 
-      {countChanged ? (
-        <polygon
-          key="user-static"
+      {spokes.length > 0 && (
+        <AnimatedPolygon
+          key={`user-${spokes.length}`}
           points={targetPoints}
-          style={{
-            fill: "rgba(124, 107, 158, 0.4)",
-            stroke: "#7C6B9E",
-            strokeWidth: 3,
-          }}
-        />
-      ) : (
-        <animated.polygon
-          key="user-animated"
-          points={spring.points}
+          immediate={countChanged}
           style={{
             fill: "rgba(124, 107, 158, 0.4)",
             stroke: "#7C6B9E",
@@ -304,27 +316,16 @@ export default function RadarChartCore({
       })}
 
       {hasCompareData && comparePoints ? (
-        countChanged || compareJustAppeared ? (
-          <polygon
-            key="compare-static"
-            points={comparePoints}
-            style={{
-              fill: "rgba(90, 154, 110, 0.3)",
-              stroke: "#5A9A6E",
-              strokeWidth: 2,
-            }}
-          />
-        ) : (
-          <animated.polygon
-            key="compare-animated"
-            points={compareSpring.points}
-            style={{
-              fill: "rgba(90, 154, 110, 0.3)",
-              stroke: "#5A9A6E",
-              strokeWidth: 2,
-            }}
-          />
-        )
+        <AnimatedPolygon
+          key={`compare-${spokes.length}`}
+          points={comparePoints}
+          immediate={compareImmediate}
+          style={{
+            fill: "rgba(90, 154, 110, 0.3)",
+            stroke: "#5A9A6E",
+            strokeWidth: 2,
+          }}
+        />
       ) : null}
 
       {hasCompareData && compareCoords && compareCoords.map(([cx, cy], i) => {
