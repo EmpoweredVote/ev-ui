@@ -33,6 +33,12 @@ Once `build-check.yml` passes on the PR, auto-merge completes the merge, and Ren
 - essentials
 - read-rank
 - civic-spaces
+- treasury-tracker
+- empowered-badges
+- Civic-Trivia-Championships (monorepo — ev-ui lives in `frontend/`; its
+  `ev-ui-bump.yml` bumps `frontend/package.json` and targets the `master`
+  branch, and the required status check is the `ci.yml` frontend build rather
+  than a standalone `build-check.yml`)
 
 ## Adding a new consumer
 
