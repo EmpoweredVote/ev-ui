@@ -74,6 +74,12 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Gate the release itself, not just PRs: build-check only runs on pull
+      # requests, so a direct push to main would otherwise reach npm untested —
+      # and a bug here fans out to every consumer through the autobump matrix.
+      - name: Test
+        run: npm test
+
       - name: Publish to npm (via OIDC trusted publishing)
         run: npm publish --access public
 

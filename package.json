@@ -29,19 +29,24 @@
     "access": "public"
   },
   "peerDependencies": {
-    "react": ">=17",
-    "react-dom": ">=17",
+    "@floating-ui/react": "^0.27.0",
     "@react-spring/web": ">=9",
-    "@floating-ui/react": "^0.27.0"
+    "react": ">=17",
+    "react-dom": ">=17"
   },
   "devDependencies": {
+    "@floating-ui/react": "^0.27.0",
+    "@react-spring/web": "^9.7.2",
+    "@testing-library/react": "^16.3.2",
+    "@vitejs/plugin-react": "^6.0.5",
+    "jsdom": "^30.0.1",
     "tsup": "^8.0.0",
     "typescript": "^5.4.0",
-    "@react-spring/web": "^9.7.2",
-    "@floating-ui/react": "^0.27.0"
+    "vitest": "^4.1.10"
   },
   "scripts": {
     "build": "tsup",
+    "test": "vitest run",
     "sync-penpot": "node scripts/sync-penpot-tokens.js"
   }
 }

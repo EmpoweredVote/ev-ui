@@ -1,0 +1,20 @@
+name: Build check
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          # Matches publish.yml. Must be >= 22.22 / 24.15: jsdom 30 pulls in an
+          # undici that needs webidl.util.markAsUncloneable, absent on Node 20.
+          node-version: '24'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
