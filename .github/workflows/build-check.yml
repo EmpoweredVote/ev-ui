@@ -11,7 +11,9 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          # Matches publish.yml. Must be >= 22.22 / 24.15: jsdom 30 pulls in an
+          # undici that needs webidl.util.markAsUncloneable, absent on Node 20.
+          node-version: '24'
           cache: 'npm'
       - run: npm ci
       - run: npm run build
