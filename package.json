@@ -50,5 +50,8 @@
     "build": "tsup",
     "test": "vitest run",
     "sync-penpot": "node scripts/sync-penpot-tokens.js"
+  },
+  "overrides": {
+    "esbuild": "^0.28.1"
   }
 }
