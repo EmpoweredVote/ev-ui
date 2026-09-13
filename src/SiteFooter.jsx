@@ -43,6 +43,7 @@ const DEFAULT_LINKS = [
   { label: 'Mind Map', href: 'https://empowered.vote/maps/purpose-map.html' },
   { label: 'Briefing', href: 'https://empowered.vote/briefing' },
   { label: 'Financials', href: 'https://financials.empowered.vote', external: true },
+  { label: 'Donate', href: 'https://empowered.vote/donate' },
 ];
 
 export default function SiteFooter({
