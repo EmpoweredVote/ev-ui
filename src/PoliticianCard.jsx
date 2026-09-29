@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { colors, fonts, fontWeights, fontSizes, spacing, borderRadius, shadows } from './tokens';
+import RestrictedPortraitFigure from './RestrictedPortraitFigure';
 
 /**
  * PoliticianCard component for displaying politician info
@@ -17,6 +18,13 @@ import { colors, fonts, fontWeights, fontSizes, spacing, borderRadius, shadows }
  * @param {string} props.badge - Optional badge label (e.g., "Candidate") shown as coral pill
  * @param {React.ReactNode} [props.footer] - Optional content rendered below subtitle (e.g., icon badges)
  * @param {string} [props.imageWidth] - Photo column width for the horizontal variant (default '90px')
+ * @param {boolean} [props.portraitRestricted] - True when a portrait of this person EXISTS but
+ *   its publisher has reserved its use. Draws a neutral figure instead of the initials avatar.
+ *   These are different facts and must not look alike: initials say "not found yet" and imply
+ *   unfinished work on our side; this says the portrait was found and may not be shown. Ignored
+ *   when `imageSrc` resolves, so a person who later grants permission simply gets their photo.
+ * @param {string} [props.restrictedLabel] - Optional hover text for that figure, e.g.
+ *   "Portrait use restricted". The reason itself belongs above the group, not on the tile.
  */
 export default function PoliticianCard({
   id,
@@ -32,6 +40,8 @@ export default function PoliticianCard({
   imageFocalPoint,
   footer,
   imageWidth = '90px',
+  portraitRestricted = false,
+  restrictedLabel,
   contentStyle = {},
 }) {
   const isHorizontal = variant === 'horizontal';
@@ -243,6 +253,7 @@ export default function PoliticianCard({
     return initials.toUpperCase();
   };
 
+
   return (
     <div
       style={styles.card}
@@ -279,6 +290,15 @@ export default function PoliticianCard({
             style={styles.image}
             onError={() => setImgError(true)}
           />
+        ) : portraitRestricted ? (
+          <div
+            style={{ ...styles.imagePlaceholder, padding: '10%' }}
+            role="img"
+            aria-label={`No portrait is shown for ${name}. The publisher of this portrait has reserved its use.`}
+            title={restrictedLabel || undefined}
+          >
+            <RestrictedPortraitFigure />
+          </div>
         ) : (
           <div style={styles.imagePlaceholder}>
             {getInitials(name)}

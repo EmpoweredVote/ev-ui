@@ -6,6 +6,7 @@ export { default as SiteHeader, defaultNavItems, defaultCtaButton, evAppLinks } 
 export { default as SiteFooter } from "./SiteFooter.jsx";
 export { default as FilterSidebar } from "./FilterSidebar.jsx";
 export { default as PoliticianCard } from "./PoliticianCard.jsx";
+export { default as RestrictedPortraitFigure } from "./RestrictedPortraitFigure.jsx";
 export { default as CompassCardHorizontal } from "./CompassCardHorizontal.jsx";
 export { default as CompassCardVertical } from "./CompassCardVertical.jsx";
 export { default as CompassKey } from "./CompassKey.jsx";

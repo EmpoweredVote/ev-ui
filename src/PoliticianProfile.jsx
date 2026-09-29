@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { colors, fonts, fontWeights, fontSizes, spacing, borderRadius, shadows } from './tokens';
 import useMediaQuery from './useMediaQuery';
 import SocialLinks from './SocialLinks.jsx';
+import RestrictedPortraitFigure from './RestrictedPortraitFigure.jsx';
 import CommitteeTable from './CommitteeTable.jsx';
 import LegislativeInlineSummary from './LegislativeInlineSummary.jsx';
 import JudicialScorecard from './JudicialScorecard.jsx';
@@ -328,6 +329,12 @@ export default function PoliticianProfile({
     .map((n) => n[0])
     .join('');
 
+  // Non-null when a portrait of this person EXISTS and its publisher has reserved its use.
+  // Served by the API out of essentials.photo_restrictions — see backend/src/lib/photoRestriction.ts.
+  // Only consulted when there is no image to show, so a member who later grants permission
+  // simply gets their photograph and this disappears with no other change.
+  const photoRestriction = pol.photo_restriction || null;
+
   const [imgError, setImgError] = useState(false);
   useEffect(() => { setImgError(false); }, [profileImageUrl]);
 
@@ -491,6 +498,31 @@ export default function PoliticianProfile({
       objectFit: 'cover',
       objectPosition: imageFocalPoint ?? 'center 20%',
       background: colors.borderLight,
+    },
+    // The portrait-restriction notice. Deliberately NOT an error style: nothing has gone wrong,
+    // and a red box would read as a fault on the page rather than a decision made elsewhere.
+    restrictionNotice: {
+      background: '#FFF8E6',
+      border: '1px solid #F0DCA8',
+      borderLeft: '4px solid #D0A301',
+      borderRadius: borderRadius.md,
+      padding: `${spacing[3]} ${spacing[4]}`,
+      margin: `${spacing[3]} 0`,
+      textAlign: 'left',
+    },
+    restrictionHeadline: {
+      margin: `0 0 ${spacing[2]}`,
+      fontFamily: fonts.primary,
+      fontWeight: fontWeights.bold,
+      fontSize: fontSizes.sm,
+      color: '#7B640E',
+    },
+    restrictionPara: {
+      margin: `0 0 ${spacing[2]}`,
+      fontFamily: fonts.primary,
+      fontSize: fontSizes.xs,
+      lineHeight: 1.55,
+      color: '#5B4B10',
     },
     placeholder: {
       width: '100%',
@@ -690,6 +722,17 @@ export default function PoliticianProfile({
                 style={styles.photo}
                 onError={() => setImgError(true)}
               />
+            ) : photoRestriction ? (
+              // A portrait of this person exists and its publisher has reserved it. That is not
+              // the same fact as "we have not found one", so it must not draw the same avatar —
+              // see RestrictedPortraitFigure. The reason itself is stated below, in full.
+              <div
+                style={{ ...styles.placeholder, padding: '12%' }}
+                role="img"
+                aria-label={`No portrait is shown for ${displayName}. ${photoRestriction.authority} has reserved the use of this portrait.`}
+              >
+                <RestrictedPortraitFigure />
+              </div>
             ) : (
               <div style={styles.placeholder}>{initials || '?'}</div>
             )}
@@ -703,6 +746,28 @@ export default function PoliticianProfile({
             <h1 style={styles.name}>{displayName}</h1>
             {banner}
             <p style={styles.roleLine}>{roleLine}</p>
+
+            {/* Why this person has no photograph. Sits directly under the name, so a reader
+                meets the reason at the same moment they meet the placeholder — never further
+                down the page, and never only as hover text. */}
+            {photoRestriction && (
+              <div style={styles.restrictionNotice}>
+                <p style={styles.restrictionHeadline}>{photoRestriction.headline}</p>
+                {String(photoRestriction.body || '')
+                  .split(/\n\s*\n/)
+                  .filter(Boolean)
+                  .map((para, i, arr) => (
+                    <p
+                      key={i}
+                      style={i === arr.length - 1
+                        ? { ...styles.restrictionPara, marginBottom: 0 }
+                        : styles.restrictionPara}
+                    >
+                      {para}
+                    </p>
+                  ))}
+              </div>
+            )}
 
             {pol.office_description && (
               <p style={styles.officeDesc}>{pol.office_description}</p>
