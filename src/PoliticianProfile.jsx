@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { colors, fonts, fontWeights, fontSizes, spacing, borderRadius, shadows } from './tokens';
+import { colors, colorScales, fonts, fontWeights, fontSizes, spacing, borderRadius, shadows } from './tokens';
 import useMediaQuery from './useMediaQuery';
 import SocialLinks from './SocialLinks.jsx';
 import RestrictedPortraitFigure from './RestrictedPortraitFigure.jsx';
@@ -286,10 +286,60 @@ const ExternalLinkIcon = ({ size = 16 }) => (
   </svg>
 );
 
+/**
+ * A tinted circular chip behind a contact icon. Rendered only under the
+ * `contactBadges` opt-in.
+ *
+ * The background is the icon colour at a low alpha, appended as a hex pair, so
+ * the chip tracks whatever colour the icon uses without a second token. Dark
+ * mode gets `2e` rather than `1f` because the same alpha over a dark surface
+ * reads as roughly half the contrast it does over a light one.
+ *
+ * `kind` is emitted as a modifier class (`ev-contact-badge--phone`) so a
+ * consumer can restyle one badge without reaching for :nth-child.
+ */
+const ContactIconBadge = ({ kind, light, dark, darkMode, size = 26, children }) => {
+  const color = darkMode ? dark : light;
+  return (
+    <span
+      className={`ev-contact-badge ev-contact-badge--${kind}`}
+      style={{
+        flexShrink: 0,
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color,
+        backgroundColor: `${color}${darkMode ? '2e' : '1f'}`,
+      }}
+    >
+      {children}
+    </span>
+  );
+};
+
+// The contact badge palette. Muted Blue on light, Light Blue on dark — both
+// already in the scale, rather than re-stating the hexes here.
+const BADGE_LIGHT = colorScales.teal['500'];     // #00657C — 6.66:1 on white
+const BADGE_DARK = colorScales.skyblue['500'];   // #59B0C4
+
 // ── Component ────────────────────────────────────────────────────────
 
 /**
  * PoliticianProfile - Reusable politician profile layout component.
+ *
+ * Two opt-in presentation flags, both default false so existing consumers render
+ * exactly as before:
+ *   contactBadges — draw each contact icon in a tinted circular chip, and add a
+ *                   badged "Contact Information" heading.
+ *   brandMarks    — forwarded to SocialLinks; official brand marks in place of
+ *                   stroked glyphs.
+ *
+ * Independent of either flag, the markup carries stable hooks for consumers that
+ * need to restyle it: `ev-role-line`, `ev-contact-label`, `ev-contact-divider`,
+ * and `ev-contact-badge` / `ev-contact-badge--<kind>` on the chips.
  */
 export default function PoliticianProfile({
   politician = {},
@@ -304,6 +354,8 @@ export default function PoliticianProfile({
   onNavigateToRecord,
   imageFocalPoint,
   darkMode = false,
+  contactBadges = false,
+  brandMarks = false,
 }) {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const pol = politician;
@@ -450,6 +502,18 @@ export default function PoliticianProfile({
     margin: 0,
     marginBottom: spacing[4],
   };
+
+  // Renders a contact icon either bare (the default) or inside a tinted chip
+  // (`contactBadges`). The badged icon is drawn a little larger than the bare
+  // one because the chip's padding eats into its apparent size.
+  const contactIcon = (kind, Icon, { badgeSize = 26, iconSize = 14, bareSize = 12 } = {}) =>
+    contactBadges ? (
+      <ContactIconBadge kind={kind} light={BADGE_LIGHT} dark={BADGE_DARK} darkMode={darkMode} size={badgeSize}>
+        <Icon size={iconSize} />
+      </ContactIconBadge>
+    ) : (
+      <Icon size={bareSize} />
+    );
 
   const styles = {
     container: {
@@ -745,7 +809,7 @@ export default function PoliticianProfile({
             )}
             <h1 style={styles.name}>{displayName}</h1>
             {banner}
-            <p style={styles.roleLine}>{roleLine}</p>
+            <p className="ev-role-line" style={styles.roleLine}>{roleLine}</p>
 
             {/* Why this person has no photograph. Sits directly under the name, so a reader
                 meets the reason at the same moment they meet the placeholder — never further
@@ -817,17 +881,17 @@ export default function PoliticianProfile({
         {/* ── Section 2: Contact Info ── */}
         {hasContactInfo && (
           <>
-            <div style={divider} />
+            <div className="ev-contact-divider" style={divider} />
             <div style={sectionHeading}>
-              <MailIcon size={20} />
+              {contactIcon('heading', MailIcon, { badgeSize: 34, iconSize: 18, bareSize: 20 })}
               Contact Information
             </div>
             <div style={styles.contactGrid}>
               {/* Addresses column */}
               {hasAddresses && (
                 <div style={styles.contactGroup}>
-                  <p style={styles.contactLabel}>
-                    <MapPinIcon size={12} />
+                  <p className="ev-contact-label" style={styles.contactLabel}>
+                    {contactIcon('address', MapPinIcon)}
                     Addresses
                   </p>
                   {addresses.map((addr, i) => (
@@ -851,8 +915,8 @@ export default function PoliticianProfile({
               {/* Phones column */}
               {hasPhones && (
                 <div style={styles.contactGroup}>
-                  <p style={styles.contactLabel}>
-                    <PhoneIcon size={12} />
+                  <p className="ev-contact-label" style={styles.contactLabel}>
+                    {contactIcon('phone', PhoneIcon)}
                     Phone
                   </p>
                   {Object.entries(phonesByType).map(([type, phones], i) => (
@@ -880,8 +944,8 @@ export default function PoliticianProfile({
               {/* Emails column */}
               {hasEmails && (
                 <div style={styles.contactGroup}>
-                  <p style={styles.contactLabel}>
-                    <MailIcon size={12} />
+                  <p className="ev-contact-label" style={styles.contactLabel}>
+                    {contactIcon('email', MailIcon)}
                     Email
                   </p>
                   {Object.entries(emailsByType).filter(([, emails]) => emails.some(e => e && e.trim())).map(([type, emails], i) => (
@@ -909,8 +973,8 @@ export default function PoliticianProfile({
               {/* Websites column */}
               {hasWebsitesCol && (
                 <div style={styles.contactGroup}>
-                  <p style={styles.contactLabel}>
-                    <GlobeIcon size={12} />
+                  <p className="ev-contact-label" style={styles.contactLabel}>
+                    {contactIcon('website', GlobeIcon)}
                     Websites
                   </p>
                   {allWebsites.map((url, i) => (
@@ -937,6 +1001,7 @@ export default function PoliticianProfile({
                       extraLinks={socialWebsiteUrls}
                       size="sm"
                       darkMode={darkMode}
+                      brandMarks={brandMarks}
                       style={{ marginTop: allWebsites.length > 0 ? '8px' : 0 }}
                     />
                   )}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { colorScales, borderRadius } from './tokens';
 
-export default function PlaceholderRadar({ size = 250, name = '', darkMode = false }) {
+export default function PlaceholderRadar({ size = 250, name = '', darkMode = false, highContrast = false }) {
   const cx = size / 2;
   const cy = size / 2;
   const r = (size / 2) * 0.65;
@@ -9,8 +9,14 @@ export default function PlaceholderRadar({ size = 250, name = '', darkMode = fal
 
   // Surface + stroke tuned per theme so the ghost radar reads on either a white
   // card or the essentials ev-navy-card dark surface.
-  const surface = darkMode ? '#1e2a3a' : colorScales.teal['050'];
-  const stroke = darkMode ? 'rgba(255,255,255,0.22)' : colorScales.gray['200'];
+  //
+  // `highContrast` deepens the light-theme surface and stroke one step. The
+  // default pairing all but vanishes against a white card at small sizes; the
+  // darker pairing is legible there. Opt-in rather than default because it is a
+  // visible change to every consumer rendering this placeholder. Dark mode is
+  // already legible and is unaffected either way.
+  const surface = darkMode ? '#1e2a3a' : colorScales.teal[highContrast ? '100' : '050'];
+  const stroke = darkMode ? 'rgba(255,255,255,0.22)' : colorScales.gray[highContrast ? '500' : '200'];
 
   const vertices = Array.from({ length: n }, (_, i) => {
     const a = (2 * Math.PI * i) / n;

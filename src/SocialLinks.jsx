@@ -21,6 +21,7 @@ const SOCIAL_PLATFORMS = [
  * @param {string} props.linkedin - LinkedIn URL or handle
  * @param {string[]} props.extraLinks - Additional social platform URLs detected from websites list
  * @param {'sm' | 'md' | 'lg'} props.size - Icon size
+ * @param {boolean} props.brandMarks - Opt in to official brand marks (currently LinkedIn) in place of stroked glyphs. Default false, because it changes the rendering for every consumer.
  * @param {Object} props.style - Additional styles
  */
 export default function SocialLinks({
@@ -32,6 +33,7 @@ export default function SocialLinks({
   extraLinks = [],
   size = 'md',
   darkMode = false,
+  brandMarks = false,
   style = {},
 }) {
   const iconSizes = {
@@ -48,6 +50,9 @@ export default function SocialLinks({
 
   const iconSize = iconSizes[size];
   const boxSize = boxSizes[size];
+  // Brand marks are solid shapes rather than strokes, so they need a little more
+  // room than a stroked glyph to carry the same visual weight.
+  const logoSize = `${parseInt(iconSize, 10) + 4}px`;
 
   const styles = {
     container: {
@@ -123,7 +128,15 @@ export default function SocialLinks({
         <circle cx="18" cy="6" r="1" fill="currentColor" />
       </svg>
     ),
-    linkedin: (
+    // Under `brandMarks`, the official LinkedIn "in" mark (Simple Icons, CC0).
+    // It is a filled square rather than a stroked glyph, so the link also drops
+    // its outlined box in the render below — a box around a solid tile reads as
+    // a double border.
+    linkedin: brandMarks ? (
+      <svg style={{ width: logoSize, height: logoSize }} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+      </svg>
+    ) : (
       <svg style={styles.icon} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path
           d="M16 8C17.5913 8 19.1174 8.63214 20.2426 9.75736C21.3679 10.8826 22 12.4087 22 14V21H18V14C18 13.4696 17.7893 12.9609 17.4142 12.5858C17.0391 12.2107 16.5304 12 16 12C15.4696 12 14.9609 12.2107 14.5858 12.5858C14.2107 12.9609 14 13.4696 14 14V21H10V14C10 12.4087 10.6321 10.8826 11.7574 9.75736C12.8826 8.63214 14.4087 8 16 8Z"
@@ -148,21 +161,25 @@ export default function SocialLinks({
     {
       href: formatUrl(twitter, 'twitter'),
       label: 'X (Twitter)',
+      platform: 'twitter',
       icon: platformIconMap.twitter,
     },
     {
       href: formatUrl(facebook, 'facebook'),
       label: 'Facebook',
+      platform: 'facebook',
       icon: platformIconMap.facebook,
     },
     {
       href: formatUrl(instagram, 'instagram'),
       label: 'Instagram',
+      platform: 'instagram',
       icon: platformIconMap.instagram,
     },
     {
       href: formatUrl(linkedin, 'linkedin'),
       label: 'LinkedIn',
+      platform: 'linkedin',
       icon: platformIconMap.linkedin,
     },
     {
@@ -194,6 +211,10 @@ export default function SocialLinks({
         links.push({
           href: url,
           label: detected.platform.charAt(0).toUpperCase() + detected.platform.slice(1),
+          // Carry the platform itself. The display label is title-cased from it
+          // ("Linkedin"), so it does not match the canonical "LinkedIn" and is
+          // not a safe key for per-platform rendering rules.
+          platform: detected.platform,
           icon: platformIconMap[detected.platform],
         });
       }
@@ -212,7 +233,11 @@ export default function SocialLinks({
           href={link.href}
           target="_blank"
           rel="noopener noreferrer"
-          style={styles.link}
+          style={
+            brandMarks && link.platform === 'linkedin'
+              ? { ...styles.link, border: 'none' }
+              : styles.link
+          }
           aria-label={link.label}
           onMouseEnter={(e) => {
             e.currentTarget.style.color = colors.evTeal;

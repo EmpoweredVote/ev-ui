@@ -97,6 +97,7 @@ function palette(darkMode) {
  *   verdictsByQuote        — Record<quote_id, 'agreed' | 'disagreed'> | undefined — per-quote verdicts
  *   initialExpandedTopicId — topic ID to auto-open on mount (e.g. deep-linked from ReadRank)
  *   apiUrl                 — API base URL (default: 'https://api.empowered.vote')
+ *   polDotColor            — optional 6-digit hex overriding the politician dot (default: theme sage)
  */
 export default function StanceAccordion({
   topics,
@@ -110,6 +111,7 @@ export default function StanceAccordion({
   verdictsByQuote,  // Record<quote_id, 'agreed' | 'disagreed'> | undefined
   initialExpandedTopicId,
   apiUrl = 'https://api.empowered.vote',
+  polDotColor,
 }) {
   const [expandedTopicId, setExpandedTopicId] = useState(null);
   const [loadingId, setLoadingId] = useState(null);
@@ -117,7 +119,12 @@ export default function StanceAccordion({
   const contextCache = useRef(new Map());
   const quotesCache = useRef(null); // null = unfetched, array = fetched (may be empty)
 
-  const c = palette(darkMode);
+  // `polDotColor` lets a caller rendering several accordions side by side tint
+  // each one's politician dot to match its section, instead of every group
+  // repeating the same sage. Undefined keeps the theme default, so existing
+  // callers are unaffected. Must be a 6-digit hex: the expanded-row dot appends
+  // an alpha pair (`${c.polDot}33`) to build its halo.
+  const c = polDotColor ? { ...palette(darkMode), polDot: polDotColor } : palette(darkMode);
 
   // Build lookup: topic_id -> polAnswer value
   const polAnswerMap = {};
