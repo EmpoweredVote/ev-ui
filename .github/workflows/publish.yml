@@ -83,6 +83,39 @@ jobs:
       - name: Publish to npm (via OIDC trusted publishing)
         run: npm publish --access public
 
+      # `npm publish` returns before the version can be installed — npm says so
+      # itself: "Your package is being processed and may take a few minutes to
+      # become available." The dispatch below reaches seven consumers that each
+      # run `npm install @empoweredvote/ev-ui@<version>` within seconds of the
+      # event, so without this wait they all die on ETARGET while this run still
+      # reports green and nothing looks wrong until someone checks a consumer.
+      # That is exactly what happened to 0.13.0: published 21:19:19, readable
+      # ~21:20:40, and all seven bump jobs failed at 21:19:29.
+      - name: Wait for the registry to serve the new version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          TIMEOUT: '900'
+        run: |
+          PKG=$(node -p "require('./package.json').name")
+          DEADLINE=$(( SECONDS + TIMEOUT ))
+          ATTEMPT=0
+          # --prefer-online so a cached packument cannot answer for the registry.
+          until npm view "$PKG@$VERSION" version --prefer-online >/dev/null 2>&1; do
+            if [ "$SECONDS" -ge "$DEADLINE" ]; then
+              echo "::error::$PKG@$VERSION was published, but the registry still does not serve it ${TIMEOUT}s later. Holding back the consumer dispatch rather than sending seven jobs into ETARGET — re-run this job once npm catches up."
+              exit 1
+            fi
+            ATTEMPT=$(( ATTEMPT + 1 ))
+            echo "attempt $ATTEMPT: registry has not caught up yet, waiting 10s"
+            sleep 10
+          done
+          # The packument listing the version is not quite the consumer's test:
+          # it then fetches the tarball. Check that too, so a half-propagated
+          # release cannot pass this gate.
+          TARBALL=$(npm view "$PKG@$VERSION" dist.tarball --prefer-online)
+          curl -fsSI "$TARBALL" >/dev/null
+          echo "$PKG@$VERSION is installable after ~${SECONDS}s ($TARBALL)"
+
   dispatch:
     needs: publish
     runs-on: ubuntu-latest
