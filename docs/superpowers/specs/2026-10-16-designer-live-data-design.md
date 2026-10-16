@@ -87,8 +87,8 @@ Per-repo work:
 
 ### 2.1 One shared "designer" skill
 
-One Claude skill, kept in a single shared place (proposed: this repo, `ev-ui`, under
-`claude/skills/ev-designer/`), so the rules do not drift across six copies. It tells Claude:
+One Claude skill, kept in a single shared place (this repo, `ev-ui`, as the `ev-designer` plugin under
+`plugins/ev-designer/`), so the rules do not drift across six copies. It tells Claude:
 
 - Get data from the API through the repo's existing API helper. Never type real-looking names,
   numbers, dates or quotes into components.
@@ -136,7 +136,9 @@ Each step ships on its own and helps on its own.
 - The next few designer PRs: count hardcoded data values that review had to replace. Target zero
   outside `src/mocks/`.
 
-## Open questions
+## Decisions made while planning
 
-- Where designers install the skill from: a Claude Code plugin in `ev-ui`, or a copy in each repo's
-  `.claude/skills/`. The plugin keeps one copy; the per-repo copy needs no install step.
+- The skill ships as a Claude Code plugin in `ev-ui`. Each frontend enables it in
+  `.claude/settings.json`, so Claude offers the install on first start. One copy, no manual step.
+- The proxy block lives once, as `liveApiProxy()` in `ev-ui`, instead of being copied into four repos.
+- `essentials/.env.example` also changes: its absolute `VITE_API_URL` skips its own proxy in dev.
