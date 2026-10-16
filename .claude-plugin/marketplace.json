@@ -1,0 +1,16 @@
+{
+  "name": "empoweredvote",
+  "owner": {
+    "name": "Empowered Vote"
+  },
+  "plugins": [
+    {
+      "name": "ev-designer",
+      "source": "./plugins/ev-designer",
+      "description": "Rules and a public API index so designers build Empowered Vote screens on live data, not invented data."
+    }
+  ],
+  "metadata": {
+    "description": "Empowered Vote plugins for designers and contributors."
+  }
+}
