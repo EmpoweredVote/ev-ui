@@ -21,10 +21,15 @@ becomes rework for whoever merges the PR, so use the real thing.
 
 `npm run dev` proxies `/api` to the live API. Leave `VITE_API_URL` unset or empty in local dev;
 an absolute value skips the proxy and the browser blocks the call (the dev server prints a
-warning when this happens).
+warning when this happens). On the Record runs from `web/` and needs nothing set: in dev it
+ignores `NEXT_PUBLIC_EV_ACCOUNTS_URL` for browser calls and uses its own `/api` rewrite.
 
 **If a request fails, say so and stop.** Report the URL and the status. Do not replace failed
 data with invented data — that hides the failure and ships the rework.
+
+A 404 means different things. On a route from the index or one the frontend already calls, it is
+a failure: report it. On a route name you guessed, it means nothing yet: check the index and the
+frontend's source before deciding the data is missing.
 
 ## 3. Check the index before inventing anything
 
@@ -36,8 +41,10 @@ deciding the data is missing.
 
 When a screen needs data that no API route returns:
 
-1. Put the sample data in one file under `src/mocks/`, shaped like the response the API would
-   return. Start the file with a comment naming the route it stands in for:
+1. Put the sample data in one `.ts`/`.js` module under `src/mocks/` (On the Record:
+   `web/src/mocks/`) that exports the data, shaped like the response the API would return. Not a
+   `.json` file — JSON cannot carry the header. Start the file with a comment naming the route it
+   stands in for:
    `// Stands in for: GET /api/<route> — not yet served by the API`
 2. Load it through the same helper the real data uses, so replacing it later is a one-line
    change.

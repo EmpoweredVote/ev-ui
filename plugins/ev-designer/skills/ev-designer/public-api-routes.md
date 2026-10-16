@@ -5,8 +5,14 @@ Hand-kept. Regenerate when a frontend adds a route. Samples captured from
 fields, 15 lines at most. In local dev, call these as relative paths (`/api/...`); the dev server
 proxies them to the live API.
 
-Every route here answers without signing in. A route not listed may still exist: search the
-frontend for an existing call before deciding the data is missing.
+Every route here answers without signing in. **This list is not complete.** Routes the frontends
+also call but that are not sampled here include `/api/treasury/budgets/:id/transactions?link_key=`,
+`/api/treasury/orgs/:id/financial-summary`, `/api/inform/boundary?layer=&geoid=`,
+`/api/agenda-items/:id`, `/api/council-files/:id` and `/api/campaign-finance/politician/:id/council-votes`.
+Before deciding data is missing, search the frontend for an existing call and try it.
+
+`/api/meetings/upcoming` returns `[]` whenever nothing is scheduled; that is a real answer, not an
+error.
 
 ## Places and lookup
 
@@ -120,6 +126,24 @@ All federal officials (large: ~1.3 MB). Used by: essentials.
   "external_id": -27002,
 ```
 
+### `GET /api/essentials/voter-info?address=`
+
+Polling place and voter info for an address. Used by: essentials.
+
+```json
+{
+ "electionName": null,
+ "electionDate": null,
+ "dropOffLocations": [],
+ "earlyVoteSites": [],
+ "pollingLocations": [],
+ "ballotInfoUrl": null,
+ "electionInfoUrl": null,
+ "votingLocationFinderUrl": null,
+ "…": "1 more fields"
+}
+```
+
 ## Politicians
 
 ### `GET /api/essentials/politicians/:id`
@@ -128,14 +152,14 @@ One politician profile. Used by: essentials.
 
 ```json
 {
- "id": "7ac75846-3990-45d0-b74a-b85d6d672f61",
- "external_id": null,
- "first_name": "Aaron",
+ "id": "102b239c-0a3d-44b9-ae32-88d8179197e2",
+ "external_id": 354419,
+ "first_name": "Todd",
  "middle_initial": "",
- "last_name": "Freeman",
+ "last_name": "Young",
  "preferred_name": "",
  "name_suffix": "",
- "full_name": "Aaron Freeman",
+ "full_name": "Todd Young",
  "…": "54 more fields"
 }
 ```
@@ -145,7 +169,21 @@ One politician profile. Used by: essentials.
 Races a politician has run in. Used by: essentials.
 
 ```json
-[]
+[
+ {
+  "election_name": "Indiana General Election",
+  "election_date": null,
+  "position_name": "U.S. Senate - Indiana",
+  "result": "WON",
+  "withdrawn": false,
+  "party_name": "Republican",
+  "is_primary": false,
+  "is_runoff": false,
+  "…": "2 more fields"
+ },
+ {
+  "election_name": "Indiana Primary Election",
+  "election_date": null,
 ```
 
 ### `GET /api/essentials/politicians/:id/committees`
@@ -153,7 +191,21 @@ Races a politician has run in. Used by: essentials.
 Committee seats. Used by: essentials.
 
 ```json
-[]
+[
+ {
+  "id": "a5fb9fbd-1701-47fe-937f-6353a5d2508f",
+  "committee_id": "2f760cc0-36dc-4766-9752-ec921a5fcb03",
+  "committee_name": "Consumer Protection, Technology, and Data Privacy",
+  "committee_type": "subcommittee",
+  "chamber": "senate",
+  "jurisdiction": "federal",
+  "role": "member",
+  "is_current": true,
+  "…": "2 more fields"
+ },
+ {
+  "id": "47c7ab83-f5b1-4cd6-be96-6219add81cd6",
+  "committee_id": "ed1693b9-d2b2-4efd-aea6-bff97decb841",
 ```
 
 ### `GET /api/people`
@@ -184,16 +236,38 @@ One person, On the Record view. Used by: otr.
 
 ```json
 {
- "politicianId": "7ac75846-3990-45d0-b74a-b85d6d672f61",
- "name": "Aaron Freeman",
- "headshotUrl": "https://kxsdzaojfaibhuzmclfq.storage.supabase.co/storage/v1/object/public/pol...",
- "party": null,
- "officeTitle": "Senator",
- "district": "State Senate District 32",
- "jurisdiction": "State of Indiana",
- "meetingCount": 1,
+ "politicianId": "91f6d45d-5e7e-48f6-aab1-9476d81946b5",
+ "name": "Isabel Piedmont-Smith",
+ "headshotUrl": "https://kxsdzaojfaibhuzmclfq.supabase.co/storage/v1/object/public/politician_...",
+ "party": "Democratic",
+ "officeTitle": "City Common Council - District 1",
+ "district": "District 1",
+ "jurisdiction": "City of Bloomington, Indiana, US",
+ "meetingCount": 7,
  "…": "3 more fields"
 }
+```
+
+### `GET /api/people/:id/appearances`
+
+Meetings where a person spoke. Used by: otr.
+
+```json
+{
+ "id": "91f6d45d-5e7e-48f6-aab1-9476d81946b5",
+ "appearances": [
+  {
+   "meetingId": "a87f52de-f51d-4627-9cfd-1ce794092f29",
+   "title": null,
+   "eventKind": "council",
+   "eventOrgs": [],
+   "sourceTitle": null,
+   "city": "Bloomington",
+   "meetingType": "Regular Session",
+   "date": "2026-07-29",
+   "…": "2 more fields"
+  },
+  {
 ```
 
 ## Compass
@@ -269,7 +343,17 @@ Topic lenses (preset topic groups). Used by: essentials, compass.
 A politician's compass positions. Used by: essentials, compass.
 
 ```json
-[]
+[
+ {
+  "topic_id": "00b95a6a-75db-4521-b523-3326bba938de",
+  "value": 5
+ },
+ {
+  "topic_id": "0bc588c6-39e1-4084-b5de-cac909b8b762",
+  "value": 4
+ },
+ "…22 more"
+]
 ```
 
 ## Campaign finance
@@ -280,15 +364,15 @@ Money raised and spent. Used by: essentials.
 
 ```json
 {
- "politician_id": "7ac75846-3990-45d0-b74a-b85d6d672f61",
+ "politician_id": "102b239c-0a3d-44b9-ae32-88d8179197e2",
  "cycle": "2026",
- "total_raised": 83650,
+ "total_raised": 4401018.38,
  "total_refunded": 0,
  "refund_count": 0,
- "contribution_count": 61,
- "confidence_level": "MEDIUM",
- "data_source": "indiana",
- "…": "7 more fields"
+ "contribution_count": 1476,
+ "confidence_level": "HIGH",
+ "data_source": "fec",
+ "…": "9 more fields"
 }
 ```
 
@@ -312,6 +396,28 @@ Search donors by name. Used by: essentials.
    "…": "1 more fields"
   },
   {
+```
+
+### `GET /api/campaign-finance/politician/:id/contributions?cycle=&limit=`
+
+Itemized contributions, paged. Used by: essentials.
+
+```json
+{
+ "results": [
+  {
+   "id": "b80d2d0c-f29c-4695-9b6e-e6d4180bb19f",
+   "donor_name": "mass mutual",
+   "donor_type": "committee",
+   "employer": "",
+   "occupation": "",
+   "sector": "Other/Unclassified",
+   "amount": 11403.79,
+   "contribution_date": "2024-12-31",
+   "…": "2 more fields"
+  },
+  {
+   "id": "58ec0d2f-5162-461e-956a-ac3053b29607",
 ```
 
 ## Read & Rank
@@ -366,8 +472,20 @@ Place search for Read & Rank. Used by: read-rank.
 
 ```json
 {
- "localities": []
-}
+ "localities": [
+  {
+   "name": "Bloomington",
+   "state": "IL",
+   "placeGeoid": "1706613",
+   "countyGeoid": "17113"
+  },
+  {
+   "name": "Bloomington",
+   "state": "IN",
+   "placeGeoid": "1805860",
+   "countyGeoid": "18105"
+  },
+  "…2 more"
 ```
 
 ## Treasury
@@ -414,6 +532,90 @@ Cities with budgets (very large: ~80 MB, avoid on page load). Used by: essential
  {
   "id": "fffe10ec-061c-4953-9570-1c5de9c4eb86",
   "name": "Abbott Township, Potter County",
+```
+
+### `GET /api/treasury/cities/:id`
+
+One city or county. Used by: treasury.
+
+```json
+{
+ "id": "592cc4ec-23ad-4f5f-be93-8be4dd9bc557",
+ "name": "Bloomington",
+ "state": "IN",
+ "entity_type": "city",
+ "population": 79986,
+ "population_year": null,
+ "county_id": "0361fe24-9c04-4677-9c65-2281cadb7647",
+ "hero_image_url": null,
+ "…": "3 more fields"
+}
+```
+
+### `GET /api/treasury/cities/:id/budgets`
+
+A city's budgets by year and type. Used by: treasury.
+
+```json
+[
+ {
+  "id": "c31b4c46-36d4-4ff1-9287-c0505d4028d9",
+  "municipality_id": "592cc4ec-23ad-4f5f-be93-8be4dd9bc557",
+  "fiscal_year": 2026,
+  "dataset_type": "operating",
+  "period_label": null,
+  "total_budget": 224674053.42999983,
+  "fund_scope": "unknown",
+  "basis": "unknown",
+  "…": "10 more fields"
+ },
+ {
+  "id": "32ba278c-bfcd-4dda-8150-dc87c33a44e6",
+  "municipality_id": "592cc4ec-23ad-4f5f-be93-8be4dd9bc557",
+```
+
+### `GET /api/treasury/budgets/:id/categories`
+
+Spending or revenue categories in a budget. Used by: treasury.
+
+```json
+[
+ {
+  "name": "Utilities",
+  "amount": 57178518.929999985,
+  "actualAmount": 10423259.200000003,
+  "percentage": 25.449542596076725,
+  "color": "#4476ca",
+  "items": 0,
+  "enrichment": {
+   "plainName": "Water and Electric Services",
+   "shortDescription": "This fund pays for the city's water, sewer, and electric utility operations a...",
+   "description": "This fund covers the city's utility services including water treatment and di...",
+   "tags": [
+    "utilities",
+    "water",
+```
+
+### `GET /api/treasury/federal/context`
+
+Federal budget context (large: ~10 MB). Used by: treasury.
+
+```json
+{
+ "annual_summary": [
+  {
+   "fiscal_year": 1962,
+   "receipts": 99676000000,
+   "outlays": 106821000000,
+   "surplus_or_deficit": -7146000000,
+   "mandatory": 27900000000,
+   "discretionary_defense": 52600000000,
+   "discretionary_nondefense": 19500000000,
+   "net_interest": 6900000000,
+   "…": "3 more fields"
+  },
+  {
+   "fiscal_year": 1963,
 ```
 
 ## On the Record
@@ -500,5 +702,101 @@ Full-text search across meetings. Used by: essentials, otr.
    "meetingType": "Candidate Forum",
    "date": "2026-02-10",
    "…": "6 more fields"
+```
+
+### `GET /api/meetings/upcoming`
+
+Meetings scheduled but not yet held. Used by: otr.
+
+```json
+[]
+```
+
+### `GET /api/meetings/:id/transcript`
+
+Speaker-labelled transcript. Used by: otr.
+
+```json
+{
+ "segments": [
+  {
+   "id": "f876f120-51c4-413d-9d63-2c4a5f158911",
+   "meetingId": "a87f52de-f51d-4627-9cfd-1ce794092f29",
+   "speakerId": "4182bbd1-d198-404a-8c5f-e0d9d047c716",
+   "segmentIndex": 0,
+   "startTime": 0.031,
+   "endTime": 16.433,
+   "text": "- Seeing that it is now 630, I would like to call to order this regular sessi...",
+   "speakerLabel": "SPEAKER_12",
+   "…": "3 more fields"
+  },
+  {
+   "id": "7aad31f9-ed2a-43bb-afbb-2d57a1addf94",
+```
+
+### `GET /api/meetings/:id/votes`
+
+Votes taken in a meeting. Used by: otr.
+
+```json
+[
+ {
+  "id": "a5e1ad2a-ab25-4db1-90ae-13bb0873a04e",
+  "meetingId": "a87f52de-f51d-4627-9cfd-1ce794092f29",
+  "resolution": "Ordinance 2026-16",
+  "description": "Daily moved and Zulich seconded to present Ordinance 2026-16 for second readi...",
+  "result": "Continued 8–0",
+  "voteType": "roll call",
+  "timestamp": null,
+  "createdAt": null,
+  "…": "1 more fields"
+ },
+ {
+  "id": "b0f4f028-9a0c-4bd0-bc57-88e6250441e7",
+  "meetingId": "a87f52de-f51d-4627-9cfd-1ce794092f29",
+```
+
+### `GET /api/meetings/:id/summary`
+
+Meeting summary. Used by: otr.
+
+```json
+{
+ "id": "a87f52de-f51d-4627-9cfd-1ce794092f29",
+ "meetingId": "a87f52de-f51d-4627-9cfd-1ce794092f29",
+ "summaryType": "meeting",
+ "model": "claude-haiku-4-5-20251001+claude-sonnet-4-5",
+ "createdAt": "2026-07-31T11:50:59.016557",
+ "executiveSummary": "The Bloomington City Council held a routine meeting with no public comment an...",
+ "keyDecisions": [],
+ "sections": [
+  {
+   "id": "a87f52de-f51d-4627-9cfd-1ce794092f29:0",
+   "summaryId": "a87f52de-f51d-4627-9cfd-1ce794092f29",
+   "sectionType": "opening",
+   "title": "Call to Order",
+   "content": "# Summary\n\nThe City Common Council meeting in Bloomington was called to order...",
+```
+
+### `GET /api/topics/:topicKey`
+
+One topic with its meeting items. Used by: otr.
+
+```json
+{
+ "topicKey": "taxes",
+ "title": "Taxes",
+ "items": [
+  {
+   "meetingId": "38e71313-bdc5-4104-8e9c-9e5d73d23f08",
+   "title": "BECERRA vs. HILTON on Gas Prices (CBS LA) - CA Governor Candidates In Depth",
+   "eventKind": "news_clip",
+   "eventOrgs": [
+    "CBS LA"
+   ],
+   "sourceTitle": "BECERRA vs. HILTON on GAS PRICES | California Governor Candidates In Depth",
+   "city": null,
+   "meetingType": "Interview",
+   "date": "2026-10-01",
 ```
 
