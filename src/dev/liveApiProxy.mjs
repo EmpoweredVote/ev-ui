@@ -31,20 +31,28 @@ export function liveApiProxy({ target } = {}) {
   };
 }
 
-const LOCAL_HOST = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/;
+const LOCAL_HOST = /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])(:\d+)?(\/|$)/;
 
 /**
- * An absolute VITE_API_URL makes the app call the API directly and skip the
- * proxy, so CORS blocks it in local dev. Say so once at startup.
+ * Any absolute VITE_API_URL makes the app call that address directly and skip
+ * the /api proxy. Pointed at the live API, the browser blocks it (CORS);
+ * pointed at localhost, it only works while a local backend is running. Say
+ * which, once, at startup. A relative value ("/api") keeps the proxy.
  * @param {Record<string, string | undefined>} env
  * @param {(message: string) => void} [log]
  * @returns {boolean} true when a warning was printed
  */
 export function warnIfAbsoluteApiUrl(env, log = console.warn) {
-  const url = env.VITE_API_URL;
-  if (!url || LOCAL_HOST.test(url)) return false;
-  log(
-    `[ev-ui] VITE_API_URL is set to ${url}: the app will skip the /api proxy and the live API will block it. unset it for local dev.`,
-  );
+  const url = (env.VITE_API_URL ?? "").trim();
+  if (!url || url.startsWith("/")) return false;
+  if (LOCAL_HOST.test(url)) {
+    log(
+      `[ev-ui] VITE_API_URL points at a local backend (${url}). If none is running, unset it to use live data through the /api proxy.`,
+    );
+  } else {
+    log(
+      `[ev-ui] VITE_API_URL is set to ${url}: the app will skip the /api proxy and the live API will block it. unset it for local dev.`,
+    );
+  }
   return true;
 }

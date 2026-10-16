@@ -32,8 +32,16 @@ describe("warnIfAbsoluteApiUrl", () => {
     expect(log.mock.calls[0][0]).toMatch(/VITE_API_URL.*unset it for local dev/);
   });
 
-  test("silent when unset, empty or localhost", () => {
-    for (const v of [undefined, "", "http://localhost:3000", "http://127.0.0.1:5050"]) {
+  test("warns differently when VITE_API_URL points at a local backend", () => {
+    for (const v of ["http://localhost:3000", "http://127.0.0.1:5050", "http://[::1]:3000", "http://0.0.0.0:3000"]) {
+      const log = vi.fn();
+      expect(warnIfAbsoluteApiUrl({ VITE_API_URL: v }, log)).toBe(true);
+      expect(log.mock.calls[0][0]).toMatch(/local backend.*unset it to use live data/);
+    }
+  });
+
+  test("silent when unset, blank or relative", () => {
+    for (const v of [undefined, "", "  ", "/api"]) {
       expect(warnIfAbsoluteApiUrl({ VITE_API_URL: v }, vi.fn())).toBe(false);
     }
   });
