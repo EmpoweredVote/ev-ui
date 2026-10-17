@@ -98,6 +98,16 @@ function palette(darkMode) {
  *   initialExpandedTopicId — topic ID to auto-open on mount (e.g. deep-linked from ReadRank)
  *   apiUrl                 — API base URL (default: 'https://api.empowered.vote')
  *   polDotColor            — optional 6-digit hex overriding the politician dot (default: theme sage)
+ *   quotes                 — optional pre-fetched quote list; supplying it stops this
+ *                            instance fetching its own (see below)
+ *   showHeading            — boolean, default true — render the "Stance Breakdown" h3
+ *
+ * Both of the last two exist for a caller that renders SEVERAL accordions on one
+ * page — essentials groups a politician's topics into issue categories and gives
+ * each category its own accordion. Left to itself each instance fetches the same
+ * politician's full quote list the first time a topic inside it is expanded, and
+ * each one prints its own heading, so the page ends up with one "Stance Breakdown"
+ * per open group. Defaults keep the single-accordion behaviour exactly as it was.
  */
 export default function StanceAccordion({
   topics,
@@ -112,12 +122,21 @@ export default function StanceAccordion({
   initialExpandedTopicId,
   apiUrl = 'https://api.empowered.vote',
   polDotColor,
+  quotes,
+  showHeading = true,
 }) {
   const [expandedTopicId, setExpandedTopicId] = useState(null);
   const [loadingId, setLoadingId] = useState(null);
   const [showAll, setShowAll] = useState(false);
   const contextCache = useRef(new Map());
   const quotesCache = useRef(null); // null = unfetched, array = fetched (may be empty)
+
+  // `handleToggle` is memoized and closes over the first `ensureQuotesFetched`,
+  // so read the caller's list through a ref: a parent that fetches it after
+  // mount would otherwise be invisible to that stale closure and we would fetch
+  // anyway, which is the thing this prop is here to stop.
+  const externalQuotes = useRef(quotes);
+  externalQuotes.current = quotes;
 
   // `polDotColor` lets a caller rendering several accordions side by side tint
   // each one's politician dot to match its section, instead of every group
@@ -187,6 +206,9 @@ export default function StanceAccordion({
    * Subsequent calls return immediately (no-op).
    */
   async function ensureQuotesFetched() {
+    // A caller that passed `quotes` owns the fetch; doing our own would be the
+    // duplicate request this prop exists to remove.
+    if (externalQuotes.current !== undefined) return;
     if (quotesCache.current !== null) return;
     try {
       const res = await fetch(
@@ -216,8 +238,10 @@ export default function StanceAccordion({
 
       setExpandedTopicId(topicId);
 
-      // Check if context already cached (quotes fetched separately)
-      if (contextCache.current.has(topicId) && quotesCache.current !== null) return;
+      // Check if context already cached (quotes fetched separately, or supplied
+      // by the caller — in which case there is nothing left to wait for).
+      const quotesReady = externalQuotes.current !== undefined || quotesCache.current !== null;
+      if (contextCache.current.has(topicId) && quotesReady) return;
 
       // Fetch context and quotes in parallel
       setLoadingId(topicId);
@@ -268,9 +292,11 @@ export default function StanceAccordion({
       className="ev-stance-panel flex flex-col"
       style={{ fontFamily: "'Manrope', sans-serif" }}
     >
-      <h3 style={{ ...sectionLabelStyle, marginBottom: '8px' }}>
-        Stance Breakdown
-      </h3>
+      {showHeading && (
+        <h3 style={{ ...sectionLabelStyle, marginBottom: '8px' }}>
+          Stance Breakdown
+        </h3>
+      )}
 
       {visibleTopics.map((topic) => {
         const topicId = String(topic.id);
@@ -288,8 +314,9 @@ export default function StanceAccordion({
         // Filter quotes for this politician and topic.
         // candidateId guard is a defensive check — the backend already filters by
         // politician_id, but this ensures correctness if the cache is ever shared.
-        const topicQuotes = quotesCache.current
-          ? quotesCache.current.filter((q) => {
+        const availableQuotes = quotes !== undefined ? quotes : quotesCache.current;
+        const topicQuotes = availableQuotes
+          ? availableQuotes.filter((q) => {
               if (!q.issue) return false;
               if (q.candidateId && q.candidateId !== politicianId) return false;
               if (topic.topic_key) return q.issue === topic.topic_key;
