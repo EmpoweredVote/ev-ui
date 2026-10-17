@@ -18,12 +18,19 @@
     },
     "./tailwind-preset": {
       "import": "./src/tailwind-preset.js"
+    },
+    "./dev": {
+      "types": "./src/dev/liveApiProxy.d.mts",
+      "import": "./src/dev/liveApiProxy.mjs",
+      "default": "./src/dev/liveApiProxy.mjs"
     }
   },
   "files": [
     "dist",
     "src/tokens.js",
-    "src/tailwind-preset.js"
+    "src/tailwind-preset.js",
+    "src/dev/liveApiProxy.mjs",
+    "src/dev/liveApiProxy.d.mts"
   ],
   "publishConfig": {
     "access": "public"
