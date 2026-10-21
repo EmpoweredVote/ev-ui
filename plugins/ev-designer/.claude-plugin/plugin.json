@@ -1,0 +1,6 @@
+{
+  "name": "ev-designer",
+  "version": "0.1.0",
+  "description": "Build Empowered Vote screens on live public data. Never hardcode invented data.",
+  "author": { "name": "Empowered Vote" }
+}
