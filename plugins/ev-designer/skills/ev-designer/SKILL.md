@@ -1,6 +1,6 @@
 ---
 name: ev-designer
-description: Use when building or changing UI screens, components or pages in an Empowered Vote frontend (essentials, read-rank, treasury-tracker, CompassV2, on-the-record), or a standalone HTML prototype of one. Keeps designs on live public data instead of invented, hardcoded data.
+description: Use when building or changing UI screens, components or pages in an Empowered Vote frontend (essentials, read-rank, treasury-tracker, CompassV2, on-the-record, Civic-Trivia-Championships, civic-spaces, focused-communities), or a standalone HTML prototype of one. Keeps designs on live public data instead of invented, hardcoded data.
 ---
 
 # Designing Empowered Vote screens on live data

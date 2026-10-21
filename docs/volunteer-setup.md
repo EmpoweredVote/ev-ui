@@ -15,8 +15,9 @@ anything asks you for a secret, stop and ask in the team channel.
 ## One-time setup
 
 1. Install Node.js 20 or later, Git, and the Claude desktop app.
-2. Clone the app you are working on (essentials, CompassV2, read-rank, treasury-tracker or
-   on-the-record) from github.com/EmpoweredVote.
+2. Clone the app you are working on from github.com/EmpoweredVote: essentials, CompassV2,
+   read-rank, treasury-tracker, on-the-record, Civic-Trivia-Championships, civic-spaces or
+   focused-communities. Each repo's `CLAUDE.md` says what is live and what is sample data there.
 3. In Claude Code, add the Empowered Vote plugin marketplace and the designer skill:
 
    ```
@@ -34,7 +35,14 @@ npm run dev
 ```
 
 Do **not** create a `.env` file. With no `.env`, `npm run dev` reads the live public API.
-On the Record runs from its `web/` folder.
+On the Record runs from its `web/` folder; Civic Trivia and Focused Communities from `frontend/`.
+
+Two apps have sample data where no real public data exists:
+
+- **Civic Spaces:** forum posts are members-only, so they come from clearly marked fixtures.
+  Officials, elections and meetings are live.
+- **Focused Communities:** production has no threads yet. Run `VITE_DEMO_THREADS=1 npm run dev`
+  to see demo threads (every author is a "Demo" name). Communities and stances are live.
 
 You are signed out locally. A failed `/api/auth/session` line in the browser console is normal.
 
