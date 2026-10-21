@@ -34,6 +34,8 @@ npm install
 npm run dev
 ```
 
+Civic Trivia, Focused Communities and Empowered Listening use `origin/master` instead of `origin/main`.
+
 Do **not** create a `.env` file. With no `.env`, `npm run dev` reads the live public API.
 On the Record runs from its `web/` folder; Civic Trivia and Focused Communities from `frontend/`.
 
