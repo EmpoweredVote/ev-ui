@@ -1,6 +1,6 @@
 ---
 name: ev-designer
-description: Use when building or changing UI screens, components or pages in an Empowered Vote frontend (essentials, read-rank, treasury-tracker, CompassV2, on-the-record). Keeps designs on live public data instead of invented, hardcoded data.
+description: Use when building or changing UI screens, components or pages in an Empowered Vote frontend (essentials, read-rank, treasury-tracker, CompassV2, on-the-record), or a standalone HTML prototype of one. Keeps designs on live public data instead of invented, hardcoded data.
 ---
 
 # Designing Empowered Vote screens on live data
@@ -56,3 +56,23 @@ When a screen needs data that no API route returns:
 Locally you are signed out: session cookies belong to the live site. Design the signed-out state
 from live data. Put any signed-in sample (a user's own answers, profile) in `src/mocks/` under
 the same rule.
+A failed or 401 `/api/auth/session` call in the console is this signed-out check. It is expected
+locally; do not "fix" it. Account and user data is off-limits for design work.
+
+## 6. Standalone prototypes (HTML pages, artifacts)
+
+A prototype page that is not served by the repo's dev server cannot call the API: a published
+Claude artifact may fetch only its own origin, and the API's CORS list excludes other sites. So:
+
+1. Fetch real records yourself first: `curl -s https://accounts-api.empowered.vote/api/<route>`
+   (routes and samples are in the index).
+2. Embed them in one clearly marked data block in the page, with the date you fetched them.
+3. Anything no route serves follows the missing-data rule: mark it as a placeholder in the page
+   and list it in the PR.
+
+## 7. Build on current code
+
+- Branch from current `main`: `git fetch origin && git switch -c <branch> origin/main`. An old
+  branch or a stale clone is how outdated screens come back.
+- Use `@empoweredvote/ev-ui` components and tokens. Do not copy a component into the app to
+  restyle it; propose the change to ev-ui instead.
