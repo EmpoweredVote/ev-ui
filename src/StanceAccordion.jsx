@@ -16,6 +16,18 @@ function getDisplayUrl(url) {
   }
 }
 
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+/**
+ * "2026-10-20" → "October 20, 2026". Read from the string, not a Date, so the
+ * day never shifts with the viewer's time zone. Anything else is shown as given.
+ */
+function formatDay(ymd) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(ymd || '');
+  if (!m) return ymd || '';
+  return `${MONTHS[Number(m[2]) - 1]} ${Number(m[3])}, ${m[1]}`;
+}
+
 // Comparison dot colors — from the EV dataViz palette (tokens.js).
 // Antipartisan: neutral dusk/sage pairing, never party colors.
 const USER_DOT = '#7C6B9E';            // Dusk — "You"
@@ -101,6 +113,17 @@ function palette(darkMode) {
  *   quotes                 — optional pre-fetched quote list; supplying it stops this
  *                            instance fetching its own (see below)
  *   showHeading            — boolean, default true — render the "Stance Breakdown" h3
+ *   politicianName         — optional display name for the "no public stance" sentence
+ *                            (without it: "this official")
+ *   researchStates         — optional pre-fetched research states; supplying it stops this
+ *                            instance fetching its own, like `quotes`
+ *
+ * Research states (Stage 5) cover a topic the person was researched on and holds
+ * no seat: `no-stance` ("We researched … and found no public stance on …") or
+ * `doesnt-fit` (their checked own words, "not a position on the scale"). They come
+ * from GET /api/compass/politicians/:id/research-states, fetched once on the first
+ * expand alongside the quotes. A seated topic ignores them, and a failed fetch
+ * renders exactly as before.
  *
  * Both of the last two exist for a caller that renders SEVERAL accordions on one
  * page — essentials groups a politician's topics into issue categories and gives
@@ -124,12 +147,15 @@ export default function StanceAccordion({
   polDotColor,
   quotes,
   showHeading = true,
+  politicianName,
+  researchStates,
 }) {
   const [expandedTopicId, setExpandedTopicId] = useState(null);
   const [loadingId, setLoadingId] = useState(null);
   const [showAll, setShowAll] = useState(false);
   const contextCache = useRef(new Map());
   const quotesCache = useRef(null); // null = unfetched, array = fetched (may be empty)
+  const statesCache = useRef(null); // null = unfetched, array = fetched (may be empty)
 
   // `handleToggle` is memoized and closes over the first `ensureQuotesFetched`,
   // so read the caller's list through a ref: a parent that fetches it after
@@ -137,6 +163,8 @@ export default function StanceAccordion({
   // anyway, which is the thing this prop is here to stop.
   const externalQuotes = useRef(quotes);
   externalQuotes.current = quotes;
+  const externalStates = useRef(researchStates);
+  externalStates.current = researchStates;
 
   // `polDotColor` lets a caller rendering several accordions side by side tint
   // each one's politician dot to match its section, instead of every group
@@ -150,6 +178,15 @@ export default function StanceAccordion({
   if (polAnswers) {
     polAnswers.forEach((a) => {
       polAnswerMap[String(a.topic_id)] = a.value;
+    });
+  }
+
+  // Build lookup: topic_id -> research state (Stage 5)
+  const stateByTopic = {};
+  const availableStates = researchStates !== undefined ? researchStates : statesCache.current;
+  if (Array.isArray(availableStates)) {
+    availableStates.forEach((st) => {
+      stateByTopic[String(st.topic_id)] = st;
     });
   }
 
@@ -227,6 +264,25 @@ export default function StanceAccordion({
   }
 
   /**
+   * Fetch this politician's research states once. Any failure leaves an empty
+   * list, which renders every topic exactly as before.
+   */
+  async function ensureStatesFetched() {
+    if (externalStates.current !== undefined) return;
+    if (statesCache.current !== null) return;
+    try {
+      const res = await fetch(
+        `${apiUrl}/api/compass/politicians/${politicianId}/research-states`,
+        { credentials: 'include' }
+      );
+      const data = res.ok ? await res.json() : [];
+      statesCache.current = Array.isArray(data) ? data : [];
+    } catch {
+      statesCache.current = [];
+    }
+  }
+
+  /**
    * Toggle accordion row. Lazy-fetch context + quotes in parallel if not cached.
    */
   const handleToggle = useCallback(
@@ -241,12 +297,13 @@ export default function StanceAccordion({
       // Check if context already cached (quotes fetched separately, or supplied
       // by the caller — in which case there is nothing left to wait for).
       const quotesReady = externalQuotes.current !== undefined || quotesCache.current !== null;
-      if (contextCache.current.has(topicId) && quotesReady) return;
+      const statesReady = externalStates.current !== undefined || statesCache.current !== null;
+      if (contextCache.current.has(topicId) && quotesReady && statesReady) return;
 
       // Fetch context and quotes in parallel
       setLoadingId(topicId);
       try {
-        await Promise.all([fetchContext(topicId), ensureQuotesFetched()]);
+        await Promise.all([fetchContext(topicId), ensureQuotesFetched(), ensureStatesFetched()]);
       } finally {
         setLoadingId(null);
       }
@@ -302,7 +359,19 @@ export default function StanceAccordion({
         const topicId = String(topic.id);
         const polValue = polAnswerMap[topicId];
         const userValue = userAnswerMap[topicId];
-        const label = getStanceLabel(topicId, polValue);
+        // A seated topic ignores research states. A doesnt-fit state with no
+        // passage left to show (none passed the quote check) renders as today.
+        const rawState = polValue > 0 ? undefined : stateByTopic[topicId];
+        const researchState =
+          rawState && (rawState.outcome === 'no-stance' ||
+            (rawState.outcome === 'doesnt-fit' && rawState.passages && rawState.passages.length > 0))
+            ? rawState
+            : undefined;
+        const label = researchState
+          ? researchState.outcome === 'no-stance'
+            ? 'No public stance found'
+            : 'Own words, not a position on the scale'
+          : getStanceLabel(topicId, polValue);
         const isExpanded = expandedTopicId === topicId;
         const isLoading = loadingId === topicId;
         const cached = contextCache.current.get(topicId);
@@ -511,6 +580,65 @@ export default function StanceAccordion({
                     </div>
                   )}
 
+                  {!isLoading && researchState && (
+                    <div style={{ marginBottom: '12px' }}>
+                      {researchState.outcome === 'no-stance' ? (
+                        <p style={{ fontSize: '14px', color: c.reasoning, lineHeight: 1.6, margin: 0 }}>
+                          {`We researched ${politicianName || 'this official'} and found no public stance on ${fullTopic?.short_title || topic.short_title}.`}
+                        </p>
+                      ) : (
+                        <>
+                          <p style={{ ...sectionLabelStyle, marginBottom: '8px' }}>
+                            In their own words — not a position on the scale
+                          </p>
+                          {researchState.passages.map((p, i) => (
+                            <div
+                              key={i}
+                              style={{
+                                borderLeft: `3px solid ${c.quoteBorder}`,
+                                paddingLeft: '10px',
+                                paddingTop: '6px',
+                                paddingBottom: '6px',
+                                marginBottom: '8px',
+                              }}
+                            >
+                              {p.kind === 'local-record' && (
+                                <p style={{ ...sectionLabelStyle, marginBottom: '4px' }}>Local record</p>
+                              )}
+                              <p
+                                style={{
+                                  fontSize: '13px',
+                                  fontStyle: p.kind === 'own-words' ? 'italic' : 'normal',
+                                  color: c.quoteText,
+                                  margin: 0,
+                                  lineHeight: 1.5,
+                                }}
+                              >
+                                {p.kind === 'own-words' ? `“${p.passage}”` : p.passage}
+                              </p>
+                              <span style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '3px', fontSize: '11px', color: c.sourceText }}>
+                                <a
+                                  href={p.source_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1.5"
+                                  style={{ color: c.link, textDecoration: 'none' }}
+                                >
+                                  <Favicon url={p.source_url} />
+                                  <span>{getDisplayUrl(p.source_url)}</span>
+                                </a>
+                                {p.source_date && <span>{formatDay(p.source_date)}</span>}
+                              </span>
+                            </div>
+                          ))}
+                        </>
+                      )}
+                      <p style={{ fontSize: '12px', color: c.sourceText, marginTop: '6px', marginBottom: 0 }}>
+                        {`Researched ${formatDay(researchState.researched_on)}.`}
+                      </p>
+                    </div>
+                  )}
+
                   {!isLoading && cached && (
                     <>
                       {cached.reasoning ? (
@@ -655,7 +783,8 @@ export default function StanceAccordion({
                         </div>
                       )}
 
-                      {!cached.reasoning &&
+                      {!researchState &&
+                        !cached.reasoning &&
                         (!cached.sources || cached.sources.length === 0) &&
                         topicQuotes.length === 0 && (
                           <p style={{ fontSize: '14px', color: c.emptyText, fontStyle: 'italic', padding: '8px 0' }}>
