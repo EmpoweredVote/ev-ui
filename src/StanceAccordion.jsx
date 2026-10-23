@@ -155,7 +155,9 @@ export default function StanceAccordion({
   const [showAll, setShowAll] = useState(false);
   const contextCache = useRef(new Map());
   const quotesCache = useRef(null); // null = unfetched, array = fetched (may be empty)
-  const statesCache = useRef(null); // null = unfetched, array = fetched (may be empty)
+  // { politicianId, list } once fetched. Keyed by person: these put words under a name, so a list fetched
+  // for one person is never read for another if this instance is reused.
+  const statesCache = useRef(null);
 
   // `handleToggle` is memoized and closes over the first `ensureQuotesFetched`,
   // so read the caller's list through a ref: a parent that fetches it after
@@ -183,7 +185,9 @@ export default function StanceAccordion({
 
   // Build lookup: topic_id -> research state (Stage 5)
   const stateByTopic = {};
-  const availableStates = researchStates !== undefined ? researchStates : statesCache.current;
+  const availableStates = researchStates !== undefined
+    ? researchStates
+    : statesCache.current?.politicianId === politicianId ? statesCache.current.list : null;
   if (Array.isArray(availableStates)) {
     availableStates.forEach((st) => {
       stateByTopic[String(st.topic_id)] = st;
@@ -269,16 +273,16 @@ export default function StanceAccordion({
    */
   async function ensureStatesFetched() {
     if (externalStates.current !== undefined) return;
-    if (statesCache.current !== null) return;
+    if (statesCache.current?.politicianId === politicianId) return;
     try {
       const res = await fetch(
         `${apiUrl}/api/compass/politicians/${politicianId}/research-states`,
         { credentials: 'include' }
       );
       const data = res.ok ? await res.json() : [];
-      statesCache.current = Array.isArray(data) ? data : [];
+      statesCache.current = { politicianId, list: Array.isArray(data) ? data : [] };
     } catch {
-      statesCache.current = [];
+      statesCache.current = { politicianId, list: [] };
     }
   }
 
@@ -297,7 +301,7 @@ export default function StanceAccordion({
       // Check if context already cached (quotes fetched separately, or supplied
       // by the caller — in which case there is nothing left to wait for).
       const quotesReady = externalQuotes.current !== undefined || quotesCache.current !== null;
-      const statesReady = externalStates.current !== undefined || statesCache.current !== null;
+      const statesReady = externalStates.current !== undefined || statesCache.current?.politicianId === politicianId;
       if (contextCache.current.has(topicId) && quotesReady && statesReady) return;
 
       // Fetch context and quotes in parallel

@@ -121,3 +121,16 @@ describe('research states', () => {
     expect(screen.queryByText('In their own words — not a position on the scale')).toBeNull();
   });
 });
+
+describe('research states belong to one person', () => {
+  it('never shows the last person\'s states after politicianId changes', async () => {
+    stubFetch([NO_STANCE]);
+    const { rerender } = render(<StanceAccordion {...base} politicianName="Jane Doe" />);
+    expand();
+    expect(await screen.findByText('We researched Jane Doe and found no public stance on Voting Rights.')).toBeTruthy();
+    stubFetch([]);
+    rerender(<StanceAccordion {...base} politicianId="pol-2" politicianName="John Roe" />);
+    expect(screen.queryByText('No public stance found')).toBeNull();
+    expect(screen.queryByText(/We researched/)).toBeNull();
+  });
+});
