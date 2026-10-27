@@ -47,12 +47,16 @@ afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 const expand = (title = 'What should it take to vote?') => fireEvent.click(screen.getByText(title));
 
 describe('research states', () => {
-  it('no-stance renders the exact sentence and the research date', async () => {
+  // No research date is shown. `researched_on` stays in the payload as a record, but a dated
+  // "Researched {day}" line ages in public the moment it is written: a stance we checked once and
+  // that has not changed still reads as neglected a year later. The sentence carries the claim;
+  // the date only invites that misreading.
+  it('no-stance renders the exact sentence and never a research date', async () => {
     stubFetch([NO_STANCE]);
     render(<StanceAccordion {...base} politicianName="Jane Doe" />);
     expand();
     expect(await screen.findByText('We researched Jane Doe and found no public stance on Voting Rights.')).toBeTruthy();
-    expect(screen.getByText('Researched October 20, 2026.')).toBeTruthy();
+    expect(screen.queryByText(/^Researched /)).toBeNull();
     expect(screen.queryByText('No detailed reasoning available for this topic.')).toBeNull();
     expect(calls.filter((u) => u.includes('/research-states'))).toEqual(['https://api.test/api/compass/politicians/pol-1/research-states']);
   });
@@ -76,7 +80,9 @@ describe('research states', () => {
     expect(screen.getByText('February 1, 2024')).toBeTruthy();
     const links = screen.getAllByRole('link').map((a) => a.getAttribute('href'));
     expect(links).toEqual(expect.arrayContaining(['https://example.org/speech', 'https://town.example/minutes']));
-    expect(screen.getByText('Researched October 21, 2026.')).toBeTruthy();
+    // The per-passage SOURCE dates above are kept — they date the evidence. What goes is our own
+    // "Researched {day}" line, on this branch too.
+    expect(screen.queryByText(/^Researched /)).toBeNull();
   });
 
   it('labels the collapsed row once the state is known', async () => {
