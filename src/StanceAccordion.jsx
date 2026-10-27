@@ -637,9 +637,12 @@ export default function StanceAccordion({
                           ))}
                         </>
                       )}
-                      <p style={{ fontSize: '12px', color: c.sourceText, marginTop: '6px', marginBottom: 0 }}>
-                        {`Researched ${formatDay(researchState.researched_on)}.`}
-                      </p>
+                      {/* No "Researched {day}" line. `researched_on` stays in the payload as a
+                          record of when the check happened, but printing it publicly ages the row
+                          the moment it is written: a position we verified once and that has not
+                          changed still reads as neglected a year on. The sentence above carries
+                          the claim without inviting that misreading. The per-passage source dates
+                          are a different thing and stay — they date the evidence, not our work. */}
                     </div>
                   )}
 
