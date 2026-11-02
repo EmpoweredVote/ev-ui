@@ -387,6 +387,23 @@ export default function PoliticianProfile({
   // simply gets their photograph and this disappears with no other change.
   const photoRestriction = pol.photo_restriction || null;
 
+  // The credit this portrait owes. Served by the API out of the stored licence and origin — see
+  // backend/src/lib/photoCredit.ts. 🔴 NOT `photo_origin_url`, which despite its name is the
+  // image to display (a COALESCE over photo_custom_url) and is already the <img src> below.
+  //
+  // Shown only when a portrait is actually on screen: a credit under a placeholder would be
+  // crediting a photograph nobody can see. The source is a link when we hold one; when the
+  // licence requires attribution and we hold none, the licence is still named, because saying
+  // less would hide the gap rather than close it.
+  const photoCredit = (() => {
+    const c = pol.photo_credit;
+    if (!c) return null;
+    const label = c.label || '';
+    const source = c.source_url || '';
+    if (!label && !source) return null;
+    return { label, source, required: !!c.attribution_required };
+  })();
+
   const [imgError, setImgError] = useState(false);
   useEffect(() => { setImgError(false); }, [profileImageUrl]);
 
@@ -552,8 +569,26 @@ export default function PoliticianProfile({
     },
     photoWrap: {
       width: isMobile ? '150px' : '192px',
-      height: isMobile ? '150px' : '240px',
       flexShrink: 0,
+    },
+    photoBox: {
+      width: '100%',
+      height: isMobile ? '150px' : '240px',
+    },
+    // The credit sits under the portrait, not over it: a licence that obliges us to name a
+    // source is not decoration on the image, and text on a face is unreadable at this size.
+    photoCredit: {
+      fontFamily: fonts.primary,
+      fontSize: '10px',
+      lineHeight: 1.35,
+      marginTop: spacing[1],
+      color: darkMode ? '#9ca3af' : '#6A7282',
+      wordBreak: 'break-word',
+    },
+    photoCreditLink: {
+      color: 'inherit',
+      textDecoration: 'underline',
+      textUnderlineOffset: '2px',
     },
     photo: {
       width: '100%',
@@ -779,6 +814,7 @@ export default function PoliticianProfile({
         <div style={styles.heroRow}>
           {/* Photo */}
           <div style={styles.photoWrap}>
+            <div style={styles.photoBox}>
             {profileImageUrl && !imgError ? (
               <img
                 src={profileImageUrl}
@@ -799,6 +835,24 @@ export default function PoliticianProfile({
               </div>
             ) : (
               <div style={styles.placeholder}>{initials || '?'}</div>
+            )}
+            </div>
+            {profileImageUrl && !imgError && photoCredit && (
+              <p style={styles.photoCredit}>
+                {'Photo: '}
+                {photoCredit.source ? (
+                  <a
+                    href={photoCredit.source}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={styles.photoCreditLink}
+                  >
+                    {photoCredit.label || 'source'}
+                  </a>
+                ) : (
+                  photoCredit.label
+                )}
+              </p>
             )}
           </div>
 
