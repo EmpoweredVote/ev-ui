@@ -1,0 +1,6 @@
+{
+  "name": "ev-primer",
+  "version": "0.1.0",
+  "description": "Empowered Vote's platform values and the verified state of its shared infrastructure. Read before writing code in any EV repo.",
+  "author": { "name": "Empowered Vote" }
+}
