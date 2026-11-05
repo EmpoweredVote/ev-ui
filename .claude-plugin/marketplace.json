@@ -8,6 +8,11 @@
       "name": "ev-designer",
       "source": "./plugins/ev-designer",
       "description": "Rules and a public API index so designers build Empowered Vote screens on live data, not invented data."
+    },
+    {
+      "name": "ev-primer",
+      "source": "./plugins/ev-primer",
+      "description": "Platform values, the three-pillar model, and the dated, verified state of the shared Supabase project, services and repo conventions."
     }
   ],
   "metadata": {
