@@ -77,6 +77,55 @@ describe("PoliticianProfile contact presentation", () => {
   });
 });
 
+describe("PoliticianProfile tier badge and term row hooks", () => {
+  // essentials restyles these two elements in light mode. Before they had classes it
+  // found them by matching the serialised inline style, which stops matching the
+  // moment a colour or a layout value here changes — silently, with no failing test
+  // on either side. These hooks are the contract that replaces that.
+  const serving = {
+    ...politician,
+    term_start: "2023-06-15",
+    term_end: "2027-06-15",
+    total_years_in_office: 3,
+  };
+
+  it.each([
+    ["LOCAL_EXEC", "local", "LOCAL"],
+    ["STATE_UPPER", "state", "STATE"],
+    ["NATIONAL_LOWER", "federal", "FEDERAL"],
+  ])("marks a %s badge as data-tier=%s", (districtType, dataTier, label) => {
+    const { container } = render(
+      <PoliticianProfile politician={{ ...serving, district_type: districtType }} />,
+    );
+    const badge = container.querySelector(".ev-tier-badge");
+    expect(badge).not.toBeNull();
+    expect(badge.getAttribute("data-tier")).toBe(dataTier);
+    expect(badge.textContent).toBe(label);
+  });
+
+  it("renders no tier badge when there is no district type", () => {
+    const { container } = render(<PoliticianProfile politician={serving} />);
+    expect(container.querySelector(".ev-tier-badge")).toBeNull();
+  });
+
+  it("classes the term row and both of its items", () => {
+    const { container } = render(<PoliticianProfile politician={serving} />);
+    const row = container.querySelector(".ev-term-row");
+    expect(row).not.toBeNull();
+    // essentials' rule is `.ev-term-row > span`, so the items must stay direct children.
+    expect(row.querySelectorAll(":scope > span.ev-term-row__item")).toHaveLength(2);
+    expect(row.querySelector(":scope > .ev-term-row__item--term").textContent).toMatch(/2023/);
+    expect(row.querySelector(":scope > .ev-term-row__item--years").textContent).toMatch(
+      /3 years in office/,
+    );
+  });
+
+  it("renders no term row without a term or years in office", () => {
+    const { container } = render(<PoliticianProfile politician={politician} />);
+    expect(container.querySelector(".ev-term-row")).toBeNull();
+  });
+});
+
 describe("SocialLinks brand marks", () => {
   const linkedinUrl = "https://www.linkedin.com/in/jane-doe";
 

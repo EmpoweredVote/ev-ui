@@ -339,7 +339,10 @@ const BADGE_DARK = colorScales.skyblue['500'];   // #59B0C4
  *
  * Independent of either flag, the markup carries stable hooks for consumers that
  * need to restyle it: `ev-role-line`, `ev-contact-label`, `ev-contact-divider`,
- * and `ev-contact-badge` / `ev-contact-badge--<kind>` on the chips.
+ * and `ev-contact-badge` / `ev-contact-badge--<kind>` on the chips. The tier badge
+ * above the name carries `ev-tier-badge` plus `data-tier="local|state|federal"`, and
+ * the term / years-in-office row carries `ev-term-row`, with
+ * `ev-term-row__item--term` and `ev-term-row__item--years` on its two items.
  */
 export default function PoliticianProfile({
   politician = {},
@@ -859,7 +862,13 @@ export default function PoliticianProfile({
           {/* Info */}
           <div style={styles.infoCol}>
             {styles.tierBadge && (
-              <div style={styles.tierBadge}>{tier}</div>
+              <div
+                className="ev-tier-badge"
+                data-tier={tier.toLowerCase()}
+                style={styles.tierBadge}
+              >
+                {tier}
+              </div>
             )}
             <h1 style={styles.name}>{displayName}</h1>
             {banner}
@@ -897,15 +906,15 @@ export default function PoliticianProfile({
 
             {/* Term + Years in Office */}
             {(termLine || pol.total_years_in_office > 0) && (
-              <div style={styles.metaRow}>
+              <div className="ev-term-row" style={styles.metaRow}>
                 {termLine && (
-                  <span style={styles.metaItem}>
+                  <span className="ev-term-row__item ev-term-row__item--term" style={styles.metaItem}>
                     <CalendarIcon size={14} />
                     {termLine}
                   </span>
                 )}
                 {pol.total_years_in_office > 0 && (
-                  <span style={styles.metaItem}>
+                  <span className="ev-term-row__item ev-term-row__item--years" style={styles.metaItem}>
                     <ClockIcon size={14} />
                     {pol.total_years_in_office} {pol.total_years_in_office === 1 ? 'year' : 'years'} in office
                   </span>
