@@ -178,10 +178,10 @@ describe('checked summary on a doesnt-fit topic', () => {
     expand();
     await screen.findByText('In their own words — not a position on the scale');
     const hrefs = [...container.querySelectorAll('a[href^="#ref-"]')].map((a) => [a.getAttribute('href'), a.textContent]);
-    expect(hrefs).toEqual([['#ref-t1-1', '1'], ['#ref-t1-2', '2'], ['#ref-t1-4', '4']]);
+    expect(hrefs).toEqual([['#ref-pol-1-t1-1', '1'], ['#ref-pol-1-t1-2', '2'], ['#ref-pol-1-t1-4', '4']]);
     expect(container.textContent).toContain('early polling [2, 4].');
-    for (let n = 1; n <= 4; n++) expect(container.querySelector(`li#ref-t1-${n}`)).toBeTruthy();
-    expect(container.querySelector('li#ref-t1-3 a').getAttribute('href')).toBe(SOURCES[2]);
+    for (let n = 1; n <= 4; n++) expect(container.querySelector(`li#ref-pol-1-t1-${n}`)).toBeTruthy();
+    expect(container.querySelector('li#ref-pol-1-t1-3 a').getAttribute('href')).toBe(SOURCES[2]);
   });
 
   it('a number with no matching reference renders as plain text', async () => {
@@ -190,7 +190,7 @@ describe('checked summary on a doesnt-fit topic', () => {
     expand();
     await screen.findByText('In their own words — not a position on the scale');
     const hrefs = [...container.querySelectorAll('a[href^="#ref-"]')].map((a) => a.getAttribute('href'));
-    expect(hrefs).toEqual(['#ref-t1-1']);
+    expect(hrefs).toEqual(['#ref-pol-1-t1-1']);
     expect(container.textContent).toContain('Claim [1, 9] and see https://x.org/p[2] too.');
   });
 
@@ -221,5 +221,33 @@ describe('checked summary on a doesnt-fit topic', () => {
     expect(p.childNodes.length).toBe(1);
     expect(p.childNodes[0].nodeType).toBe(3);
     expect(container.querySelector('a[href^="#ref-"]')).toBeNull();
+  });
+
+  it('citation links carry an aria-label', async () => {
+    stubWithContext([OWN_WORDS], ctxOk(SUMMARY, SOURCES));
+    const { container } = render(<StanceAccordion {...base} />);
+    expand();
+    await screen.findByText('In their own words — not a position on the scale');
+    expect([...container.querySelectorAll('a[href^="#ref-"]')].map((a) => a.getAttribute('aria-label'))).toEqual(['Reference 1', 'Reference 2', 'Reference 4']);
+  });
+
+  it('a seated topic keeps [sic] and [2019] as plain text', async () => {
+    stubWithContext([], ctxOk('He said it [sic] in the [2019] budget.', ['https://example.org/a', 'https://example.org/b']));
+    const { container } = render(<StanceAccordion {...base} polAnswers={[{ topic_id: 't1', value: 3 }]} />);
+    expand();
+    const p = await screen.findByText('He said it [sic] in the [2019] budget.');
+    expect(p.childNodes.length).toBe(1);
+    expect(container.querySelector('a[href^="#ref-"]')).toBeNull();
+  });
+
+  it('a topic id with a space or slash still yields a matching href and id', async () => {
+    const odd = { id: 'a b/c', short_title: 'Odd', topic_key: 'odd', question_text: 'Odd question?', stances: [] };
+    stubWithContext([{ topic_id: 'a b/c', outcome: 'doesnt-fit', researched_on: '2026-10-21', passages: OWN_WORDS.passages }], ctxOk('Claim [1].', ['https://example.org/a']));
+    const { container } = render(<StanceAccordion {...base} topics={[odd]} allTopics={[odd]} />);
+    fireEvent.click(screen.getByText('Odd question?'));
+    await screen.findByText('In their own words — not a position on the scale');
+    const href = container.querySelector('a[href^="#ref-"]').getAttribute('href');
+    expect(href).toBe('#ref-pol-1-a%20b%2Fc-1');
+    expect(container.querySelector('li').id).toBe(href.slice(1));
   });
 });

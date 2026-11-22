@@ -34,7 +34,11 @@ function formatDay(ymd) {
  * text. A bracket inside a URL is left alone. Text with no linkable marker is returned unchanged
  * (the same string), so a reasoning without markers renders exactly as it did before.
  */
-function linkCitations(text, topicId, refCount) {
+function refAnchorId(politicianId, topicId, n) {
+  return `ref-${encodeURIComponent(String(politicianId))}-${encodeURIComponent(String(topicId))}-${n}`;
+}
+
+function linkCitations(text, politicianId, topicId, refCount) {
   if (!text || !refCount) return text;
   const re = /\[(\d+(?:\s*,\s*\d+)*)\]/g;
   const out = [];
@@ -53,7 +57,7 @@ function linkCitations(text, topicId, refCount) {
     parts.forEach((x, i) => {
       const n = Number(x);
       if (i % 2 === 0 && n >= 1 && n <= refCount) {
-        out.push(<a key={`${m.index}-${i}`} href={`#ref-${topicId}-${n}`}>{x}</a>);
+        out.push(<a key={`${m.index}-${i}`} href={`#${refAnchorId(politicianId, topicId, n)}`} aria-label={`Reference ${n}`}>{x}</a>);
       } else {
         out.push(x);
       }
@@ -432,7 +436,7 @@ export default function StanceAccordion({
                             lineHeight: 1.6,
                           }}
                         >
-                          {linkCitations(cached.reasoning, topicId, (cached.sources || []).length)}
+                          {linkCitations(cached.reasoning, politicianId, topicId, (cached.sources || []).length)}
                         </p>
                       ) : null}
 
@@ -443,7 +447,7 @@ export default function StanceAccordion({
                           </p>
                           <ol style={{ listStyle: 'decimal', listStylePosition: 'inside', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                             {cached.sources.map((src, i) => (
-                              <li key={i} id={`ref-${topicId}-${i + 1}`} style={{ fontSize: '12px', color: c.sourceText }}>
+                              <li key={i} id={refAnchorId(politicianId, topicId, i + 1)} style={{ fontSize: '12px', color: c.sourceText }}>
                                 <a
                                   href={src}
                                   target="_blank"
