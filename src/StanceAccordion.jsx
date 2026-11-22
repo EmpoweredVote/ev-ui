@@ -28,6 +28,44 @@ function formatDay(ymd) {
   return `${MONTHS[Number(m[2]) - 1]} ${Number(m[3])}, ${m[1]}`;
 }
 
+/**
+ * Link "[n]" and "[n, m, ...]" citation markers in a checked summary to the reference list below it.
+ * Number n links to `#ref-<topicId>-<n>` only when reference n exists; any other number stays plain
+ * text. A bracket inside a URL is left alone. Text with no linkable marker is returned unchanged
+ * (the same string), so a reasoning without markers renders exactly as it did before.
+ */
+function linkCitations(text, topicId, refCount) {
+  if (!text || !refCount) return text;
+  const re = /\[(\d+(?:\s*,\s*\d+)*)\]/g;
+  const out = [];
+  let last = 0;
+  let linked = false;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const before = text.slice(0, m.index);
+    const token = before.slice(before.search(/\S*$/));
+    if (/:\/\//.test(token)) continue;
+    const parts = m[1].split(/(\s*,\s*)/);
+    const hasLink = parts.some((x, i) => i % 2 === 0 && Number(x) >= 1 && Number(x) <= refCount);
+    if (!hasLink) continue;
+    linked = true;
+    out.push(text.slice(last, m.index), '[');
+    parts.forEach((x, i) => {
+      const n = Number(x);
+      if (i % 2 === 0 && n >= 1 && n <= refCount) {
+        out.push(<a key={`${m.index}-${i}`} href={`#ref-${topicId}-${n}`}>{x}</a>);
+      } else {
+        out.push(x);
+      }
+    });
+    out.push(']');
+    last = m.index + m[0].length;
+  }
+  if (!linked) return text;
+  out.push(text.slice(last));
+  return out;
+}
+
 // Comparison dot colors — from the EV dataViz palette (tokens.js).
 // Antipartisan: neutral dusk/sage pairing, never party colors.
 const USER_DOT = '#7C6B9E';            // Dusk — "You"
@@ -379,6 +417,52 @@ export default function StanceAccordion({
         const isExpanded = expandedTopicId === topicId;
         const isLoading = loadingId === topicId;
         const cached = contextCache.current.get(topicId);
+        // A doesnt-fit topic leads with its checked summary (reasoning + References) and keeps the
+        // own-words passages after it; every other topic keeps the order it always had.
+        const summaryFirst = researchState?.outcome === 'doesnt-fit' && !!cached;
+        const summaryEl = cached ? (
+                      <>
+                      {cached.reasoning ? (
+                        <p
+                          style={{
+                            fontSize: '14px',
+                            color: c.reasoning,
+                            marginBottom: '12px',
+                            whiteSpace: 'pre-wrap',
+                            lineHeight: 1.6,
+                          }}
+                        >
+                          {linkCitations(cached.reasoning, topicId, (cached.sources || []).length)}
+                        </p>
+                      ) : null}
+
+                      {cached.sources && cached.sources.length > 0 && (
+                        <div style={{ marginTop: '8px' }}>
+                          <p style={{ ...sectionLabelStyle, marginBottom: '6px' }}>
+                            References
+                          </p>
+                          <ol style={{ listStyle: 'decimal', listStylePosition: 'inside', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            {cached.sources.map((src, i) => (
+                              <li key={i} id={`ref-${topicId}-${i + 1}`} style={{ fontSize: '12px', color: c.sourceText }}>
+                                <a
+                                  href={src}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1.5"
+                                  style={{ color: c.link }}
+                                >
+                                  <Favicon url={src} />
+                                  <span style={{ textDecoration: 'underline', textUnderlineOffset: '2px' }}>
+                                    {getDisplayUrl(src)}
+                                  </span>
+                                </a>
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                      )}
+                      </>
+        ) : null;
         const fullTopic = topicById[topicId];
         const questionText = fullTopic?.question_text;
         const titleText = questionText || topic.short_title;
@@ -584,6 +668,8 @@ export default function StanceAccordion({
                     </div>
                   )}
 
+                  {!isLoading && summaryFirst && summaryEl}
+
                   {!isLoading && researchState && (
                     <div style={{ marginBottom: '12px' }}>
                       {researchState.outcome === 'no-stance' ? (
@@ -648,45 +734,7 @@ export default function StanceAccordion({
 
                   {!isLoading && cached && (
                     <>
-                      {cached.reasoning ? (
-                        <p
-                          style={{
-                            fontSize: '14px',
-                            color: c.reasoning,
-                            marginBottom: '12px',
-                            whiteSpace: 'pre-wrap',
-                            lineHeight: 1.6,
-                          }}
-                        >
-                          {cached.reasoning}
-                        </p>
-                      ) : null}
-
-                      {cached.sources && cached.sources.length > 0 && (
-                        <div style={{ marginTop: '8px' }}>
-                          <p style={{ ...sectionLabelStyle, marginBottom: '6px' }}>
-                            References
-                          </p>
-                          <ol style={{ listStyle: 'decimal', listStylePosition: 'inside', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            {cached.sources.map((src, i) => (
-                              <li key={i} style={{ fontSize: '12px', color: c.sourceText }}>
-                                <a
-                                  href={src}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="inline-flex items-center gap-1.5"
-                                  style={{ color: c.link }}
-                                >
-                                  <Favicon url={src} />
-                                  <span style={{ textDecoration: 'underline', textUnderlineOffset: '2px' }}>
-                                    {getDisplayUrl(src)}
-                                  </span>
-                                </a>
-                              </li>
-                            ))}
-                          </ol>
-                        </div>
-                      )}
+                      {!summaryFirst && summaryEl}
 
                       {topicQuotes.length > 0 && (
                         <div style={{ marginTop: '14px' }}>

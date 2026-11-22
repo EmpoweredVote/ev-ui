@@ -140,3 +140,86 @@ describe('research states belong to one person', () => {
     expect(screen.queryByText(/We researched/)).toBeNull();
   });
 });
+
+describe('checked summary on a doesnt-fit topic', () => {
+  const SOURCES = ['https://example.org/a', 'https://example.org/b', 'https://example.org/c', 'https://example.org/d'];
+  const SUMMARY = 'She backs mail voting [1] and early polling [2, 4].';
+  const stubWithContext = (states, contextResponse) => {
+    calls = [];
+    vi.stubGlobal('fetch', vi.fn(async (url) => {
+      calls.push(String(url));
+      const u = String(url);
+      if (u.includes('/research-states')) return { ok: true, json: async () => states };
+      if (u.includes('/context')) return contextResponse;
+      return { ok: true, json: async () => (u.includes('/quotes') ? { quotes: [] } : {}) };
+    }));
+  };
+  const ctxOk = (reasoning, sources) => ({ ok: true, status: 200, json: async () => ({ reasoning, sources }) });
+
+  it('a doesnt-fit topic with context shows the reasoning and References above the own-words passages', async () => {
+    stubWithContext([OWN_WORDS], ctxOk(SUMMARY, SOURCES));
+    const { container } = render(<StanceAccordion {...base} politicianName="Jane Doe" />);
+    expand();
+    expect(await screen.findByText('In their own words — not a position on the scale')).toBeTruthy();
+    expect(calls.some((u) => u.endsWith('/api/compass/politicians/pol-1/t1/context'))).toBe(true);
+    const text = container.textContent;
+    const iSummary = text.indexOf('She backs mail voting');
+    const iRefs = text.indexOf('References');
+    const iOwn = text.indexOf('In their own words');
+    expect(iSummary).toBeGreaterThan(-1);
+    expect(iRefs).toBeGreaterThan(iSummary);
+    expect(iOwn).toBeGreaterThan(iRefs);
+    expect(screen.getByText('“Every voter should be able to vote by mail.”')).toBeTruthy();
+  });
+
+  it('[n] markers render as links to that topic\'s reference n', async () => {
+    stubWithContext([OWN_WORDS], ctxOk(SUMMARY, SOURCES));
+    const { container } = render(<StanceAccordion {...base} />);
+    expand();
+    await screen.findByText('In their own words — not a position on the scale');
+    const hrefs = [...container.querySelectorAll('a[href^="#ref-"]')].map((a) => [a.getAttribute('href'), a.textContent]);
+    expect(hrefs).toEqual([['#ref-t1-1', '1'], ['#ref-t1-2', '2'], ['#ref-t1-4', '4']]);
+    expect(container.textContent).toContain('early polling [2, 4].');
+    for (let n = 1; n <= 4; n++) expect(container.querySelector(`li#ref-t1-${n}`)).toBeTruthy();
+    expect(container.querySelector('li#ref-t1-3 a').getAttribute('href')).toBe(SOURCES[2]);
+  });
+
+  it('a number with no matching reference renders as plain text', async () => {
+    stubWithContext([OWN_WORDS], ctxOk('Claim [1, 9] and see https://x.org/p[2] too.', SOURCES.slice(0, 2)));
+    const { container } = render(<StanceAccordion {...base} />);
+    expand();
+    await screen.findByText('In their own words — not a position on the scale');
+    const hrefs = [...container.querySelectorAll('a[href^="#ref-"]')].map((a) => a.getAttribute('href'));
+    expect(hrefs).toEqual(['#ref-t1-1']);
+    expect(container.textContent).toContain('Claim [1, 9] and see https://x.org/p[2] too.');
+  });
+
+  it('a doesnt-fit topic whose context fetch 404s renders as today', async () => {
+    stubWithContext([OWN_WORDS], { ok: false, status: 404, json: async () => ({}) });
+    const { container } = render(<StanceAccordion {...base} />);
+    expand();
+    expect(await screen.findByText('In their own words — not a position on the scale')).toBeTruthy();
+    expect(screen.queryByText('References')).toBeNull();
+    expect(container.querySelector('a[href^="#ref-"]')).toBeNull();
+    expect(screen.queryByText('No detailed reasoning available for this topic.')).toBeNull();
+  });
+
+  it('an empty context renders as today', async () => {
+    stubWithContext([OWN_WORDS], ctxOk('', []));
+    render(<StanceAccordion {...base} />);
+    expand();
+    expect(await screen.findByText('In their own words — not a position on the scale')).toBeTruthy();
+    expect(screen.queryByText('References')).toBeNull();
+  });
+
+  it('a seated topic\'s reasoning with no markers renders identically', async () => {
+    stubWithContext([], ctxOk('Plain reasoning, no markers.', ['https://example.org/a']));
+    const { container } = render(<StanceAccordion {...base} polAnswers={[{ topic_id: 't1', value: 3 }]} />);
+    expand();
+    const p = await screen.findByText('Plain reasoning, no markers.');
+    expect(p.tagName).toBe('P');
+    expect(p.childNodes.length).toBe(1);
+    expect(p.childNodes[0].nodeType).toBe(3);
+    expect(container.querySelector('a[href^="#ref-"]')).toBeNull();
+  });
+});
