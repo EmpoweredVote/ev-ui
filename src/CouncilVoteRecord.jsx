@@ -69,15 +69,20 @@ const linkStyle = {
 const hoverOn = (e) => { e.currentTarget.style.textDecoration = 'underline'; };
 const hoverOff = (e) => { e.currentTarget.style.textDecoration = 'none'; };
 
-function ExtLink({ href, children }) {
+const srOnly = {
+  position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px',
+  overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0,
+};
+
+function ExtLink({ href, label, children }) {
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer" style={linkStyle} onMouseEnter={hoverOn} onMouseLeave={hoverOff}>
+    <a href={href} target="_blank" rel="noopener noreferrer" aria-label={`${label} (opens in a new tab)`} style={linkStyle} onMouseEnter={hoverOn} onMouseLeave={hoverOff}>
       {children}
     </a>
   );
 }
 
-function VoteRow({ vote }) {
+function VoteRow({ vote, number }) {
   const style = positionStyle(vote.position);
   const sourceLabel = vote.source_kind === 'memorandum' ? "Clerk's memo" : 'Minutes';
   const tally = tallyText(vote);
@@ -94,6 +99,11 @@ function VoteRow({ vote }) {
         borderTop: `1px solid ${colors.borderLight}`,
       }}
     >
+      {vote.meeting_date && (
+        <span style={{ fontFamily: fonts.primary, fontSize: fontSizes.xs, color: colors.textMuted }}>
+          {formatDate(vote.meeting_date)}
+        </span>
+      )}
       <span style={{ flex: 1, minWidth: 0, fontFamily: fonts.primary, fontSize: fontSizes.sm, color: colors.textSecondary }}>
         {vote.question}
         {vote.seat_label && (
@@ -101,6 +111,7 @@ function VoteRow({ vote }) {
             as {vote.seat_label}
           </span>
         )}
+        {vote.worked_out && <span style={srOnly}> {WORKED_OUT_NOTE}</span>}
       </span>
       <span
         data-testid="position"
@@ -120,7 +131,7 @@ function VoteRow({ vote }) {
       <span style={{ fontFamily: fonts.primary, fontSize: fontSizes.xs, color: colors.textMuted }}>
         {[OUTCOME_WORDS[vote.outcome], tally].filter(Boolean).join(' · ')}
       </span>
-      {vote.minutes_url && <ExtLink href={vote.minutes_url}>{sourceLabel}</ExtLink>}
+      {vote.minutes_url && <ExtLink href={vote.minutes_url} label={`${sourceLabel} for ${number}`}>{sourceLabel}</ExtLink>}
     </div>
   );
 }
@@ -140,7 +151,7 @@ function ItemBlock({ item, year }) {
         {item.status_label && (
           <span style={{ fontFamily: fonts.primary, fontSize: fontSizes.xs, color: colors.textMuted }}>{item.status_label}</span>
         )}
-        {item.url && <ExtLink href={item.url}>Legislation page</ExtLink>}
+        {item.url && <ExtLink href={item.url} label={`Legislation page for ${item.number}`}>Legislation page</ExtLink>}
       </div>
       {showPending && (
         <div style={{ padding: `${spacing[2]} 0` }}>
@@ -153,7 +164,7 @@ function ItemBlock({ item, year }) {
         </div>
       )}
       {votes.map((v, i) => (
-        <VoteRow key={v.roll_call_id || i} vote={v} />
+        <VoteRow key={v.roll_call_id || i} vote={v} number={item.number} />
       ))}
     </div>
   );

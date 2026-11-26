@@ -51,7 +51,7 @@ describe('CouncilVoteRecord', () => {
     expect(text.indexOf('Ord 1')).toBeLessThan(text.indexOf('Ord 2'));
     expect(text.indexOf('Amendment 1')).toBeLessThan(text.indexOf('Final passage'));
     expect(text).toContain('Veto override');
-    const links = screen.getAllByRole('link', { name: 'Legislation page' });
+    const links = screen.getAllByRole('link', { name: 'Legislation page for Ord 1 (opens in a new tab)' });
     expect(links[0].getAttribute('href')).toBe('https://x/1');
   });
 
@@ -103,8 +103,8 @@ describe('CouncilVoteRecord', () => {
       }),
     ];
     render(<CouncilVoteRecord items={items} />);
-    expect(screen.getByRole('link', { name: 'Minutes' }).getAttribute('href')).toBe('https://x/min');
-    expect(screen.getByRole('link', { name: "Clerk's memo" }).getAttribute('href')).toBe('https://x/memo');
+    expect(screen.getByRole('link', { name: 'Minutes for Ord 1 (opens in a new tab)' }).getAttribute('href')).toBe('https://x/min');
+    expect(screen.getByRole('link', { name: "Clerk's memo for Ord 1 (opens in a new tab)" }).getAttribute('href')).toBe('https://x/memo');
   });
 
   it('puts the worked-out note in the row title and shows the seat note', () => {
@@ -137,8 +137,49 @@ describe('CouncilVoteRecord', () => {
   });
 
   it('never shows party text', () => {
-    const items = [item({ pending: { meeting_date: '2024-03-05', outcome: 'failed', yes: 1, no: 5, abstain: 1 } })];
+    const items = [item({
+      pending: { meeting_date: '2024-03-05', outcome: 'failed', yes: 1, no: 5, abstain: 1 },
+      votes: [vote({ worked_out: true, seat_label: 'Seat label' }), vote({ roll_call_id: 'r2', position: 'present' })],
+    })];
     const { container } = render(<CouncilVoteRecord items={items} />);
     expect(container.textContent).not.toMatch(/democrat|republican|\bparty\b|\(D\)|\(R\)/i);
+  });
+
+  it('shows the meeting date on each vote row', () => {
+    const items = [item({ votes: [
+      vote({ roll_call_id: 'a', question: 'Q-a', meeting_date: '2024-03-05' }),
+      vote({ roll_call_id: 'b', question: 'Q-b', meeting_date: '2024-04-09' }),
+    ] })];
+    render(<CouncilVoteRecord items={items} />);
+    expect(screen.getByText('Q-a').closest('[data-vote-row]').textContent).toContain('Mar 5, 2024');
+    expect(screen.getByText('Q-b').closest('[data-vote-row]').textContent).toContain('Apr 9, 2024');
+  });
+
+  it('puts the worked-out note in the accessible text, not only the title', () => {
+    const items = [item({ votes: [vote({ question: 'Q-w', worked_out: true }), vote({ roll_call_id: 'x', question: 'Q-n' })] })];
+    render(<CouncilVoteRecord items={items} />);
+    const note = "Worked out from the attendance list and tally in the clerk's record.";
+    expect(screen.getByText(note).closest('[data-vote-row]').textContent).toContain('Q-w');
+    expect(screen.getAllByText(note)).toHaveLength(1);
+  });
+
+  it('shows Unknown for an unrecognised position', () => {
+    const items = [item({ votes: [vote({ question: 'Q-u', position: 'weird' })] })];
+    render(<CouncilVoteRecord items={items} />);
+    expect(within(screen.getByText('Q-u').closest('[data-vote-row]')).getByTestId('position').textContent).toBe('Unknown');
+  });
+
+  it('shows outcome words and the tally format', () => {
+    const items = [item({
+      pending: { meeting_date: '2024-03-05', outcome: 'vetoed', yes: 4, no: 3, abstain: 1 },
+      votes: [
+        vote({ roll_call_id: 'a', question: 'Q-p', outcome: 'passed', yes: 7, no: 2, abstain: 0 }),
+        vote({ roll_call_id: 'b', question: 'Q-f', outcome: 'failed', yes: 3, no: 5, abstain: 1 }),
+      ],
+    })];
+    const { container } = render(<CouncilVoteRecord items={items} />);
+    expect(screen.getByText('Q-p').closest('[data-vote-row]').textContent).toContain('Passed · 7 yes, 2 no');
+    expect(screen.getByText('Q-f').closest('[data-vote-row]').textContent).toContain('Failed · 3 yes, 5 no, 1 abstain');
+    expect(container.textContent).toContain('Vetoed · 4 yes, 3 no, 1 abstain');
   });
 });
